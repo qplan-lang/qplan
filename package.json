@@ -24,7 +24,7 @@
     "engine"
   ],
   "author": "gyu",
-    "repository": {
+  "repository": {
     "type": "git",
     "url": "https://github.com/g2developer/qplan.git"
   },
@@ -34,6 +34,10 @@
   "homepage": "https://github.com/g2developer/qplan#readme",
   "license": "MIT",
   "devDependencies": {
+    "@types/node": "^25.0.0",
     "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "openai": "^6.10.0"
   }
 }

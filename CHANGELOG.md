@@ -42,42 +42,6 @@ qplan의 변경 이력을 기록하는 문서입니다.
 
 ---
 
-## [0.2.0] - Future Release (예정)
-
-### Added
-- PARALLEL 안정화
-- 조건 분기(IF/ELSE) 개선
-- 에러 메시지 개선
-- 모듈 확장 API 고도화
-
-### Changed
-- AST 구조 리팩터링
-- Lexer/Parser 성능 개선
-
-### Fixed
-- 초기 파싱 오류
-
----
-
-## [0.3.0] - Future Release (예정)
-
-### Added
-- Plugin Module System
-- Logging / Tracing
-- qplan Studio GUI 프로토타입
-
----
-
-## [0.4.0+] - Long-term Roadmap (예정)
-
-### Added
-- Cloud Runner
-- 모듈 마켓플레이스 구조
-- LOOP / TRY-CATCH / IMPORT 같은 언어 확장
-- 타입 시스템
-
----
-
 # Versioning
 본 프로젝트는 Semantic Versioning(semver.org)을 따릅니다.
 
