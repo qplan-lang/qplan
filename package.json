@@ -1,0 +1,39 @@
+{
+  "name": "qplan",
+  "version": "0.1.0",
+  "description": "AI-driven workflow DSL engine",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "module": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc -w",
+    "clean": "rm -rf dist",
+    "test": "echo \"No test yet\""
+  },
+  "keywords": [
+    "dsl",
+    "workflow",
+    "ai",
+    "automation",
+    "parser",
+    "engine"
+  ],
+  "author": "gyu",
+    "repository": {
+    "type": "git",
+    "url": "https://github.com/g2developer/qplan.git"
+  },
+  "bugs": {
+    "url": "https://github.com/g2developer/qplan/issues"
+  },
+  "homepage": "https://github.com/g2developer/qplan#readme",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}

@@ -26,6 +26,47 @@ qplan은 **AI가 작성하고 시스템이 실행하는** 경량 워크플로우
 
 ---
 
+## 📦 Installation
+
+```bash
+npm install qplan
+```
+
+---
+
+## 🧪 Quick Start
+
+```ts
+import { runQplan } from "qplan";
+
+const script = `
+FETCH price stock=005930 days=30 -> price
+CALC ma20 price -> ma20
+`;
+
+const ctx = runQplan(script);
+console.log(ctx.toJSON());
+```
+
+---
+
+## 🔌 Custom Module Example
+
+```ts
+class HelloModule {
+  execute(inputs, ctx) {
+    return `Hello ${inputs.name}`;
+  }
+}
+
+registry.register("CALL_hello", new HelloModule());
+```
+
+DSL:
+```
+CALL hello name="world" -> out
+```
+
 # 🚀 qplan DSL Example
 
 ```qplan
@@ -142,6 +183,11 @@ public interface ActionModule {
 - Cloud Runner  
 
 ---
+
+## ⚠️ Project Status
+
+qplan is currently in **early-alpha (v0.1)**.  
+Grammar and API may change.
 
 # 📝 License
 MIT License (예정)
