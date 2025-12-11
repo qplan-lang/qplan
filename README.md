@@ -50,149 +50,193 @@ console.log(ctx.toJSON());
 
 ---
 
-## 🔌 Custom Module Example
+# 📂 프로젝트 구조
 
-```ts
-class HelloModule {
-  execute(inputs, ctx) {
-    return `Hello ${inputs.name}`;
-  }
-}
-
-registry.register("CALL_hello", new HelloModule());
 ```
-
-DSL:
-```
-CALL hello name="world" -> out
-```
-
-# 🚀 qplan DSL Example
-
-```qplan
-PARALLEL:
-    FETCH price stock=005930 days=60 -> price
-    FETCH flow stock=005930 days=20 -> flow
-END
-
-CALC ma20 price -> ma20
-
-IF price.close > ma20:
-    AI "강세 분석을 해줘" USING price, ma20 -> result
-ELSE:
-    AI "약세 분석을 해줘" USING price, ma20 -> result
-END
+src/
+ ├ core/                # Engine: Tokenizer, Parser, Executor, Context
+ ├ modules/             # Built-in & Extended Modules
+ └ index.ts             # runQplan entry
+docs/
+ ├ 01-overview.md
+ ├ 02-grammar.md
+ ├ 03-architecture.md
+ ├ 04-modules.md
+ ├ 05-examples.md
+ ├ 06-executor.md
+ ├ 07-registry.md
+ ├ 08-writing-modules.md
+ └ 09-ai-integration.md
 ```
 
 ---
 
-# 📚 DSL Grammar (EBNF Draft)
+# 🧠 ActionModule (핵심 개념)
+
+모든 기능은 **ActionModule** 을 통해 확장됩니다.
+
+각 모듈은 다음 메타데이터를 포함할 수 있습니다:
 
 ```
-script          = { statement } ;
+id: string
+description?: string
+usage?: string
+inputs?: string[]
+execute(inputs, ctx)
+```
 
-statement       = fetch_stmt
-                | call_stmt
-                | calc_stmt
-                | ai_stmt
-                | if_block
-                | parallel_block ;
+함수형 / 객체형 모두 지원합니다.
 
-fetch_stmt      = "FETCH" identifier { argument } "->" identifier ;
-call_stmt       = "CALL" identifier { argument } "->" identifier ;
-calc_stmt       = "CALC" identifier identifier "->" identifier ;
-ai_stmt         = "AI" string "USING" identifier_list "->" identifier ;
+---
 
-if_block        = "IF" condition ":" { statement }
-                  [ "ELSE:" { statement } ]
-                  "END" ;
+# 🔧 기본 제공 모듈 (Minimal Built-in Set)
 
-parallel_block  = "PARALLEL:" { statement } "END" ;
+| 모듈 | 설명 |
+|------|------|
+| echo | 입력 그대로 반환 |
+| sleep | 딜레이(ms) |
+| file | 파일 읽기/쓰기 |
+| math | add/sub/mul/div/sum/avg/ma |
+| future | 비동기 Future 생성 |
+| join | Future 결과 병합 |
 
-argument        = identifier "=" value ;
-identifier_list = identifier { "," identifier } ;
+---
 
-condition       = identifier comparator value ;
+# 🌱 확장 모듈 (Optional)
 
-comparator      = ">" | "<" | ">=" | "<=" | "==" | "!="
-                | "EXISTS" | "NOT_EXISTS" ;
+| 모듈 | 설명 |
+|------|------|
+| http | GET/POST HTTP 요청 |
+| html | HTML 파싱(body/tag/tags/text) |
+| json | JSON parse/stringify |
+| string | 문자열 유틸 |
+| ai | OpenAI 기반 LLM 호출 |
 
-value           = number | string | identifier ;
-identifier      = letter { letter | digit | "_" } ;
-string          = '"' { any } '"' ;
+필요 시 다음처럼 등록합니다:
+
+```
+registry.registerAll([ httpModule, aiModule ])
 ```
 
 ---
 
-# 🏗 Architecture Overview
+# 📜 DSL 문법 (요약)
 
+### Action
 ```
-qplan script
-      ↓
-Tokenizer → Parser → AST → Executor
-                   ↑
-             Module Registry
+math op="add" a=1 b=2 -> x
 ```
 
----
-
-# 📦 Project Structure
-
+### If
 ```
-qplan/
- ├─ src/
- │   ├─ lexer/
- │   ├─ parser/
- │   ├─ executor/
- │   ├─ modules/
- │   └─ core/
- ├─ docs/
- ├─ examples/
- └─ README.md
-```
-
----
-
-# 🧩 Module System
-
-```java
-public interface ActionModule {
-    Object execute(Map<String, Object> inputs, ExecutionContext ctx);
+if total > 100 {
+  echo msg="big" -> r
+} else {
+  echo msg="small" -> r
 }
 ```
 
----
+### Parallel
+```
+parallel concurrency=2 {
+  echo msg="A" -> a
+  echo msg="B" -> b
+}
+```
 
-# 📅 Roadmap
-
-### v0.1
-- Tokenizer  
-- Parser  
-- Executor  
-- 기본 모듈(FETCH, CALC, AI)
-
-### v0.2
-- PARALLEL  
-- 조건 분기 개선  
-
-### v0.3
-- Plugin Module System  
-
-### v0.4+
-- qplan Studio  
-- Cloud Runner  
+### Future / Join
+```
+future task="A" delay=200 -> f1
+future task="B" delay=500 -> f2
+join futures="f1,f2" -> out
+```
 
 ---
 
-## ⚠️ Project Status
+# 🚀 실행 흐름
 
-qplan is currently in **early-alpha (v0.1)**.  
-Grammar and API may change.
-
-# 📝 License
-MIT License (예정)
+```
+script  
+ → Tokenizer  
+ → Parser(AST)  
+ → Executor  
+ → ExecutionContext(ctx)
+```
 
 ---
 
-# 🤝 Contributing
-초기 개발 단계로 제안/PR 대환영.
+# 🧪 예제
+
+```
+file op="read" path="./nums.txt" -> txt
+math op="avg" arr=txt -> avg
+echo value=avg -> result
+```
+
+---
+
+# 🧩 AI 연동
+
+AI는 다음 정보를 기반으로 qplan 스크립트를 생성할 수 있습니다:
+
+```
+registry.list()
+→ [{ id, description, usage, inputs }]
+```
+
+이를 프롬프트에 전달하면  
+AI가 자동으로 qplan 워크플로우를 생성할 수 있습니다.
+
+---
+
+# 📦 설치 & 실행
+
+```
+npm install
+npm run build
+node examples/demo.js
+```
+
+---
+
+# 🤝 모듈 작성 가이드
+
+### 함수형
+
+```
+export const addModule = Object.assign(
+  (inputs) => Number(inputs.a) + Number(inputs.b),
+  { id:"add", description:"..." }
+)
+```
+
+### 객체형
+
+```
+export const fileModule = {
+  id:"file",
+  description:"파일 읽기/쓰기",
+  async execute(inputs, ctx) { ... }
+}
+```
+
+---
+
+# 📘 문서 링크
+
+모든 문서는 docs/ 폴더에 포함:
+
+- 01-overview  
+- 02-grammar  
+- 03-architecture  
+- 04-modules  
+- 05-examples  
+- 06-executor  
+- 07-registry  
+- 08-writing-modules  
+- 09-ai-integration
+
+---
+
+# 🏁 License
+MIT
