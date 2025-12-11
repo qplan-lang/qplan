@@ -1,31 +1,51 @@
-// src/core/moduleRegistry.ts
+/**
+ * ModuleRegistry
+ * -----------------------------------------
+ * - register(): ActionModule 하나 등록
+ * - registerAll(): 여러 개 등록
+ * - get(): 모듈 조회
+ * - list(): 메타데이터 목록(AI용)
+ *
+ * id 없는 모듈 → 경고만 출력, 실행 자체는 허용.
+ */
 
-import { ExecutionContext } from "./executionContext.js";
-
-export interface ActionModule {
-  execute(
-    inputs: Record<string, any>,
-    ctx: ExecutionContext
-  ): any | Promise<any>;
-}
+import { ActionModule, ModuleMeta } from "./actionModule.js";
 
 export class ModuleRegistry {
   private modules = new Map<string, ActionModule>();
 
-  register(name: string, module: ActionModule): void {
-    this.modules.set(name.toUpperCase(), module);
-  }
+  register(module: ActionModule) {
+    const id = (module as any).id;
 
-  has(name: string): boolean {
-    return this.modules.has(name.toUpperCase());
-  }
-
-  get(name: string): ActionModule {
-    const key = name.toUpperCase();
-    const mod = this.modules.get(key);
-    if (!mod) {
-      throw new Error(`Unknown module: ${key}`);
+    if (!id) {
+      console.warn(
+        "[WARN] Module registered without id. AI cannot refer to this module."
+      );
+      return; // 등록하지 않고 그냥 무시하는 게 더 안전함 (원하면 set할 수도 있음)
     }
-    return mod;
+
+    if (this.modules.has(id)) {
+      throw new Error(`Module '${id}' already registered`);
+    }
+
+    this.modules.set(id, module);
+  }
+
+  registerAll(modules: ActionModule[]) {
+    modules.forEach(m => this.register(m));
+  }
+
+  get(id: string): ActionModule | undefined {
+    return this.modules.get(id);
+  }
+
+  // AI가 참고하는 모듈 스펙 리스트
+  list(): ModuleMeta[] {
+    return [...this.modules.values()].map(m => ({
+      id: m.id,
+      description: m.description,
+      usage: m.usage,
+      inputs: m.inputs
+    }));
   }
 }

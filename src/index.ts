@@ -1,71 +1,53 @@
-// src/index.ts
+/**
+ * qplan 엔트리 포인트
+ * -----------------------------------------
+ * 사용 예:
+ *
+ * import { runQplan, registry } from "qplan";
+ *
+ * registry.registAll([
+ *   { id: "echo", module: (inputs) => inputs },
+ *   { id: "add", module: ({ a, b }) => a + b }
+ * ]);
+ *
+ * const ctx = await runQplan(`
+ *   echo msg="hello" -> x
+ *   add a=3 b=4 -> y
+ * `);
+ *
+ * console.log(ctx.toJSON());
+ */
 
 import { tokenize } from "./core/tokenizer.js";
 import { Parser } from "./core/parser.js";
 import { Executor } from "./core/executor.js";
-import { ExecutionContext } from "./core/executionContext.js";
 import { ModuleRegistry } from "./core/moduleRegistry.js";
+import { ExecutionContext } from "./core/executionContext.js";
+import { basicModules } from "./modules/index.js";
 
-import { FetchDefaultModule } from "./modules/fetch.js";
-import { CalcDefaultModule } from "./modules/calc.js";
-import { CallDefaultModule } from "./modules/call.js";
-import { AiDefaultModule } from "./modules/ai.js";
-import { AiOpenAIModule } from "./modules/aiOpenAI.js";
-import { FetchHttpModule } from "./modules/fetchHttp.js";
-import { CalcExtractHeadlineModule } from "./modules/calcExtractHeadline.js";
-import { FileReadModule } from "./modules/fileRead.js";
-import { TimeoutModule } from "./modules/timeout.js";
-import { FutureModule } from "./modules/future.js";
-import { JoinModule } from "./modules/join.js";
+// 🎯 외부에서 모듈 등록 가능하도록 registry export
+export const registry = new ModuleRegistry();
+
+// 기본모듈 등록
+registry.registerAll(basicModules);
 
 /**
- * 기본 모듈이 등록된 Registry 생성
+ * DSL 스크립트 실행 함수
  */
-export function createDefaultRegistry(): ModuleRegistry {
-  const registry = new ModuleRegistry();
-
-  registry.register("FETCH", new FetchDefaultModule());
-  registry.register("CALC", new CalcDefaultModule());
-  registry.register("CALL", new CallDefaultModule());
-//   registry.register("AI", new AiDefaultModule());
-  registry.register("FETCH_fetchHttp", new FetchHttpModule());
-  registry.register("CALC_extractHeadline", new CalcExtractHeadlineModule());
-  registry.register("AI", new AiOpenAIModule());
-  registry.register("FETCH_file", new FileReadModule());
-  registry.register("CALL_timeout", new TimeoutModule());
-  registry.register("CALL_future", new FutureModule());
-  registry.register("CALL_join", new JoinModule());
-
-  return registry;
-}
-
-/**
- * 엔진 전체 실행
- */
-export async function runQplan(
-  script: string,
-  registry: ModuleRegistry = createDefaultRegistry(),
-  ctx: ExecutionContext = new ExecutionContext()
-): Promise<ExecutionContext> {
-  // 1. Tokenize
+export async function runQplan(script: string) {
+  // 1) Tokenize
   const tokens = tokenize(script);
 
-  // 2. Parse (AST 생성)
+  // 2) Parse → AST
   const parser = new Parser(tokens);
   const ast = parser.parse();
 
-  // 3. Execute
+  // 3) Execute
+  const ctx = new ExecutionContext();
   const executor = new Executor(registry);
-  const resultContext = await executor.run(ast, ctx);
 
-  return resultContext;
+  await executor.run(ast, ctx);
+  return ctx;
 }
 
-// 편의 export
-export {
-  ExecutionContext,
-  ModuleRegistry,
-  Executor,
-  Parser,
-  tokenize,
-};
+// 기본 모듈을 자동 등록하려면 여기에서 registry.registAll(defaultModules) 호출하면 됨

@@ -1,24 +1,42 @@
-// src/core/ast.ts
-
-export type ASTNode =
-  | FetchNode
-  | CallNode
-  | CalcNode
-  | AiNode
-  | IfNode
-  | ParallelNode
-  | BlockNode;
-
 /**
- * 공통 노드 인터페이스
+ * AST (Abstract Syntax Tree)
+ * ---------------------------
+ * AST는 qplan DSL 코드를 "구문 구조대로 해석한 결과"를
+ * 트리(Tree) 형태로 표현한 자료구조이다.
+ *
+ * 즉, 사용자가 작성한 문자열 스크립트를
+ *   → Tokenizer가 토큰으로 나누고
+ *   → Parser가 토큰을 AST 노드들로 조립하여
+ *   → Executor가 AST를 순서대로 실행한다.
+ *
+ * AST는 실행 가능한 '프로그램 구조' 그 자체이며,
+ * qplan 엔진의 중심 데이터 모델이다.
+ *
+ * 이 파일은 qplan DSL에 등장할 수 있는 모든 노드(Action/If/Parallel/Block)를 정의한다.
+ * prefix(FETCH/CALC/CALL/AI)가 없는 새로운 모듈 기반 DSL 구조를 따른다.
  */
+
 export interface BaseNode {
   type: string;
   line: number;
 }
 
 /**
- * 여러 statement를 담는 블록 노드
+ * 하나의 DSL 명령 = 1개의 ActionNode
+ * 예)
+ *   fetchHttp url="https://site.com" -> html
+ *   extractHeadline input=html -> heads
+ *   ai "요약해줘" USING heads -> summary
+ */
+export interface ActionNode extends BaseNode {
+  type: "Action";
+  module: string;
+  args: Record<string, any>;
+  output: string;
+}
+
+/**
+ * 여러 DSL 명령의 묶음
  */
 export interface BlockNode extends BaseNode {
   type: "Block";
@@ -26,78 +44,37 @@ export interface BlockNode extends BaseNode {
 }
 
 /**
- * FETCH price stock=005930 days=30 -> price
- */
-export interface FetchNode extends BaseNode {
-  type: "Fetch";
-  name: string;                     // FETCH price → price (모듈명)
-  args: Record<string, any>;        // { stock: "005930", days: "30" }
-  output: string;                   // -> price
-}
-
-/**
- * CALL send_mail to="x" -> result
- */
-export interface CallNode extends BaseNode {
-  type: "Call";
-  name: string;
-  args: Record<string, any>;
-  output: string;
-}
-
-/**
- * CALC ma20 price -> ma20
- */
-export interface CalcNode extends BaseNode {
-  type: "Calc";
-  calcName: string;                 // ma20
-  input: string;                    // price
-  output: string;                   // ma20
-}
-
-/**
- * AI "문장" USING price, ma20 -> out
- */
-export interface AiNode extends BaseNode {
-  type: "AI";
-  prompt: string;                   // "문장"
-  using: string[];                  // ["price", "ma20"]
-  output: string;
-}
-
-/**
- * IF xxx > yyy:
- *    ...
- * ELSE:
- *    ...
- * END
+ * 조건문
  */
 export interface IfNode extends BaseNode {
   type: "If";
-  left: string;                     // price.close
-  comparator: string;               // >, <, ==, EXISTS ...
-  right: any;                       // value or identifier
+  left: string;
+  comparator: string;
+  right: any;
   thenBlock: BlockNode;
   elseBlock?: BlockNode;
 }
 
 /**
- * PARALLEL:
- *    FETCH...
- *    FETCH...
- * END
+ * 병렬 실행 블록
  */
 export interface ParallelNode extends BaseNode {
   type: "Parallel";
-  block: BlockNode;                 // 내부 statement
+  block: BlockNode;
   ignoreErrors?: boolean;
-  concurrency?: number;     // 동시에 몇개씩 호출할건지
+  concurrency?: number;
 }
 
 /**
- * AST Root
+ * 전체 AST 루트
  */
 export interface ASTRoot {
   type: "Root";
   block: BlockNode;
 }
+
+export type ASTNode =
+  | ActionNode
+  | IfNode
+  | ParallelNode
+  | BlockNode;

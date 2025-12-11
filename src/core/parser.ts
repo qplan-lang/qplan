@@ -1,40 +1,70 @@
-// src/core/parser.ts
+/**
+ * qplan Parser
+ * --------------------------------------
+ * Tokenizer가 생성한 토큰들을 기반으로
+ * AST(Action / If / Parallel / Block)을 생성한다.
+ *
+ * 모든 명령은 prefix(FETCH/CALC/CALL/AI) 없이
+ *   <moduleName> key=value ... -> out
+ * 형식의 ActionNode 로 파싱된다.
+ */
 
-import {
-  Token,
-  TokenType,
-} from "./tokenizer.js";
-
+import { Token, TokenType } from "./tokenizer.js";
 import {
   ASTRoot,
-  BlockNode,
-  FetchNode,
-  CallNode,
-  CalcNode,
-  AiNode,
-  IfNode,
-  ParallelNode,
   ASTNode,
-} from "./ast";
+  ActionNode,
+  BlockNode,
+  IfNode,
+  ParallelNode
+} from "./ast.js";
+import { ParserError } from "./parserError.js";
 
-export class ParserError extends Error {
-  constructor(message: string, line: number) {
-    super(`${message} (line ${line})`);
-    this.name = "ParserError";
-  }
-}
-
-/**
- * Parser: Token → AST
- */
 export class Parser {
-  private tokens: Token[];
   private pos = 0;
 
-  constructor(tokens: Token[]) {
-    this.tokens = tokens;
+  constructor(private tokens: Token[]) {}
+
+  private peek(offset = 0): Token {
+    return this.tokens[this.pos + offset] || this.tokens[this.tokens.length - 1];
   }
 
+  private match(type: TokenType, value?: string): boolean {
+    const t = this.peek();
+    return t.type === type && (value === undefined || t.value === value);
+  }
+
+  private consume(type: TokenType, value?: string): Token {
+    const t = this.peek();
+    if (!this.match(type, value)) {
+      throw new ParserError(
+        `Expected ${value ?? TokenType[type]}, got '${t.value}'`,
+        t.line
+      );
+    }
+    this.pos++;
+    return t;
+  }
+
+  private consumeIdentifier(): string {
+    return this.consume(TokenType.Identifier).value;
+  }
+
+  private consumeString(): string {
+    return this.consume(TokenType.String).value;
+  }
+
+  private consumeValueAny(): any {
+    const t = this.peek();
+    if (t.type === TokenType.String) return this.consumeString();
+    if (t.type === TokenType.Number) return Number(this.consume(TokenType.Number).value);
+    if (t.type === TokenType.Identifier) return this.consumeIdentifier();
+    throw new ParserError(`Unexpected value '${t.value}'`, t.line);
+  }
+
+  // ---------------------------------------
+  // Root
+  // ---------------------------------------
   parse(): ASTRoot {
     const block = this.parseBlock();
     return {
@@ -43,31 +73,14 @@ export class Parser {
     };
   }
 
-  // -----------------------------------------------------
-  // Helpers
-  // -----------------------------------------------------
-  private isKeyword(value: string): boolean {
-    const t = this.peek();
-    return t.type === TokenType.Keyword && t.value === value;
-  }
-
-  // -----------------------------------------------------
-  // Block
-  // -----------------------------------------------------
+  // ---------------------------------------
+  // Block = 여러 문장
+  // ---------------------------------------
   private parseBlock(): BlockNode {
     const statements: ASTNode[] = [];
-
-    while (!this.isEOF() && !this.isKeyword("END") && !this.isKeyword("ELSE")) {
-      // 빈 줄(Newline)은 스킵
-      if (this.match(TokenType.Newline)) {
-        this.consume();
-        continue;
-      }
-
-      const stmt = this.parseStatement();
-      if (stmt) statements.push(stmt);
+    while (!this.match(TokenType.Keyword, "END") && !this.match(TokenType.EOF)) {
+      statements.push(this.parseStatement());
     }
-
     return {
       type: "Block",
       statements,
@@ -75,177 +88,101 @@ export class Parser {
     };
   }
 
-  // -----------------------------------------------------
-  // Statement Dispatcher
-  // -----------------------------------------------------
-  private parseStatement(): ASTNode | null {
-    const token = this.peek();
+  // ---------------------------------------
+  // Statement
+  // ---------------------------------------
+  private parseStatement(): ASTNode {
+    const t = this.peek();
 
-    if (token.type === TokenType.Keyword) {
-      switch (token.value) {
-        case "FETCH":
-          return this.parseFetch();
-        case "CALL":
-          return this.parseCall();
-        case "CALC":
-          return this.parseCalc();
-        case "AI":
-          return this.parseAI();
-        case "IF":
-          return this.parseIf();
-        case "PARALLEL":
-          return this.parseParallel();
+    if (this.match(TokenType.Keyword, "IF")) return this.parseIf();
+    if (this.match(TokenType.Keyword, "PARALLEL")) return this.parseParallel();
+
+    // ActionNode
+    if (this.match(TokenType.Identifier)) {
+      return this.parseAction();
+    }
+
+    throw new ParserError(`Unexpected token '${t.value}'`, t.line);
+  }
+
+  // ---------------------------------------
+  // ActionNode
+  // moduleName key=value ... -> out
+  // moduleName "string" USING vars -> out
+  // ---------------------------------------
+  private parseAction(): ActionNode {
+    const moduleName = this.consumeIdentifier();
+    const line = this.peek().line;
+
+    const args: Record<string, any> = {};
+
+    // string-only (ex: ai "prompt")
+    if (this.match(TokenType.String)) {
+      args["prompt"] = this.consumeString();
+
+      if (this.match(TokenType.Keyword, "USING")) {
+        this.consume(TokenType.Keyword, "USING");
+        const vars: string[] = [];
+        vars.push(this.consumeIdentifier());
+        while (this.match(TokenType.Symbol, ",")) {
+          this.consume(TokenType.Symbol, ",");
+          vars.push(this.consumeIdentifier());
+        }
+        args["using"] = vars;
       }
+
+      this.consume(TokenType.Symbol, "->");
+      const out = this.consumeIdentifier();
+
+      return {
+        type: "Action",
+        module: moduleName,
+        args,
+        output: out,
+        line
+      };
     }
 
-    throw new ParserError(
-      `Unexpected token '${token.value}'`,
-      token.line
-    );
-  }
-
-  // -----------------------------------------------------
-  // FETCH name key=value ... -> out
-  // -----------------------------------------------------
-  private parseFetch(): FetchNode {
-    const start = this.consumeKeyword("FETCH");
-    const name = this.consumeIdentifier();
-
-    const args = this.parseArguments();
-
-    this.consumeArrow();
-    const output = this.consumeIdentifier();
-
-    return {
-      type: "Fetch",
-      name,
-      args,
-      output,
-      line: start.line,
-    };
-  }
-
-  // -----------------------------------------------------
-  // CALL name key=value ... -> out
-  // -----------------------------------------------------
-  private parseCall(): CallNode {
-    const start = this.consumeKeyword("CALL");
-    const name = this.consumeIdentifier();
-
-    const args = this.parseArguments();
-
-    this.consumeArrow();
-    const output = this.consumeIdentifier();
-
-    return {
-      type: "Call",
-      name,
-      args,
-      output,
-      line: start.line,
-    };
-  }
-
-  // -----------------------------------------------------
-  // CALC calcName input -> output
-  // -----------------------------------------------------
-  private parseCalc(): CalcNode {
-    const start = this.consumeKeyword("CALC");
-    const calcName = this.consumeIdentifier();
-    const input = this.consumeIdentifier();
-
-    this.consumeArrow();
-    const output = this.consumeIdentifier();
-
-    return {
-      type: "Calc",
-      calcName,
-      input,
-      output,
-      line: start.line,
-    };
-  }
-
-  // -----------------------------------------------------
-  // AI "prompt" USING a,b -> out
-  // -----------------------------------------------------
-  private parseAI(): AiNode {
-    const start = this.consumeKeyword("AI");
-    const prompt = this.consumeString();
-
-    this.consumeKeyword("USING");
-
-    const using: string[] = [];
-    using.push(this.consumeIdentifier());
-
-    while (this.matchValue(",")) {
-      this.consume();
-      using.push(this.consumeIdentifier());
+    // key=value style
+    while (!this.match(TokenType.Symbol, "->")) {
+      const key = this.consumeIdentifier();
+      this.consume(TokenType.Symbol, "=");
+      const value = this.consumeValueAny();
+      args[key] = value;
     }
 
-    this.consumeArrow();
-
-    const output = this.consumeIdentifier();
+    this.consume(TokenType.Symbol, "->");
+    const out = this.consumeIdentifier();
 
     return {
-      type: "AI",
-      prompt,
-      using,
-      output,
-      line: start.line,
+      type: "Action",
+      module: moduleName,
+      args,
+      output: out,
+      line,
     };
   }
 
-  // -----------------------------------------------------
-  // IF A > B:
-  //   ...
-  // ELSE:
-  //   ...
-  // END
-  // -----------------------------------------------------
+  // ---------------------------------------
+  // IF
+  // ---------------------------------------
   private parseIf(): IfNode {
-    const start = this.consumeKeyword("IF");
-
+    const start = this.consume(TokenType.Keyword, "IF");
     const left = this.consumeIdentifier();
+    const comparator = this.consume(TokenType.Identifier).value;
+    const right = this.consumeValueAny();
+    this.consume(TokenType.Symbol, ":");
 
-    const compToken = this.consumeComparator();
-    const comparator = compToken.value;
-
-    // 오른쪽 값: number|string|identifier
-    let right: any = null;
-    const next = this.peek();
-    if (next.type === TokenType.Number) {
-      right = parseInt(next.value, 10);
-      this.consume();
-    } else if (next.type === TokenType.String) {
-      right = next.value;
-      this.consume();
-    } else if (next.type === TokenType.Identifier) {
-      right = next.value;
-      this.consume();
-    } else {
-      throw new ParserError(
-        `Invalid IF condition value: '${next.value}'`,
-        next.line
-      );
-    }
-
-    this.consumeValue(":"); // IF ... :
-
-    // then block
     const thenBlock = this.parseBlock();
 
-    // optional ELSE
-    let elseBlock: BlockNode | undefined = undefined;
-
-    if (this.matchKeyword("ELSE")) {
-      this.consumeKeyword("ELSE");
-      this.consumeValue(":");
+    let elseBlock: any = undefined;
+    if (this.match(TokenType.Keyword, "ELSE")) {
+      this.consume(TokenType.Keyword, "ELSE");
+      this.consume(TokenType.Symbol, ":");
       elseBlock = this.parseBlock();
     }
 
-    // END mandatory
-    this.consumeKeyword("END");
+    this.consume(TokenType.Keyword, "END");
 
     return {
       type: "If",
@@ -258,35 +195,28 @@ export class Parser {
     };
   }
 
-  // -----------------------------------------------------
-  // PARALLEL:
-  //   statements...
-  // END
-  // -----------------------------------------------------
+  // ---------------------------------------
+  // PARALLEL
+  // ---------------------------------------
   private parseParallel(): ParallelNode {
-    const start = this.consumeKeyword("PARALLEL");
+    const start = this.consume(TokenType.Keyword, "PARALLEL");
 
     let ignoreErrors = false;
     let concurrency: number | undefined;
 
-    // identifier=value 파싱
+    // optional args
     while (this.match(TokenType.Identifier)) {
       const key = this.consumeIdentifier();
-      this.consumeValue("=");
+      this.consume(TokenType.Symbol, "=");
       const value = this.consumeValueAny();
 
-      if (key === "ignoreErrors") {
-        ignoreErrors = value === true || value === "true";
-      }
-      if (key === "concurrency") {
-        concurrency = Number(value);
-      }
+      if (key === "ignoreErrors") ignoreErrors = value === true || value === "true";
+      if (key === "concurrency") concurrency = Number(value);
     }
 
-    this.consumeValue(":");
-
+    this.consume(TokenType.Symbol, ":");
     const block = this.parseBlock();
-    this.consumeKeyword("END");
+    this.consume(TokenType.Keyword, "END");
 
     return {
       type: "Parallel",
@@ -295,125 +225,5 @@ export class Parser {
       concurrency,
       line: start.line
     };
-  }
-  
-  // -----------------------------------------------------
-  // Utilities
-  // -----------------------------------------------------
-  private parseArguments(): Record<string, any> {
-    const args: Record<string, any> = {};
-
-    while (this.match(TokenType.Identifier)) {
-      const key = this.consumeIdentifier();
-      this.consumeValue("=");
-
-      const value = this.consumeValueAny();
-      args[key] = value;
-    }
-
-    return args;
-  }
-
-  private consumeValueAny(): any {
-    const t = this.peek();
-
-    if (t.type === TokenType.Number) {
-      this.consume();
-      return parseInt(t.value, 10);
-    }
-
-    if (t.type === TokenType.String) {
-      this.consume();
-      return t.value;
-    }
-
-    if (t.type === TokenType.Identifier) {
-      this.consume();
-      return t.value;
-    }
-
-    throw new ParserError(`Unexpected value '${t.value}'`, t.line);
-  }
-
-  private consumeKeyword(kw: string): Token {
-    const t = this.peek();
-    if (t.type === TokenType.Keyword && t.value === kw) {
-      this.consume();
-      return t;
-    }
-    throw new ParserError(`Expected keyword '${kw}', got '${t.value}'`, t.line);
-  }
-
-  private consumeIdentifier(): string {
-    const t = this.peek();
-    if (t.type === TokenType.Identifier) {
-      this.consume();
-      return t.value;
-    }
-    throw new ParserError(`Expected identifier, got '${t.value}'`, t.line);
-  }
-
-  private consumeString(): string {
-    const t = this.peek();
-    if (t.type === TokenType.String) {
-      this.consume();
-      return t.value;
-    }
-    throw new ParserError(`Expected string, got '${t.value}'`, t.line);
-  }
-
-  private consumeComparator(): Token {
-    const t = this.peek();
-    if (t.type === TokenType.Comparator) {
-      this.consume();
-      return t;
-    }
-    throw new ParserError(`Expected comparator, got '${t.value}'`, t.line);
-  }
-
-  private consumeArrow() {
-    const t = this.peek();
-    if (t.type === TokenType.Arrow) {
-      this.consume();
-      return;
-    }
-    throw new ParserError(`Expected '->', got '${t.value}'`, t.line);
-  }
-
-  private consumeValue(expected: string) {
-    const t = this.peek();
-    if (t.value === expected) {
-      this.consume();
-      return;
-    }
-    throw new ParserError(`Expected '${expected}', got '${t.value}'`, t.line);
-  }
-
-  private match(type: TokenType): boolean {
-    return !this.isEOF() && this.peek().type === type;
-  }
-
-  private matchValue(value: string): boolean {
-    return !this.isEOF() && this.peek().value === value;
-  }
-
-  private matchKeyword(kw: string): boolean {
-    return (
-      !this.isEOF() &&
-      this.peek().type === TokenType.Keyword &&
-      this.peek().value === kw
-    );
-  }
-
-  private peek(): Token {
-    return this.tokens[this.pos];
-  }
-
-  private consume(): Token {
-    return this.tokens[this.pos++];
-  }
-
-  private isEOF(): boolean {
-    return this.peek().type === TokenType.EOF;
   }
 }

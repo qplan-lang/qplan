@@ -1,140 +1,92 @@
-// src/core/executor.ts
+/**
+ * Executor
+ * -----------------------------------------
+ * - ActionNode 실행 (함수형/객체형 자동 처리)
+ * - future → ctx에 Promise 저장
+ * - join → Promise.all 처리
+ * - parallel → 병렬 실행
+ * - if → 조건 분기
+ */
 
 import {
-  ASTRoot,
   ASTNode,
+  ASTRoot,
+  ActionNode,
   BlockNode,
-  FetchNode,
-  CallNode,
-  CalcNode,
-  AiNode,
   IfNode,
-  ParallelNode,
-} from "./ast";
-import { ExecutionContext } from "./executionContext.js";
+  ParallelNode
+} from "./ast.js";
 import { ModuleRegistry } from "./moduleRegistry.js";
+import { ExecutionContext } from "./executionContext.js";
 
 export class Executor {
   constructor(private registry: ModuleRegistry) {}
 
-  async run(root: ASTRoot, ctx?: ExecutionContext): Promise<ExecutionContext> {
-    const context = ctx ?? new ExecutionContext();
-    await this.executeBlock(root.block, context);
-    return context;
+  async run(root: ASTRoot, ctx: ExecutionContext): Promise<ExecutionContext> {
+    await this.executeBlock(root.block, ctx);
+    return ctx;
   }
 
-  // ----------------- core dispatch -----------------
-
-  private async executeBlock(
-    block: BlockNode,
-    ctx: ExecutionContext
-  ): Promise<void> {
+  private async executeBlock(block: BlockNode, ctx: ExecutionContext) {
     for (const stmt of block.statements) {
       await this.executeNode(stmt, ctx);
     }
   }
 
-  private async executeNode(node: ASTNode, ctx: ExecutionContext): Promise<void> {
+  private async executeNode(node: ASTNode, ctx: ExecutionContext): Promise<any> {
     switch (node.type) {
-      case "Fetch":
-        return this.execFetch(node as FetchNode, ctx);
-      case "Call":
-        return this.execCall(node as CallNode, ctx);
-      case "Calc":
-        return this.execCalc(node as CalcNode, ctx);
-      case "AI":
-        return this.execAI(node as AiNode, ctx);
-      case "If":
-        return this.execIf(node as IfNode, ctx);
-      case "Parallel":
-        return this.execParallel(node as ParallelNode, ctx);
-      case "Block":
-        return this.executeBlock(node as BlockNode, ctx);
-      default:
-        throw new Error(`Unknown AST node type: ${(node as any).type}`);
+      case "Action": return this.execAction(node, ctx);
+      case "If": return this.execIf(node, ctx);
+      case "Parallel": return this.execParallel(node, ctx);
+      case "Block": return this.executeBlock(node, ctx);
+      default: throw new Error(`Unknown AST node type: ${(node as any).type}`);
     }
   }
 
-  // ----------------- FETCH -----------------
+  private async execAction(node: ActionNode, ctx: ExecutionContext) {
+    const mod = this.registry.get(node.module);
+    if (!mod) throw new Error(`Unknown module: ${node.module}`);
 
-  private async execFetch(node: FetchNode, ctx: ExecutionContext): Promise<void> {
-    const moduleKey = this.resolveModuleKey("FETCH", node.name);
-    const mod = this.registry.get(moduleKey);
+    let result;
 
-    const inputs = {
-      __action: "FETCH",
-      __name: node.name,
-      ...node.args,
-    };
-
-    const result = await Promise.resolve(mod.execute(inputs, ctx));
-    ctx.set(node.output, result);
-  }
-
-  // ----------------- CALL -----------------
-
-  private async execCall(node: CallNode, ctx: ExecutionContext): Promise<void> {
-    const moduleKey = this.resolveModuleKey("CALL", node.name);
-    const mod = this.registry.get(moduleKey);
-
-    const inputs = {
-      __action: "CALL",
-      __name: node.name,
-      ...node.args,
-    };
-
-    const result = await Promise.resolve(mod.execute(inputs, ctx));
-    ctx.set(node.output, result);
-  }
-
-  // ----------------- CALC -----------------
-
-  private async execCalc(node: CalcNode, ctx: ExecutionContext): Promise<void> {
-    const moduleKey = this.resolveModuleKey("CALC", node.calcName);
-    const mod = this.registry.get(moduleKey);
-
-    const inputValue = ctx.get(node.input);
-
-    const inputs = {
-      __action: "CALC",
-      calcName: node.calcName,
-      input: inputValue,
-    };
-
-    const result = await Promise.resolve(mod.execute(inputs, ctx));
-    ctx.set(node.output, result);
-  }
-
-  // ----------------- AI -----------------
-
-  private async execAI(node: AiNode, ctx: ExecutionContext): Promise<void> {
-    const moduleKey = "AI";
-    const mod = this.registry.get(moduleKey);
-
-    const usingVars: Record<string, any> = {};
-    for (const name of node.using) {
-      usingVars[name] = ctx.get(name);
+    if (typeof mod === "function") {
+      result = await mod(node.args, ctx);
+    } else if (typeof mod.execute === "function") {
+      result = await mod.execute(node.args, ctx);
+    } else {
+      throw new Error(`Invalid module type: ${node.module}`);
     }
 
-    const inputs = {
-      __action: "AI",
-      prompt: node.prompt,
-      using: usingVars,
-    };
+    // future 처리
+    if (
+      result &&
+      typeof result === "object" &&
+      (result as any).__future &&
+      typeof (result as any).__future.then === "function"
+    ) {
+      ctx.set(node.output, (result as any).__future);
+      return;
+    }
 
-    const result = await Promise.resolve(mod.execute(inputs, ctx));
     ctx.set(node.output, result);
   }
 
-  // ----------------- IF -----------------
+  private async execIf(node: IfNode, ctx: ExecutionContext) {
+    const left = ctx.get(node.left);
+    const right = node.right;
+    let cond = false;
 
-  private async execIf(node: IfNode, ctx: ExecutionContext): Promise<void> {
-    const leftVal = ctx.get(node.left);
-    const cond = this.evalCondition(
-      leftVal,
-      node.comparator,
-      node.right
-    );
+    switch (node.comparator) {
+      case ">": cond = left > right; break;
+      case "<": cond = left < right; break;
+      case ">=": cond = left >= right; break;
+      case "<=": cond = left <= right; break;
+      case "==": cond = left == right; break;
+      case "!=": cond = left != right; break;
+      case "EXISTS": cond = left !== undefined; break;
+      case "NOT_EXISTS": cond = left === undefined; break;
+      default: throw new Error(`Unknown comparator: ${node.comparator}`);
+    }
 
     if (cond) {
       await this.executeBlock(node.thenBlock, ctx);
@@ -143,55 +95,19 @@ export class Executor {
     }
   }
 
-  private evalCondition(left: any, comparator: string, right: any): boolean {
-    if (comparator === "EXISTS") {
-      return left !== undefined && left !== null;
-    }
-    if (comparator === "NOT_EXISTS") {
-      return left === undefined || left === null;
-    }
+  private async execParallel(node: ParallelNode, ctx: ExecutionContext) {
+    const concurrency = node.concurrency ?? Infinity;
+    const ignoreErrors = node.ignoreErrors ?? false;
 
-    // 숫자 비교 시 숫자로 변환 시도
-    const lNum = typeof left === "number" ? left : Number(left);
-    const rNum = typeof right === "number" ? right : Number(right);
-
-    const bothNumeric = !Number.isNaN(lNum) && !Number.isNaN(rNum);
-
-    const a = bothNumeric ? lNum : left;
-    const b = bothNumeric ? rNum : right;
-
-    switch (comparator) {
-      case ">":
-        return (a as any) > (b as any);
-      case "<":
-        return (a as any) < (b as any);
-      case ">=":
-        return (a as any) >= (b as any);
-      case "<=":
-        return (a as any) <= (b as any);
-      case "==":
-        return a == b; // 의도적으로 느슨한 비교
-      case "!=":
-        return a != b;
-      default:
-        throw new Error(`Unsupported comparator: ${comparator}`);
-    }
-  }
-
-  // ----------------- PARALLEL -----------------
-  private async execParallel(node: ParallelNode, ctx: ExecutionContext): Promise<void> {
-    const ignoreErrors = node.ignoreErrors === true;
-    const concurrency = node.concurrency ?? Infinity; // 기본 무제한
-
-    const statements = node.block.statements;
+    const stmts = node.block.statements;
     const results: Promise<any>[] = [];
-    let running = 0;
     let index = 0;
+    let running = 0;
 
-    const runNext = async () => {
-      if (index >= statements.length) return;
+    const runNext = () => {
+      if (index >= stmts.length) return;
 
-      const stmt = statements[index++];
+      const stmt = stmts[index++];
       running++;
 
       const p = this.executeNode(stmt, ctx)
@@ -200,42 +116,16 @@ export class Executor {
         })
         .finally(() => {
           running--;
+          runNext();
         });
 
       results.push(p);
-
-      if (running < concurrency) runNext();
     };
 
-    // 최초 concurrency 만큼 실행
-    for (let i = 0; i < Math.min(concurrency, statements.length); i++) {
+    for (let i = 0; i < Math.min(stmts.length, concurrency); i++) {
       runNext();
     }
 
-    // 모두 끝날 때까지 기다림
     await Promise.all(results);
-  }
-
-  // ----------------- helpers -----------------
-
-  /**
-   * 모듈 키 해석:
-   *  - 우선: TYPE_NAME  (e.g. FETCH_price, CALC_ma20, CALL_send_mail)
-   *  - 없으면: TYPE     (공통 모듈)
-   */
-  private resolveModuleKey(base: string, name?: string): string {
-    if (name) {
-      const specific = `${base}_${name}`;
-      if (this.registry.has(specific)) {
-        return specific;
-      }
-    }
-    if (this.registry.has(base)) {
-      return base;
-    }
-    throw new Error(
-      `No module registered for '${base}'` +
-        (name ? ` or '${base}_${name}'` : "")
-    );
   }
 }

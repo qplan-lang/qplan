@@ -1,21 +1,40 @@
-// src/core/executionContext.ts
+/**
+ * qplan ExecutionContext
+ * -----------------------------------------
+ * 워크플로우 실행 중 생성되는 모든 변수(중간 결과)를 저장/조회하는 공간.
+ *
+ * 특징:
+ *  - ctx.set(name, value)  → 변수 저장
+ *  - ctx.get(name)         → 변수 읽기
+ *  - ctx.toJSON()          → 전체 상태 출력 (디버깅 편함)
+ *
+ * 이 컨텍스트가 qplan 실행 엔진의 “메모리” 역할을 한다.
+ */
 
 export class ExecutionContext {
-  private vars = new Map<string, any>();
+  private store = new Map<string, any>();
 
+  // 값 저장
   set(name: string, value: any): void {
-    this.vars.set(name, value);
+    this.store.set(name, value);
   }
 
-  get<T = any>(name: string): T | undefined {
-    return this.vars.get(name);
+  // 값 조회
+  get(name: string): any {
+    return this.store.get(name);
   }
 
+  // 존재 여부
   has(name: string): boolean {
-    return this.vars.has(name);
+    return this.store.has(name);
   }
 
+  // 전체 출력
   toJSON(): Record<string, any> {
-    return Object.fromEntries(this.vars.entries());
+    const json: Record<string, any> = {};
+    for (const [key, value] of this.store.entries()) {
+      json[key] = value;
+    }
+    return json;
   }
 }
