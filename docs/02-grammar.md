@@ -128,20 +128,19 @@ join futures="f1,f2,f3" -> result
 ## 2.7 Each 반복문
 
 ```
-each prices as (item, idx) {
+each item in list {
   ...
 }
 ```
 
-`prices` 는 ctx에 저장된 배열/이터러블이어야 한다. `as (value, idx)` 에서
- - `value` 는 필수이며 각 원소가 바인딩된다.
- - `idx` 는 선택이며 현재 인덱스가 저장된다.
+`list` 는 ctx에 저장된 배열/이터러블이어야 한다. 값과 인덱스를 동시에 사용하려면
+`each (value, idx) in list` 형태를 사용한다.
 
 예:
 ```
-each prices as (price, i) {
-  math op="add" a=total b=price -> total
-  math op="add" a=i b=1 -> nextIndex
+each (price, i) in prices {
+  math add a=total b=price -> total
+  math add a=i b=1 -> nextIndex
 }
 ```
 
@@ -188,7 +187,7 @@ Block           = "{" , { Statement } , "}" ;
 
 ParallelStmt    = "parallel" , Block , [ ParallelOptions ] ;
 
-EachStmt        = "each" , Identifier , "as" , "(" , Identifier , [ "," , Identifier ] , ")" , Block ;
+EachStmt        = "each" , ( "(" , Identifier , [ "," , Identifier ] , ")" | Identifier ) , "in" , Identifier , Block ;
 
 StopStmt        = "stop" ;
 SkipStmt        = "skip" ;

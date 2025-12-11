@@ -12,7 +12,7 @@ import { aiModule } from "../dist/modules/basic/ai.js";
 registry.register(aiModule);
 
 const script = `
-file op="read" path="./examples/math.txt" -> math_exam
+file read path="./examples/math.txt" -> math_exam
 ai prompt="이 수학문제의 정답만 알려줘" context=math_exam -> answer
 echo msg=answer -> out
 `;

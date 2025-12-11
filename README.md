@@ -150,8 +150,8 @@ parallel concurrency=2 {
 
 ### Each
 ```
-each items as (item, idx) {
-  math op="add" a=total b=item -> total
+each (item, idx) in items {
+  math add a=total b=item -> total
   if idx >= 5 {
     stop
   }

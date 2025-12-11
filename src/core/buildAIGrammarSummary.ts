@@ -97,7 +97,11 @@ parallel concurrency=2 {
 6) Each 반복문
 -----------------------------------------
 형식:
-each iterableVar as (item[, idx]) {
+each item in iterableVar {
+   ... actions ...
+}
+또는
+each (item, idx) in iterableVar {
    ... actions ...
 }
 
@@ -107,9 +111,9 @@ each iterableVar as (item[, idx]) {
 - 괄호 안에 두 번째 식별자를 적으면 index 값을 해당 변수에 저장
 
 예)
-each prices as (price, idx) {
-  math op="add" a=total b=price -> total
-  math op="add" a=idx b=1 -> nextIndex
+each (price, idx) in prices {
+  math add a=total b=price -> total
+  math add a=idx b=1 -> nextIndex
 }
 
 반복 제어:

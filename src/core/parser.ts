@@ -486,22 +486,29 @@ export class Parser {
   }
 
   // ----------------------------------------------------------
-  // EACH <identifier> AS (value [, idx]) { ... }
+  // EACH <identifier> [WITH index?] IN <identifier> { ... }
   // ----------------------------------------------------------
   private parseEach(): EachNode {
     const kw = this.consume(TokenType.Keyword, "EACH");
     const line = kw.line;
 
-    const iterable = this.consumeIdentifier();
-    this.consume(TokenType.Keyword, "AS");
-    this.consume(TokenType.Symbol, "(");
-    const iterator = this.consumeIdentifier();
+    let iterator: string;
     let indexVar: string | undefined;
-    if (this.match(TokenType.Symbol, ",")) {
-      this.consume(TokenType.Symbol, ",");
-      indexVar = this.consumeIdentifier();
+
+    if (this.match(TokenType.Symbol, "(")) {
+      this.consume(TokenType.Symbol, "(");
+      iterator = this.consumeIdentifier();
+      if (this.match(TokenType.Symbol, ",")) {
+        this.consume(TokenType.Symbol, ",");
+        indexVar = this.consumeIdentifier();
+      }
+      this.consume(TokenType.Symbol, ")");
+    } else {
+      iterator = this.consumeIdentifier();
     }
-    this.consume(TokenType.Symbol, ")");
+
+    this.consume(TokenType.Keyword, "IN");
+    const iterable = this.consumeIdentifier();
 
     this.consume(TokenType.Symbol, "{");
     const block = this.parseBlock();

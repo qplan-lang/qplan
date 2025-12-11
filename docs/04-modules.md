@@ -10,7 +10,8 @@ ActionModule 메타데이터:
 - inputs[]  
 - execute()
 
-## 기본 모듈(6)
+## 기본 모듈
+- print
 - echo  
 - sleep  
 - file  

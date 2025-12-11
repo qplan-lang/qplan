@@ -21,7 +21,7 @@
 ```
 
 ## Each 규칙
-- `each list as (item)` 혹은 `each list as (item, idx)`
+- `each item in list` 혹은 `each (item, idx) in list`
 - `list` 는 ctx에 존재해야 하며 배열 또는 iterable 이어야 함
 - 반복마다 `item` 변수에 값을 저장하고 블록 실행
 - `idx` 를 지정하면 현재 인덱스 값도 함께 저장

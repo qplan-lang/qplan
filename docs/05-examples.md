@@ -30,25 +30,25 @@ parallel concurrency=2 {
 
 ## Each 반복
 ```
-json op="parse" data="[1,2,3]" -> nums
-math op="add" a=0 b=0 -> total
-each nums as (n, idx) {
-  math op="add" a=total b=n -> total
-  math op="add" a=idx b=1 -> nextIndex
+json parse data="[1,2,3]" -> nums
+math add a=0 b=0 -> total
+each (n, idx) in nums {
+  math add a=total b=n -> total
+  math add a=idx b=1 -> nextIndex
 }
 ```
 
 ## Each + stop/skip
 ```
-json op="parse" data="[1,2,3,4]" -> nums
-math op="add" a=0 b=0 -> total
-each nums as (n) {
+json parse data="[1,2,3,4]" -> nums
+math add a=0 b=0 -> total
+each n in nums {
   if n == 3 {
     stop
   }
   if n == 0 {
     skip
   }
-  math op="add" a=total b=n -> total
+  math add a=total b=n -> total
 }
 ```
