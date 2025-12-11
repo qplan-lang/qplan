@@ -272,19 +272,33 @@ export class Parser {
     let ignoreErrors = false;
     let concurrency: number | undefined;
 
-    while (this.match(TokenType.Identifier)) {
-      const key = this.consumeIdentifier();
-      this.consume(TokenType.Symbol, "=");
-      const value = this.consumeValueAny();
-      if (key === "ignoreErrors") ignoreErrors = value === true || value === "true";
-      if (key === "concurrency") concurrency = Number(value);
+    const consumeOptions = () => {
+      while (this.match(TokenType.Identifier)) {
+        const nextKey = this.peek().value;
+        if (nextKey !== "ignoreErrors" && nextKey !== "concurrency") break;
+        const key = this.consumeIdentifier();
+        this.consume(TokenType.Symbol, "=");
+        const value = this.consumeValueAny();
+        if (key === "ignoreErrors") ignoreErrors = value === true || value === "true";
+        if (key === "concurrency") concurrency = Number(value);
+      }
+    };
+
+    consumeOptions();
+
+    let block: BlockNode;
+
+    if (this.match(TokenType.Symbol, "{")) {
+      this.consume(TokenType.Symbol, "{");
+      block = this.parseBlock();
+      this.consume(TokenType.Symbol, "}");
+    } else {
+      this.consume(TokenType.Symbol, ":");
+      block = this.parseBlock();
+      this.consume(TokenType.Keyword, "END");
     }
 
-    this.consume(TokenType.Symbol, ":");
-
-    const block = this.parseBlock();
-
-    this.consume(TokenType.Keyword, "END");
+    consumeOptions();
 
     return {
       type: "Parallel",

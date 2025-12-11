@@ -17,9 +17,15 @@ export const futureModule: ActionModule = {
 
   execute(inputs: Record<string, any>) {
     const delay = Number(inputs.delay ?? 500);
-    const value = inputs.value ?? `done:${inputs.task}`;
+    const task = inputs.task ?? "unknown";
+    const value = inputs.value ?? `done:${task}`;
 
-    const p = new Promise((res) => setTimeout(() => res(value), delay));
+    const p = new Promise((res) =>
+      setTimeout(() => {
+        console.log(`[future] task '${task}' resolved after ${delay}ms`);
+        res(value);
+      }, delay)
+    );
 
     return { __future: p };
   }

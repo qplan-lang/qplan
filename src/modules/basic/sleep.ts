@@ -11,7 +11,12 @@ import { ActionModule } from "../../core/actionModule.js";
 export const sleepModule: ActionModule = Object.assign(
   async (inputs: Record<string, any>) => {
     const ms = Number(inputs.ms ?? 0);
-    await new Promise((r) => setTimeout(r, ms));
+    await new Promise((r) =>
+      setTimeout(() => {
+        console.log(`[sleep] finished waiting ${ms}ms`);
+        r(null);
+      }, ms)
+    );
     return `slept ${ms}ms`;
   },
   {

@@ -5,11 +5,17 @@ import { runQplan } from "../dist/index.js";
  */
 const script = `
 parallel concurrency=3 {
-    sleep ms=300 -> a
-    sleep ms=100 -> b
-    sleep ms=500 -> c
-} -> done
+    sleep ms=3000 -> a
+    sleep ms=1000 -> b
+    sleep ms=5000 -> c
+}
+
+echo msg="parallel done" -> done
 `;
 
 const ctx = await runQplan(script);
-console.log(ctx.toJSON());
+const state = ctx.toJSON();
+console.log(state);
+console.log("a:", state.a);
+console.log("b:", state.b);
+console.log("c:", state.c);
