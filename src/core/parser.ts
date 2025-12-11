@@ -26,6 +26,7 @@ import { ParserError } from "./parserError.js";
 export class Parser {
   private pos = 0;
   private printTempVar = 0;
+  private autoTempVar = 0;
 
   constructor(private tokens: Token[]) {}
 
@@ -157,6 +158,7 @@ export class Parser {
     }
 
     const args: Record<string, any> = {};
+    let suppressStore = false;
 
     // string-only (ai "prompt")
     if (this.match(TokenType.String)) {
@@ -173,8 +175,14 @@ export class Parser {
         args["using"] = vars;
       }
 
-      this.consume(TokenType.Symbol, "->");
-      const out = this.consumeIdentifier();
+      let out: string;
+      if (this.check(TokenType.Symbol, "->")) {
+        this.consume(TokenType.Symbol, "->");
+        out = this.consumeIdentifier();
+      } else {
+        out = `__auto_dummy_${this.autoTempVar++}`;
+        args.__suppressStore = true;
+      }
 
       return {
         type: "Action",
@@ -186,15 +194,28 @@ export class Parser {
     }
 
     // key=value
-    while (!this.match(TokenType.Symbol, "->")) {
+    while (true) {
+      if (this.check(TokenType.Symbol, "->")) break;
+      const next = this.peek();
+      if (next.line > line || next.type === TokenType.EOF) break;
       const key = this.consumeIdentifier();
       this.consume(TokenType.Symbol, "=");
       const value = this.consumeValueAny();
       args[key] = value;
     }
 
-    this.consume(TokenType.Symbol, "->");
-    const out = this.consumeIdentifier();
+    let out: string;
+    if (this.check(TokenType.Symbol, "->")) {
+      this.consume(TokenType.Symbol, "->");
+      out = this.consumeIdentifier();
+    } else {
+      out = `__auto_dummy_${this.autoTempVar++}`;
+      suppressStore = true;
+    }
+
+    if (suppressStore) {
+      args.__suppressStore = true;
+    }
 
     return {
       type: "Action",

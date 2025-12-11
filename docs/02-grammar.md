@@ -32,13 +32,14 @@ sleep ms=500 -> done
 ## 2.1 Action 문법
 
 ```
-<module> <args> -> <var>
+<module> <args> [-> <var>]
 ```
 
 예:
 ```
 math op="add" a=1 b=2 -> sum
 file op="read" path="./data.txt" -> txt
+sleep ms=500            # 결과 저장 안 함
 ```
 
 ---
@@ -62,13 +63,10 @@ ai prompt="요약" context=html
 ## 2.3 Output Binding
 
 ```
--> 변수명
+[-> 변수명]
 ```
 
-예:
-```
-echo msg="hello" -> out
-```
+작성하지 않으면 해당 액션 결과는 ctx에 저장되지 않는다. 저장이 필요할 때만 `-> 변수명`을 붙인다.
 
 ---
 
@@ -163,7 +161,7 @@ Statement       = Action
                 | StopStmt
                 | SkipStmt ;
 
-Action          = ModuleName , { Argument } , "->" , Identifier ;
+Action          = ModuleName , { Argument } , [ "->" , Identifier ] ;
 
 ModuleName      = Identifier ;
 

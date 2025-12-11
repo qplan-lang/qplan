@@ -126,6 +126,7 @@ registry.registerAll([ httpModule, aiModule ])
 ### Action
 ```
 math op="add" a=1 b=2 -> x
+sleep ms=500          # 결과 저장 없음
 ```
 
 ### If
