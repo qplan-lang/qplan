@@ -25,6 +25,9 @@ export class Parser {
 
   constructor(private tokens: Token[]) {}
 
+  // ----------------------------------------------------------
+  // 기본 유틸
+  // ----------------------------------------------------------
   private peek(offset = 0): Token {
     return this.tokens[this.pos + offset] || this.tokens[this.tokens.length - 1];
   }
@@ -46,6 +49,13 @@ export class Parser {
     return t;
   }
 
+  private check(type: TokenType, value?: string): boolean {
+    const t = this.peek();
+    if (t.type !== type) return false;
+    if (value !== undefined && t.value !== value) return false;
+    return true;
+  }
+
   private consumeIdentifier(): string {
     return this.consume(TokenType.Identifier).value;
   }
@@ -62,9 +72,9 @@ export class Parser {
     throw new ParserError(`Unexpected value '${t.value}'`, t.line);
   }
 
-  // ---------------------------------------
+  // ----------------------------------------------------------
   // Root
-  // ---------------------------------------
+  // ----------------------------------------------------------
   parse(): ASTRoot {
     const block = this.parseBlock();
     return {
@@ -73,14 +83,21 @@ export class Parser {
     };
   }
 
-  // ---------------------------------------
-  // Block = 여러 문장
-  // ---------------------------------------
+  // ----------------------------------------------------------
+  // Block
+  // { statements }
+  // ----------------------------------------------------------
   private parseBlock(): BlockNode {
     const statements: ASTNode[] = [];
-    while (!this.match(TokenType.Keyword, "END") && !this.match(TokenType.EOF)) {
+
+    while (
+      !this.match(TokenType.Keyword, "END") &&
+      !this.match(TokenType.Symbol, "}") &&
+      !this.match(TokenType.EOF)
+    ) {
       statements.push(this.parseStatement());
     }
+
     return {
       type: "Block",
       statements,
@@ -88,35 +105,42 @@ export class Parser {
     };
   }
 
-  // ---------------------------------------
+  // ----------------------------------------------------------
   // Statement
-  // ---------------------------------------
+  // ----------------------------------------------------------
   private parseStatement(): ASTNode {
     const t = this.peek();
 
+    // IF
     if (this.match(TokenType.Keyword, "IF")) return this.parseIf();
+
+    // PARALLEL
     if (this.match(TokenType.Keyword, "PARALLEL")) return this.parseParallel();
 
-    // ActionNode
-    if (this.match(TokenType.Identifier)) {
-      return this.parseAction();
+    // Block literal
+    if (this.match(TokenType.Symbol, "{")) {
+      this.consume(TokenType.Symbol, "{");
+      const block = this.parseBlock();
+      this.consume(TokenType.Symbol, "}");
+      return block;
     }
+
+    // Action
+    if (this.match(TokenType.Identifier)) return this.parseAction();
 
     throw new ParserError(`Unexpected token '${t.value}'`, t.line);
   }
 
-  // ---------------------------------------
-  // ActionNode
-  // moduleName key=value ... -> out
-  // moduleName "string" USING vars -> out
-  // ---------------------------------------
+  // ----------------------------------------------------------
+  // Action
+  // ----------------------------------------------------------
   private parseAction(): ActionNode {
     const moduleName = this.consumeIdentifier();
     const line = this.peek().line;
 
     const args: Record<string, any> = {};
 
-    // string-only (ex: ai "prompt")
+    // string-only (ai "prompt")
     if (this.match(TokenType.String)) {
       args["prompt"] = this.consumeString();
 
@@ -143,7 +167,7 @@ export class Parser {
       };
     }
 
-    // key=value style
+    // key=value
     while (!this.match(TokenType.Symbol, "->")) {
       const key = this.consumeIdentifier();
       this.consume(TokenType.Symbol, "=");
@@ -167,22 +191,65 @@ export class Parser {
   // IF
   // ---------------------------------------
   private parseIf(): IfNode {
-    const start = this.consume(TokenType.Keyword, "IF");
-    const left = this.consumeIdentifier();
-    const comparator = this.consume(TokenType.Identifier).value;
-    const right = this.consumeValueAny();
-    this.consume(TokenType.Symbol, ":");
+    const kw = this.consume(TokenType.Keyword, "IF");
+    const line = kw.line;
 
-    const thenBlock = this.parseBlock();
+    // left operand (identifier)
+    const left = this.consume(TokenType.Identifier).value;
 
-    let elseBlock: any = undefined;
-    if (this.match(TokenType.Keyword, "ELSE")) {
-      this.consume(TokenType.Keyword, "ELSE");
-      this.consume(TokenType.Symbol, ":");
-      elseBlock = this.parseBlock();
+    // operator (Symbol or Identifier for EXISTS/NOT_EXISTS)
+    let comparator: string;
+
+    const opToken = this.peek();
+    if (opToken.type === TokenType.Symbol) {
+      const op = this.consume(TokenType.Symbol).value;
+      const validOps = [">", "<", ">=", "<=", "==", "!="];
+      if (!validOps.includes(op)) {
+        throw new ParserError(`Invalid operator '${op}'`, opToken.line);
+      }
+      comparator = op;
+    } else if (opToken.type === TokenType.Identifier) {
+      const opId = this.consume(TokenType.Identifier).value.toUpperCase();
+      const validIds = ["EXISTS", "NOT_EXISTS"];
+      if (!validIds.includes(opId)) {
+        throw new ParserError(`Invalid operator '${opId}'`, opToken.line);
+      }
+      comparator = opId;
+    } else {
+      throw new ParserError(
+        `Invalid operator token '${opToken.value}'`,
+        opToken.line
+      );
     }
 
-    this.consume(TokenType.Keyword, "END");
+    // right operand (Identifier | Number | String)
+    const rt = this.peek();
+    let right: any;
+
+    if (rt.type === TokenType.Number) {
+      right = Number(this.consume(TokenType.Number).value);
+    } else if (rt.type === TokenType.String) {
+      right = this.consume(TokenType.String).value;
+    } else if (rt.type === TokenType.Identifier) {
+      right = this.consume(TokenType.Identifier).value;
+    } else {
+      throw new ParserError(`Invalid right operand '${rt.value}'`, rt.line);
+    }
+
+    // then block: { ... }
+    this.consume(TokenType.Symbol, "{");
+    const thenBlock = this.parseBlock();
+    this.consume(TokenType.Symbol, "}");
+
+
+    // else block (optional)
+    let elseBlock: BlockNode | undefined;
+    if (this.check(TokenType.Keyword, "ELSE")) {
+      this.consume(TokenType.Keyword, "ELSE");
+      this.consume(TokenType.Symbol, "{");
+      elseBlock = this.parseBlock();
+      this.consume(TokenType.Symbol, "}");
+    }
 
     return {
       type: "If",
@@ -191,31 +258,32 @@ export class Parser {
       right,
       thenBlock,
       elseBlock,
-      line: start.line,
+      line,
     };
   }
 
-  // ---------------------------------------
+  // ----------------------------------------------------------
   // PARALLEL
-  // ---------------------------------------
+  // ----------------------------------------------------------
   private parseParallel(): ParallelNode {
     const start = this.consume(TokenType.Keyword, "PARALLEL");
+    const line = start.line;
 
     let ignoreErrors = false;
     let concurrency: number | undefined;
 
-    // optional args
     while (this.match(TokenType.Identifier)) {
       const key = this.consumeIdentifier();
       this.consume(TokenType.Symbol, "=");
       const value = this.consumeValueAny();
-
       if (key === "ignoreErrors") ignoreErrors = value === true || value === "true";
       if (key === "concurrency") concurrency = Number(value);
     }
 
     this.consume(TokenType.Symbol, ":");
+
     const block = this.parseBlock();
+
     this.consume(TokenType.Keyword, "END");
 
     return {
@@ -223,7 +291,7 @@ export class Parser {
       block,
       ignoreErrors,
       concurrency,
-      line: start.line
+      line,
     };
   }
 }

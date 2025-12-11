@@ -63,7 +63,6 @@ export function tokenize(input: string): Token[] {
     // String "..."
     if (c === '"') {
       i++;
-      let start = i;
       let str = "";
       while (i < input.length && input[i] !== '"') {
         str += input[i++];
@@ -91,15 +90,38 @@ export function tokenize(input: string): Token[] {
       }
 
       if (KEYWORDS.has(word.toUpperCase())) {
-        tokens.push({ type: TokenType.Keyword, value: word.toUpperCase(), line });
+        tokens.push({
+          type: TokenType.Keyword,
+          value: word.toUpperCase(),
+          line,
+        });
       } else {
         tokens.push({ type: TokenType.Identifier, value: word, line });
       }
       continue;
     }
 
-    // Symbols (=, :, ,, ->)
-    if (c === "=" || c === ":" || c === ",") {
+    // Comparison operators: > < >= <= == !=
+    if (c === ">" || c === "<" || c === "=" || c === "!") {
+      let op = c;
+      if (i + 1 < input.length && input[i + 1] === "=") {
+        op += "=";
+        i++;
+      }
+      tokens.push({ type: TokenType.Symbol, value: op, line });
+      i++;
+      continue;
+    }
+    
+    // Braces { }
+    if (c === "{" || c === "}") {
+      tokens.push({ type: TokenType.Symbol, value: c, line });
+      i++;
+      continue;
+    }
+
+    // Simple symbols (=, :, ,,) — keep after comparison rule
+    if (c === ":" || c === ",") {
       tokens.push({ type: TokenType.Symbol, value: c, line });
       i++;
       continue;
@@ -112,7 +134,9 @@ export function tokenize(input: string): Token[] {
       continue;
     }
 
-    throw new Error(`Tokenizer error at line ${line}: unexpected character '${c}'`);
+    throw new Error(
+      `Tokenizer error at line ${line}: unexpected character '${c}'`
+    );
   }
 
   tokens.push({ type: TokenType.EOF, value: "EOF", line });

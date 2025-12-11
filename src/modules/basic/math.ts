@@ -1,4 +1,5 @@
 import { ActionModule } from "../../core/actionModule.js";
+import { ExecutionContext } from "../../core/executionContext.js";
 
 /**
  * math 모듈
@@ -14,6 +15,13 @@ import { ActionModule } from "../../core/actionModule.js";
  *   - avg : arr 요소의 평균
  */
 
+function resolveInput(value: any, ctx: ExecutionContext): any {
+  if (typeof value === "string" && ctx.has(value)) {
+    return ctx.get(value);
+  }
+  return value;
+}
+
 function toNum(v: any): number {
   const n = Number(v);
   if (isNaN(n)) throw new Error(`Invalid number: ${v}`);
@@ -25,37 +33,46 @@ function toNumArray(v: any): number[] {
     return v.map(toNum);
   }
   if (typeof v === "string") {
+    const trimmed = v.trim();
+    if (!trimmed) return [];
+
     try {
-      const arr = JSON.parse(v);
-      return Array.isArray(arr) ? arr.map(toNum) : [];
+      const arr = JSON.parse(trimmed);
+      if (Array.isArray(arr)) return arr.map(toNum);
     } catch {
-      throw new Error("Invalid array JSON for math module");
+      // fallthrough to manual parsing
     }
+
+    const tokens = trimmed.split(/[\s,]+/).filter(Boolean);
+    if (tokens.length === 0) return [];
+    return tokens.map(toNum);
   }
   throw new Error("math module requires array or array JSON");
 }
 
 export const mathModule: ActionModule = Object.assign(
-  (inputs: Record<string, any>) => {
+  (inputs: Record<string, any>, ctx: ExecutionContext) => {
     const op = String(inputs.op);
 
     switch (op) {
       case "add":
-        return toNum(inputs.a) + toNum(inputs.b);
+        return toNum(resolveInput(inputs.a, ctx)) + toNum(resolveInput(inputs.b, ctx));
       case "sub":
-        return toNum(inputs.a) - toNum(inputs.b);
+        return toNum(resolveInput(inputs.a, ctx)) - toNum(resolveInput(inputs.b, ctx));
       case "mul":
-        return toNum(inputs.a) * toNum(inputs.b);
+        return toNum(resolveInput(inputs.a, ctx)) * toNum(resolveInput(inputs.b, ctx));
       case "div":
-        return toNum(inputs.a) / toNum(inputs.b);
+        return toNum(resolveInput(inputs.a, ctx)) / toNum(resolveInput(inputs.b, ctx));
 
       case "sum": {
-        const arr = toNumArray(inputs.arr);
+        const arrInput = resolveInput(inputs.arr, ctx);
+        const arr = toNumArray(arrInput);
         return arr.reduce((p, v) => p + v, 0);
       }
 
       case "avg": {
-        const arr = toNumArray(inputs.arr);
+        const arrInput = resolveInput(inputs.arr, ctx);
+        const arr = toNumArray(arrInput);
         if (arr.length === 0) return 0;
         return arr.reduce((p, v) => p + v, 0) / arr.length;
       }
