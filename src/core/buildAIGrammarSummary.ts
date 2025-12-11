@@ -21,11 +21,11 @@ qplan DSL Core Grammar (AI-Friendly Summary)
 
 1) Action
 -----------------------------------------
-<moduleName> key=value key=value -> outputVar
+<moduleName> [option] key=value key=value [-> outputVar]
 
 예)
-math op="add" a=1 b=2 -> x
-file op="read" path="./a.txt" -> txt
+math add a=1 b=2 -> x
+file read path="./a.txt" -> txt
 
 
 2) Arguments
@@ -40,11 +40,14 @@ value 타입:
   - JSON 객체 (예: "{\\"a\\":1,\\"b\\":2}")
   - ctx 변수명 (문자열이며 ctx에 존재할 경우 자동 치환됨)
 
+옵션:
+  - 모듈 이름 뒤에 식별자를 둘 수 있으며 자동으로 op 로 전달됨 (내부적으로 __options[0])
+
 
 3) Output Binding
 -----------------------------------------
-명령의 마지막에 "-> 변수명" 을 붙여 결과를 저장.
-파일/HTTP 결과/AI 응답/수학결과 등 모두 이 방식으로 저장됨.
+필요한 경우에만 "-> 변수명" 을 붙여 결과를 저장.
+생략하면 해당 액션의 반환값은 ctx에 저장되지 않음.
 
 
 4) If 문
@@ -159,7 +162,7 @@ JSON 문자열 내부의 " 는 \\" 로 이스케이프해야 함.
 - 블록 내부는 {} 로 감싸며 줄바꿈하여 작성
 
 예)
-file op="read" path="./data.txt" -> txt
+file read path="./data.txt" -> txt
 math op="avg" arr=txt -> avg
 echo msg=avg -> result
 

@@ -158,6 +158,8 @@ export class Parser {
     }
 
     const args: Record<string, any> = {};
+    const options = this.collectModuleOptions(line);
+    this.applyOptionsToArgs(args, options);
     let suppressStore = false;
 
     // string-only (ai "prompt")
@@ -197,11 +199,19 @@ export class Parser {
     while (true) {
       if (this.check(TokenType.Symbol, "->")) break;
       const next = this.peek();
-      if (next.line > line || next.type === TokenType.EOF) break;
-      const key = this.consumeIdentifier();
-      this.consume(TokenType.Symbol, "=");
-      const value = this.consumeValueAny();
-      args[key] = value;
+      if (next.type === TokenType.EOF) break;
+      if (
+        next.type === TokenType.Identifier &&
+        this.peek(1).type === TokenType.Symbol &&
+        this.peek(1).value === "="
+      ) {
+        const key = this.consumeIdentifier();
+        this.consume(TokenType.Symbol, "=");
+        const value = this.consumeValueAny();
+        args[key] = value;
+        continue;
+      }
+      break;
     }
 
     let out: string;
@@ -307,6 +317,50 @@ export class Parser {
     }
 
     return entries;
+  }
+
+  private collectModuleOptions(moduleLine: number): string[] {
+    const options: string[] = [];
+    let expectOption = true;
+
+    while (true) {
+      const token = this.peek();
+      if (token.line !== moduleLine) break;
+
+      if (expectOption) {
+        if (token.type !== TokenType.Identifier) break;
+        if (
+          this.peek(1).type === TokenType.Symbol &&
+          this.peek(1).value === "="
+        ) {
+          break;
+        }
+        options.push(this.consumeIdentifier());
+        expectOption = false;
+        continue;
+      }
+
+      if (this.check(TokenType.Keyword, "AND")) {
+        this.consume(TokenType.Keyword, "AND");
+        expectOption = true;
+        continue;
+      }
+      break;
+    }
+
+    if (expectOption && options.length > 0) {
+      throw new ParserError("Expected option after AND", this.peek().line);
+    }
+
+    return options;
+  }
+
+  private applyOptionsToArgs(args: Record<string, any>, options: string[]) {
+    if (!options.length) return;
+    args.__options = options;
+    if (args.op === undefined) {
+      args.op = options[0];
+    }
   }
 
   // ---------------------------------------

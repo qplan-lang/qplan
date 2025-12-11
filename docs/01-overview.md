@@ -67,7 +67,7 @@ Script → Tokenizer → Parser(AST) → Executor → ExecutionContext
 
 ## 📦 예시
 ```
-file op="read" path="./data.txt" -> txt
+file read path="./data.txt" -> txt
 math op="avg" arr=txt -> avg
 echo value=avg -> result
 ```

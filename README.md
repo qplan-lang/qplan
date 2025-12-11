@@ -126,8 +126,10 @@ registry.registerAll([ httpModule, aiModule ])
 ### Action
 ```
 math op="add" a=1 b=2 -> x
+file read path="./data.txt" -> txt
 sleep ms=500          # 결과 저장 없음
 ```
+모듈 이름 뒤에 option을 붙이면 자동으로 `op` 값으로 전달됩니다(내부적으로 `__options[0]`).
 
 ### If
 ```
@@ -184,7 +186,7 @@ script
 # 🧪 예제
 
 ```
-file op="read" path="./nums.txt" -> txt
+file read path="./nums.txt" -> txt
 math op="avg" arr=txt -> avg
 echo value=avg -> result
 ```

@@ -7,7 +7,7 @@ echo msg="hello" -> out
 
 ## 파일 읽기 + 계산
 ```
-file op="read" path="./nums.txt" -> txt
+file read path="./nums.txt" -> txt
 math op="avg" arr=txt -> avg
 echo value=avg -> result
 ```

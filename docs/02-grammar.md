@@ -32,15 +32,17 @@ sleep ms=500 -> done
 ## 2.1 Action 문법
 
 ```
-<module> <args> [-> <var>]
+<module> [<option>] <args> [-> <var>]
 ```
 
 예:
 ```
-math op="add" a=1 b=2 -> sum
-file op="read" path="./data.txt" -> txt
-sleep ms=500            # 결과 저장 안 함
+math add a=1 b=2 -> sum
+file read path="./data.txt" -> txt
+sleep ms=500               # 결과 저장 안 함
 ```
+
+옵션은 모듈 이름 다음에 붙이며, 첫 번째(option) 값은 기존 `op` 인수와 동일하게 전달된다(내부적으로는 `__options[0]`에 저장됨).
 
 ---
 
@@ -161,7 +163,8 @@ Statement       = Action
                 | StopStmt
                 | SkipStmt ;
 
-Action          = ModuleName , { Argument } , [ "->" , Identifier ] ;
+Action          = ModuleName , [ Option ] , { Argument } , [ "->" , Identifier ] ;
+Option          = Identifier ;
 
 ModuleName      = Identifier ;
 
@@ -246,7 +249,7 @@ JsonArray       = "[" , [ JsonValue , { "," , JsonValue } ] , "]" ;
 # 5. 예제 (문법 종합)
 
 ```
-file op="read" path="./nums.txt" -> raw
+file read path="./nums.txt" -> raw
 math op="avg" arr=raw -> avg
 
 if avg > 50 {

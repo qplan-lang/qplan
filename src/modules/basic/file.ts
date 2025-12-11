@@ -13,15 +13,15 @@ import path from "path";
  *   - write : 문자열/객체를 파일로 저장
  *
  * DSL 예:
- *   file op="read" path="./a.txt" -> text
- *   file op="write" path="./b.txt" data="hello" -> ok
+ *   file read path="./a.txt" -> text
+ *   file write path="./b.txt" data="hello" -> ok
  */
 export const fileModule: ActionModule = {
   id: "file",
   description: "파일 읽기/쓰기 모듈. op = read 또는 write.",
   usage: `
-file op="read" path="./a.txt" -> text
-file op="write" path="./b.txt" data="hello" -> ok
+file read path="./a.txt" -> text
+file write path="./b.txt" data="hello" -> ok
   `,
   inputs: ["op", "path", "data"],
 

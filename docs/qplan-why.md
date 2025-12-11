@@ -66,7 +66,7 @@ qplan 구조는 매우 명확하다:
 AI가 다음처럼 결정하면:
 
 ```
-file op="read" path="./data.json" -> raw
+file read path="./data.json" -> raw
 json op="parse" data=raw -> parsed
 http op="post" url="/save" body=parsed -> result
 ```
