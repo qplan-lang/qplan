@@ -91,7 +91,30 @@ parallel concurrency=2 {
 }
 
 
-6) Future 생성
+6) Each 반복문
+-----------------------------------------
+형식:
+each iterableVar as (item[, idx]) {
+   ... actions ...
+}
+
+설명:
+- iterableVar 는 ctx에 저장된 배열 또는 iterable 이어야 함
+- 각 반복마다 item 변수에 값을 저장
+- 괄호 안에 두 번째 식별자를 적으면 index 값을 해당 변수에 저장
+
+예)
+each prices as (price, idx) {
+  math op="add" a=total b=price -> total
+  math op="add" a=idx b=1 -> nextIndex
+}
+
+반복 제어:
+  stop      → 현재 each 탈출
+  skip      → 다음 반복으로 건너뜀
+
+
+7) Future 생성
 -----------------------------------------
 형식:
 future key=value -> futureName
@@ -104,7 +127,7 @@ future key=value -> futureName
 future delay=300 value="done" -> f1
 
 
-7) Join (Future 결합)
+8) Join (Future 결합)
 -----------------------------------------
 형식:
 join futures="f1,f2,f3" -> out
@@ -114,7 +137,7 @@ join futures="f1,f2,f3" -> out
 - Promise.all 형태
 
 
-8) ctx 변수 규칙
+9) ctx 변수 규칙
 -----------------------------------------
 - action 결과는 ctx에 저장
 - key=value 에서 value가 문자열인데 ctx에 동일 key 가 있으면 ctx 값을 사용
@@ -124,13 +147,13 @@ echo msg="hello" -> x
 echo msg=x -> y    (여기서 x는 "hello")
 
 
-9) 문자열 규칙
+10) 문자열 규칙
 -----------------------------------------
 문자열은 반드시 "..." 로 감싸야 함.
 JSON 문자열 내부의 " 는 \\" 로 이스케이프해야 함.
 
 
-10) 스크립트 구조
+11) 스크립트 구조
 -----------------------------------------
 - 여러 action/if/parallel/future/join 명령들을 줄 단위로 나열
 - 블록 내부는 {} 로 감싸며 줄바꿈하여 작성

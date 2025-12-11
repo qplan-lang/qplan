@@ -125,6 +125,28 @@ Join:
 join futures="f1,f2,f3" -> result
 ```
 
+## 2.7 Each 반복문
+
+```
+each prices as (item, idx) {
+  ...
+}
+```
+
+`prices` 는 ctx에 저장된 배열/이터러블이어야 한다. `as (value, idx)` 에서
+ - `value` 는 필수이며 각 원소가 바인딩된다.
+ - `idx` 는 선택이며 현재 인덱스가 저장된다.
+
+예:
+```
+each prices as (price, i) {
+  math op="add" a=total b=price -> total
+  math op="add" a=i b=1 -> nextIndex
+}
+```
+
+루프 내부에서는 `stop` / `skip` 를 사용해 흐름을 제어할 수 있다.
+
 ---
 
 # 3. EBNF 전체 문법 (B 버전)
@@ -136,7 +158,10 @@ Script          = { Statement } ;
 
 Statement       = Action
                 | IfStmt
-                | ParallelStmt ;
+                | ParallelStmt
+                | EachStmt
+                | StopStmt
+                | SkipStmt ;
 
 Action          = ModuleName , { Argument } , "->" , Identifier ;
 
@@ -161,6 +186,11 @@ ElseBlock       = "else" , Block ;
 Block           = "{" , { Statement } , "}" ;
 
 ParallelStmt    = "parallel" , Block , [ ParallelOptions ] ;
+
+EachStmt        = "each" , Identifier , "as" , "(" , Identifier , [ "," , Identifier ] , ")" , Block ;
+
+StopStmt        = "stop" ;
+SkipStmt        = "skip" ;
 
 ParallelOptions = "concurrency=" , Number , [ "ignoreErrors=" , Boolean ] ;
 

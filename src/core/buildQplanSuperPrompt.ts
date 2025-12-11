@@ -47,7 +47,7 @@ qplan은 "AI-친화적 워크플로우 DSL"입니다.
 - 간결한 문법
 - ActionModule 기반 확장성
 - AST + ExecutionContext 기반 안정적 실행
-- Future/Join/Parallel 제어 흐름 지원
+- Future/Join/Each/Parallel 제어 흐름 지원
 - AI가 자동으로 워크플로우를 생성할 수 있도록 설계됨
 
 ------------------------------------------------------------
@@ -57,12 +57,13 @@ qplan 엔진 구조
    - 스크립트를 토큰으로 분해
 
 2. Parser  
-   - 토큰을 AST(ActionNode, IfNode, ParallelNode 등)로 변환
+   - 토큰을 AST(ActionNode, IfNode, EachNode, ParallelNode 등)로 변환
 
 3. Executor  
    - AST를 순서대로 실행
    - Action 실행
    - If 조건문 평가
+   - Each 반복 실행
    - Parallel 병렬 실행
    - Future 생성/Join 처리
 
@@ -93,7 +94,7 @@ ${moduleText}
 1) 사용자의 요구를 분석해 **올바른 qplan 스크립트** 생성  
 2) 문법 오류 없는 qplan 생성  
 3) 모듈과 usage를 정확히 활용  
-4) If / Parallel / Future / Join 등 복합 로직 구성  
+4) If / Each / Parallel / Future / Join 등 복합 로직 구성 (stop / skip 포함)  
 5) ctx 변수를 올바르게 참조  
 6) 존재하지 않는 모듈은 절대 사용하지 않음  
 

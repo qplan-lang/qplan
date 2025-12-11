@@ -18,11 +18,11 @@ qplan은 **AI와 사람이 함께 사용할 수 있는 경량 DSL(Workflow Langu
 스크립트를 토큰으로 분해.
 
 ### 2) Parser → AST  
-스크립트를 AST(ActionNode, IfNode, ParallelNode 등)로 변환.
+스크립트를 AST(ActionNode, IfNode, EachNode, ParallelNode 등)로 변환.
 
 ### 3) Executor  
 AST를 순서대로 실행.  
-Future, join, parallel(concurrency), if 조건 모두 처리.
+Future, join, parallel(concurrency), if 조건, for 반복 모두 처리.
 
 ### 4) ExecutionContext  
 변수를 key/value 형태로 저장하는 런타임 컨텍스트.

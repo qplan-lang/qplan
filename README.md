@@ -18,8 +18,8 @@ qplan은 **AI가 작성하고 시스템이 실행하는** 경량 워크플로우
 - **모듈 기반 확장성**  
   원하는 기능을 `Module` 형태로 등록하여 바로 사용 가능.  
 
-- **조건/병렬 처리 지원**  
-  IF / ELSE / PARALLEL 블록으로 복잡한 흐름 표현.  
+- **조건/반복/병렬 처리 지원**  
+  IF / ELSE / EACH / PARALLEL 블록으로 복잡한 흐름 표현.  
 
 - **도메인 비종속**  
   주식 자동화뿐 아니라 데이터 파이프라인, 크롤링, DevOps 등 범용 사용 가능.
@@ -141,6 +141,20 @@ if total > 100 {
 parallel concurrency=2 {
   echo msg="A" -> a
   echo msg="B" -> b
+}
+```
+
+### Each
+```
+each items as (item, idx) {
+  math op="add" a=total b=item -> total
+  if idx >= 5 {
+    stop
+  }
+  if item == 0 {
+    skip
+  }
+  echo msg=idx -> lastIndex
 }
 ```
 

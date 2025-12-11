@@ -16,7 +16,10 @@ import {
   ActionNode,
   BlockNode,
   IfNode,
-  ParallelNode
+  ParallelNode,
+  EachNode,
+  StopNode,
+  SkipNode
 } from "./ast.js";
 import { ParserError } from "./parserError.js";
 
@@ -116,6 +119,15 @@ export class Parser {
 
     // PARALLEL
     if (this.match(TokenType.Keyword, "PARALLEL")) return this.parseParallel();
+
+    // EACH
+    if (this.match(TokenType.Keyword, "EACH")) return this.parseEach();
+
+    // STOP
+    if (this.match(TokenType.Keyword, "STOP")) return this.parseStop();
+
+    // SKIP
+    if (this.match(TokenType.Keyword, "SKIP")) return this.parseSkip();
 
     // Block literal
     if (this.match(TokenType.Symbol, "{")) {
@@ -307,5 +319,50 @@ export class Parser {
       concurrency,
       line,
     };
+  }
+
+  // ----------------------------------------------------------
+  // EACH <identifier> AS (value [, idx]) { ... }
+  // ----------------------------------------------------------
+  private parseEach(): EachNode {
+    const kw = this.consume(TokenType.Keyword, "EACH");
+    const line = kw.line;
+
+    const iterable = this.consumeIdentifier();
+    this.consume(TokenType.Keyword, "AS");
+    this.consume(TokenType.Symbol, "(");
+    const iterator = this.consumeIdentifier();
+    let indexVar: string | undefined;
+    if (this.match(TokenType.Symbol, ",")) {
+      this.consume(TokenType.Symbol, ",");
+      indexVar = this.consumeIdentifier();
+    }
+    this.consume(TokenType.Symbol, ")");
+
+    this.consume(TokenType.Symbol, "{");
+    const block = this.parseBlock();
+    this.consume(TokenType.Symbol, "}");
+
+    return {
+      type: "Each",
+      iterator,
+      indexVar,
+      iterable,
+      block,
+      line,
+    };
+  }
+
+  // ----------------------------------------------------------
+  // STOP / SKIP
+  // ----------------------------------------------------------
+  private parseStop(): StopNode {
+    const kw = this.consume(TokenType.Keyword, "STOP");
+    return { type: "Stop", line: kw.line };
+  }
+
+  private parseSkip(): SkipNode {
+    const kw = this.consume(TokenType.Keyword, "SKIP");
+    return { type: "Skip", line: kw.line };
   }
 }

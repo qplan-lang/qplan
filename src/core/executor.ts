@@ -14,12 +14,23 @@ import {
   ActionNode,
   BlockNode,
   IfNode,
-  ParallelNode
+  ParallelNode,
+  EachNode,
+  StopNode,
+  SkipNode
 } from "./ast.js";
 import { ModuleRegistry } from "./moduleRegistry.js";
 import { ExecutionContext } from "./executionContext.js";
 
+class LoopSignal extends Error {
+  constructor(public kind: "break" | "continue") {
+    super(kind);
+  }
+}
+
 export class Executor {
+  private loopDepth = 0;
+
   constructor(private registry: ModuleRegistry) {}
 
   async run(root: ASTRoot, ctx: ExecutionContext): Promise<ExecutionContext> {
@@ -38,7 +49,10 @@ export class Executor {
       case "Action": return this.execAction(node, ctx);
       case "If": return this.execIf(node, ctx);
       case "Parallel": return this.execParallel(node, ctx);
+      case "Each": return this.execEach(node, ctx);
       case "Block": return this.executeBlock(node, ctx);
+      case "Stop": return this.execStop(node);
+      case "Skip": return this.execSkip(node);
       default: throw new Error(`Unknown AST node type: ${(node as any).type}`);
     }
   }
@@ -127,5 +141,47 @@ export class Executor {
     }
 
     await Promise.all(results);
+  }
+
+  private async execEach(node: EachNode, ctx: ExecutionContext) {
+    const iterable = ctx.get(node.iterable);
+    if (!Array.isArray(iterable) && !(typeof iterable?.[Symbol.iterator] === "function")) {
+      throw new Error(`Each loop requires iterable: ${node.iterable}`);
+    }
+
+    const values = Array.isArray(iterable) ? iterable : Array.from(iterable);
+
+    this.loopDepth++;
+    try {
+      loop: for (let index = 0; index < values.length; index++) {
+        ctx.set(node.iterator, values[index]);
+        if (node.indexVar) ctx.set(node.indexVar, index);
+        try {
+          await this.executeBlock(node.block, ctx);
+        } catch (err) {
+          if (err instanceof LoopSignal) {
+            if (err.kind === "continue") continue;
+            if (err.kind === "break") break loop;
+          }
+          throw err;
+        }
+      }
+    } finally {
+      this.loopDepth--;
+    }
+  }
+
+  private execStop(node: StopNode) {
+    if (this.loopDepth === 0) {
+      throw new Error(`STOP is only allowed inside EACH loops (line ${node.line})`);
+    }
+    throw new LoopSignal("break");
+  }
+
+  private execSkip(node: SkipNode) {
+    if (this.loopDepth === 0) {
+      throw new Error(`SKIP is only allowed inside EACH loops (line ${node.line})`);
+    }
+    throw new LoopSignal("continue");
   }
 }

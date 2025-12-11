@@ -39,6 +39,8 @@ qplan 명령 형식:
 기능 요약:
 - Action 실행
 - If 조건문 (>, <, >=, <=, ==, !=, EXISTS, NOT_EXISTS)
+- Each 반복문 (each iterable as (item[, idx]) { ... })
+- Each 반복문에서 stop/skip 제어
 - Parallel 병렬 실행 (concurrency, ignoreErrors)
 - Future 생성
 - Join(Promise.all)

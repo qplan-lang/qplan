@@ -18,12 +18,13 @@ Script → Tokenizer → Parser(AST) → Executor → Context
 ## AST 구성요소
 - ActionNode  
 - IfNode  
+- EachNode  
 - ParallelNode  
 - BlockNode  
 - Root(ASTRoot)
 
-## 병렬 / Future 구조
+## 병렬 / 반복 / Future 구조
 - ParallelNode(concurrency, ignoreErrors)  
+- EachNode(iterator, iterable, indexVar)  
 - FutureNode → Promise 생성  
 - JoinNode → Promise.all
-

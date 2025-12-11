@@ -66,6 +66,28 @@ export interface ParallelNode extends BaseNode {
 }
 
 /**
+ * 반복문(each)
+ */
+export interface EachNode extends BaseNode {
+  type: "Each";
+  iterator: string;
+  iterable: string;
+  indexVar?: string;
+  block: BlockNode;
+}
+
+/**
+ * 반복 제어
+ */
+export interface StopNode extends BaseNode {
+  type: "Stop";
+}
+
+export interface SkipNode extends BaseNode {
+  type: "Skip";
+}
+
+/**
  * 전체 AST 루트
  */
 export interface ASTRoot {
@@ -77,4 +99,7 @@ export type ASTNode =
   | ActionNode
   | IfNode
   | ParallelNode
+  | EachNode
+  | StopNode
+  | SkipNode
   | BlockNode;
