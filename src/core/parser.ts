@@ -25,6 +25,7 @@ import { ParserError } from "./parserError.js";
 
 export class Parser {
   private pos = 0;
+  private printTempVar = 0;
 
   constructor(private tokens: Token[]) {}
 
@@ -147,8 +148,13 @@ export class Parser {
   // Action
   // ----------------------------------------------------------
   private parseAction(): ActionNode {
-    const moduleName = this.consumeIdentifier();
-    const line = this.peek().line;
+    const moduleToken = this.consume(TokenType.Identifier);
+    const moduleName = moduleToken.value;
+    const line = moduleToken.line;
+
+    if (moduleName === "print") {
+      return this.parsePrintAction(moduleName, line);
+    }
 
     const args: Record<string, any> = {};
 
@@ -197,6 +203,89 @@ export class Parser {
       output: out,
       line,
     };
+  }
+
+  /**
+   * print 명령 전용 파서.
+   * print "text", key=value, foo 처럼 자유 형식 인수를 수집해 __entries 로 넘긴다.
+   */
+  private parsePrintAction(moduleName: string, line: number): ActionNode {
+    const entries = this.collectPrintEntries(line);
+    const args: Record<string, any> = { __entries: entries };
+    let output: string;
+    let suppressStore = false;
+
+    if (this.check(TokenType.Symbol, "->")) {
+      this.consume(TokenType.Symbol, "->");
+      output = this.consumeIdentifier();
+    } else {
+      output = `__print_dummy_${this.printTempVar++}`;
+      suppressStore = true;
+    }
+
+    if (suppressStore) {
+      args.__suppressStore = true;
+    }
+
+    return {
+      type: "Action",
+      module: moduleName,
+      args,
+      output,
+      line,
+    };
+  }
+
+  /**
+   * 한 줄에서 print 인수들을 추출한다. 문자열/숫자/식별자/키=값 조합 지원.
+   */
+  private collectPrintEntries(line: number): any[] {
+    const entries: any[] = [];
+
+    while (!this.match(TokenType.EOF)) {
+      const token = this.peek();
+      if (token.line > line) break;
+      if (this.check(TokenType.Symbol, "->")) break;
+
+      if (this.check(TokenType.Symbol, ",")) {
+        this.consume(TokenType.Symbol, ",");
+        continue;
+      }
+
+      if (
+        this.check(TokenType.Identifier) &&
+        this.peek(1).type === TokenType.Symbol &&
+        this.peek(1).value === "="
+      ) {
+        const key = this.consumeIdentifier();
+        this.consume(TokenType.Symbol, "=");
+        const value = this.consumeValueAny();
+        entries.push({ kind: "kv", key, value });
+        continue;
+      }
+
+      if (token.type === TokenType.String) {
+        entries.push({ kind: "literal", value: this.consumeString() });
+        continue;
+      }
+
+      if (token.type === TokenType.Number) {
+        entries.push({
+          kind: "literal",
+          value: Number(this.consume(TokenType.Number).value),
+        });
+        continue;
+      }
+
+      if (token.type === TokenType.Identifier) {
+        entries.push({ kind: "identifier", name: this.consumeIdentifier() });
+        continue;
+      }
+
+      break;
+    }
+
+    return entries;
   }
 
   // ---------------------------------------

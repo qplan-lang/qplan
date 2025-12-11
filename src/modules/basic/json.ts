@@ -43,14 +43,16 @@ json op="entries"    data=val -> out
       val = ctx.get(val);
     }
 
-    // 문자열이면 parse 시도
-    if (typeof val === "string") {
-      try {
-        val = JSON.parse(val);
-      } catch {
-        // 파싱 실패 시 그대로 둠
+    const autoParseValue = () => {
+      if (typeof val === "string") {
+        try {
+          val = JSON.parse(val);
+        } catch {
+          console.error("JSON parse failed. value[" + val + "]");
+          // 파싱 실패 시 그대로 둠
+        }
       }
-    }
+    };
 
     const getByPath = (obj: any, path: string) =>
       path.split(".").reduce((o, k) => (o ? o[k] : undefined), obj);
@@ -69,27 +71,33 @@ json op="entries"    data=val -> out
 
     switch (op) {
       case "parse":
-        if (typeof inputs.data !== "string") {
+        if (typeof val !== "string") {
           throw new Error("json.parse requires data to be string");
         }
-        return JSON.parse(inputs.data);
+        return JSON.parse(val);
 
       case "stringify":
+        autoParseValue();
         return JSON.stringify(val, null, Number(inputs.space ?? 0));
 
       case "get":
+        autoParseValue();
         return getByPath(val, String(inputs.path ?? ""));
 
       case "set":
+        autoParseValue();
         return setByPath(val, String(inputs.path ?? ""), inputs.value);
 
       case "keys":
+        autoParseValue();
         return Object.keys(val);
 
       case "values":
+        autoParseValue();
         return Object.values(val);
 
       case "entries":
+        autoParseValue();
         return Object.entries(val);
 
       default:

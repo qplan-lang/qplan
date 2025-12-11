@@ -82,7 +82,9 @@ export class Executor {
       return;
     }
 
-    ctx.set(node.output, result);
+    if (!(node.args as any)?.__suppressStore) {
+      ctx.set(node.output, result);
+    }
   }
 
   private async execIf(node: IfNode, ctx: ExecutionContext) {

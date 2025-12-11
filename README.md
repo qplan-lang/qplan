@@ -93,6 +93,7 @@ execute(inputs, ctx)
 
 | 모듈 | 설명 |
 |------|------|
+| print | console.log 형태 출력 |
 | echo | 입력 그대로 반환 |
 | sleep | 딜레이(ms) |
 | file | 파일 읽기/쓰기 |
