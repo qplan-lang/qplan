@@ -27,7 +27,7 @@ export interface Token {
   line: number;
 }
 
-const KEYWORDS = new Set(["IF", "ELSE", "END", "PARALLEL", "USING", "EACH", "AS", "IN", "STOP", "SKIP", "AND"]);
+const KEYWORDS = new Set(["IF", "ELSE", "END", "PARALLEL", "USING", "EACH", "AS", "IN", "STOP", "SKIP", "AND", "OR", "NOT"]);
 
 export function tokenize(input: string): Token[] {
   const tokens: Token[] = [];

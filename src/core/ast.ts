@@ -48,11 +48,26 @@ export interface BlockNode extends BaseNode {
  */
 export interface IfNode extends BaseNode {
   type: "If";
-  left: string;
-  comparator: string;
-  right: any;
+  condition: ConditionExpression;
   thenBlock: BlockNode;
   elseBlock?: BlockNode;
+}
+
+export type ConditionExpression = ConditionClause | ConditionBinary;
+
+export interface ConditionClause {
+  type: "Simple";
+  left: string;
+  negated?: boolean;
+  comparator: string;
+  right: any;
+}
+
+export interface ConditionBinary {
+  type: "Binary";
+  operator: "AND" | "OR";
+  left: ConditionExpression;
+  right: ConditionExpression;
 }
 
 /**

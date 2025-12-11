@@ -53,7 +53,7 @@ value 타입:
 4) If 문
 -----------------------------------------
 형식:
-if <left> <OP> <right> {
+if <left> <OP> <right> [and/or <left> <OP> <right> ...] {
    ... qplan 명령 ...
 } else {
    ... qplan 명령 ...
@@ -64,9 +64,11 @@ if <left> <OP> <right> {
 특수:
   EXISTS
   NOT_EXISTS
+  not (앞에 붙여 부정 가능)
+괄호( ) 로 우선순위를 지정할 수 있음.
 
 예)
-if total > 100 {
+if total > 100 AND count < 5 {
   echo msg="big" -> r
 } else {
   echo msg="small" -> r

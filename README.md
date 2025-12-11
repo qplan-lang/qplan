@@ -133,12 +133,13 @@ sleep ms=500          # 결과 저장 없음
 
 ### If
 ```
-if total > 100 {
+if not total > 100 and count < 5 {
   echo msg="big" -> r
 } else {
   echo msg="small" -> r
 }
 ```
+괄호 `()` 를 사용하면 복잡한 and/or 조합의 우선순위를 조정할 수 있습니다.
 
 ### Parallel
 ```

@@ -75,7 +75,7 @@ ai prompt="요약" context=html
 ## 2.4 If 조건문
 
 ```
-if <left> <op> <right> {
+if <left> <op> <right> [and/or <left> <op> <right> ...] {
     ...
 } else {
     ...
@@ -86,10 +86,11 @@ if <left> <op> <right> {
 ```
 > < >= <= == != EXISTS NOT_EXISTS
 ```
+`and`, `or`, `not` 으로 조건을 조합할 수 있다. 괄호 `()` 를 사용하면 우선순위를 명확히 지정할 수 있다.
 
 예:
 ```
-if total > 10 {
+if (not total > 10 and count < 5) or ready {
     echo msg="big" -> r
 } else {
     echo msg="small" -> r
@@ -177,7 +178,9 @@ Value           = Number
 
 IfStmt          = "if" , Condition , Block , [ ElseBlock ] ;
 
-Condition       = Identifier , Comparator , (Number | QuotedString | Identifier) ;
+Condition       = SimpleCondition , { LogicOp , SimpleCondition } ;
+SimpleCondition = [ "NOT" ] , Identifier , Comparator , (Number | QuotedString | Identifier) ;
+LogicOp         = "AND" | "OR" ;
 
 Comparator      = ">" | "<" | ">=" | "<=" | "==" | "!=" | "EXISTS" | "NOT_EXISTS" ;
 

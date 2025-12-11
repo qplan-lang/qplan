@@ -16,6 +16,8 @@ import {
   IfNode,
   ParallelNode,
   EachNode,
+  ConditionClause,
+  ConditionExpression,
   StopNode,
   SkipNode
 } from "./ast.js";
@@ -88,27 +90,47 @@ export class Executor {
   }
 
   private async execIf(node: IfNode, ctx: ExecutionContext) {
-    const left = ctx.get(node.left);
-    const right = node.right;
-    let cond = false;
-
-    switch (node.comparator) {
-      case ">": cond = left > right; break;
-      case "<": cond = left < right; break;
-      case ">=": cond = left >= right; break;
-      case "<=": cond = left <= right; break;
-      case "==": cond = left == right; break;
-      case "!=": cond = left != right; break;
-      case "EXISTS": cond = left !== undefined; break;
-      case "NOT_EXISTS": cond = left === undefined; break;
-      default: throw new Error(`Unknown comparator: ${node.comparator}`);
-    }
+    const cond = this.evaluateCondition(node.condition, ctx);
 
     if (cond) {
       await this.executeBlock(node.thenBlock, ctx);
     } else if (node.elseBlock) {
       await this.executeBlock(node.elseBlock, ctx);
     }
+  }
+
+  private evaluateCondition(expr: ConditionExpression, ctx: ExecutionContext): boolean {
+    if (expr.type === "Binary") {
+      const left = this.evaluateCondition(expr.left, ctx);
+      if (expr.operator === "AND") {
+        if (!left) return false;
+        return this.evaluateCondition(expr.right, ctx);
+      } else {
+        if (left) return true;
+        return this.evaluateCondition(expr.right, ctx);
+      }
+    }
+    return this.evaluateClause(expr, ctx);
+  }
+
+  private evaluateClause(clause: ConditionClause, ctx: ExecutionContext): boolean {
+    const left = ctx.get(clause.left);
+    const right = clause.right;
+
+    let result: boolean;
+    switch (clause.comparator) {
+      case ">": result = left > right; break;
+      case "<": result = left < right; break;
+      case ">=": result = left >= right; break;
+      case "<=": result = left <= right; break;
+      case "==": result = left == right; break;
+      case "!=": result = left != right; break;
+      case "EXISTS": result = left !== undefined; break;
+      case "NOT_EXISTS": result = left === undefined; break;
+      default: throw new Error(`Unknown comparator: ${clause.comparator}`);
+    }
+
+    return clause.negated ? !result : result;
   }
 
   private async execParallel(node: ParallelNode, ctx: ExecutionContext) {

@@ -38,7 +38,7 @@ qplan 명령 형식:
 
 기능 요약:
 - Action 실행 (모듈 이름 뒤 옵션으로 op 지정 가능)
-- If 조건문 (>, <, >=, <=, ==, !=, EXISTS, NOT_EXISTS)
+- If 조건문 (>, <, >=, <=, ==, !=, EXISTS, NOT_EXISTS) + and/or/not 조합, 괄호 우선순위 지원
 - Each 반복문 (each item in iterable { ... } / each (item, idx) in iterable { ... })
 - Each 반복문에서 stop/skip 제어
 - Parallel 병렬 실행 (concurrency, ignoreErrors)

@@ -19,7 +19,9 @@ import {
   ParallelNode,
   EachNode,
   StopNode,
-  SkipNode
+  SkipNode,
+  ConditionClause,
+  ConditionExpression
 } from "./ast.js";
 import { ParserError } from "./parserError.js";
 
@@ -370,13 +372,78 @@ export class Parser {
     const kw = this.consume(TokenType.Keyword, "IF");
     const line = kw.line;
 
-    // left operand (identifier)
+    const condition = this.parseConditionExpression();
+
+    // then block: { ... }
+    this.consume(TokenType.Symbol, "{");
+    const thenBlock = this.parseBlock();
+    this.consume(TokenType.Symbol, "}");
+
+
+    // else block (optional)
+    let elseBlock: BlockNode | undefined;
+    if (this.check(TokenType.Keyword, "ELSE")) {
+      this.consume(TokenType.Keyword, "ELSE");
+      this.consume(TokenType.Symbol, "{");
+      elseBlock = this.parseBlock();
+      this.consume(TokenType.Symbol, "}");
+    }
+
+    return {
+      type: "If",
+      condition,
+      thenBlock,
+      elseBlock,
+      line,
+    };
+  }
+
+  private parseConditionExpression(precedence = 0): ConditionExpression {
+    let expr = this.parseConditionPrimary();
+
+    while (true) {
+      const token = this.peek();
+      if (token.type !== TokenType.Keyword) break;
+      const opValue = token.value.toUpperCase();
+      if (opValue !== "AND" && opValue !== "OR") break;
+
+      const opPrecedence = opValue === "OR" ? 1 : 2;
+      if (opPrecedence < precedence) break;
+
+      this.consume(TokenType.Keyword, opValue);
+      const right = this.parseConditionExpression(opPrecedence);
+      expr = {
+        type: "Binary",
+        operator: opValue as "AND" | "OR",
+        left: expr,
+        right,
+      };
+    }
+
+    return expr;
+  }
+
+  private parseConditionPrimary(): ConditionExpression {
+    if (this.match(TokenType.Symbol, "(")) {
+      this.consume(TokenType.Symbol, "(");
+      const expr = this.parseConditionExpression();
+      this.consume(TokenType.Symbol, ")");
+      return expr;
+    }
+    return this.parseConditionClause();
+  }
+
+  private parseConditionClause(): ConditionClause {
+    let negated = false;
+    while (this.match(TokenType.Keyword, "NOT")) {
+      negated = !negated;
+      this.consume(TokenType.Keyword, "NOT");
+    }
+
     const left = this.consume(TokenType.Identifier).value;
 
-    // operator (Symbol or Identifier for EXISTS/NOT_EXISTS)
-    let comparator: string;
-
     const opToken = this.peek();
+    let comparator: string;
     if (opToken.type === TokenType.Symbol) {
       const op = this.consume(TokenType.Symbol).value;
       const validOps = [">", "<", ">=", "<=", "==", "!="];
@@ -398,10 +465,8 @@ export class Parser {
       );
     }
 
-    // right operand (Identifier | Number | String)
     const rt = this.peek();
     let right: any;
-
     if (rt.type === TokenType.Number) {
       right = Number(this.consume(TokenType.Number).value);
     } else if (rt.type === TokenType.String) {
@@ -412,29 +477,12 @@ export class Parser {
       throw new ParserError(`Invalid right operand '${rt.value}'`, rt.line);
     }
 
-    // then block: { ... }
-    this.consume(TokenType.Symbol, "{");
-    const thenBlock = this.parseBlock();
-    this.consume(TokenType.Symbol, "}");
-
-
-    // else block (optional)
-    let elseBlock: BlockNode | undefined;
-    if (this.check(TokenType.Keyword, "ELSE")) {
-      this.consume(TokenType.Keyword, "ELSE");
-      this.consume(TokenType.Symbol, "{");
-      elseBlock = this.parseBlock();
-      this.consume(TokenType.Symbol, "}");
-    }
-
     return {
-      type: "If",
+      type: "Simple",
       left,
       comparator,
       right,
-      thenBlock,
-      elseBlock,
-      line,
+      negated,
     };
   }
 
