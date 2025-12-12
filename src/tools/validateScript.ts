@@ -27,6 +27,13 @@ async function main() {
     console.error(` line ${result.line}`);
   }
   console.error(` ${result.error}`);
+  if (result.issues?.length) {
+    console.error(" Details:");
+    for (const issue of result.issues) {
+      const prefix = issue.line !== undefined ? `  - line ${issue.line}:` : "  -";
+      console.error(`${prefix} ${issue.message}`);
+    }
+  }
   process.exit(1);
 }
 

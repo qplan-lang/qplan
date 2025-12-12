@@ -27,6 +27,8 @@ import { basicModules } from "./modules/index.js";
 import { ParserError } from "./core/parserError.js";
 import { ASTRoot } from "./core/ast.js";
 import type { StepEventEmitter } from "./step/stepEvents.js";
+import { validateSemantics } from "./core/semanticValidator.js";
+import type { SemanticIssue } from "./core/semanticValidator.js";
 
 // 🎯 외부에서 모듈 등록 가능하도록 registry export
 export const registry = new ModuleRegistry();
@@ -57,9 +59,11 @@ export async function runQplan(script: string, options: RunQplanOptions = {}) {
   return ctx;
 }
 
+export type ValidationIssue = SemanticIssue;
+
 export type QplanValidationResult =
   | { ok: true; ast: ASTRoot }
-  | { ok: false; error: string; line?: number };
+  | { ok: false; error: string; line?: number; issues?: ValidationIssue[] };
 
 /**
  * DSL 스크립트 문법만 검증하고 싶을 때 사용.
@@ -70,6 +74,16 @@ export function validateQplanScript(script: string): QplanValidationResult {
     const tokens = tokenize(script);
     const parser = new Parser(tokens);
     const ast = parser.parse();
+    const semanticIssues = validateSemantics(ast);
+    if (semanticIssues.length > 0) {
+      const first = semanticIssues[0];
+      return {
+        ok: false,
+        error: first.message,
+        line: first.line,
+        issues: semanticIssues,
+      };
+    }
     return { ok: true, ast };
   } catch (err) {
     if (err instanceof ParserError) {
