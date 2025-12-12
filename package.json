@@ -27,12 +27,12 @@
   "author": "gyu",
   "repository": {
     "type": "git",
-    "url": "https://github.com/g2developer/qplan.git"
+    "url": "https://github.com/qplan-lang/qplan.git"
   },
   "bugs": {
-    "url": "https://github.com/g2developer/qplan/issues"
+    "url": "https://github.com/qplan-lang/qplan/issues"
   },
-  "homepage": "https://github.com/g2developer/qplan#readme",
+  "homepage": "https://github.com/qplan-lang/qplan#readme",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^25.0.0",
