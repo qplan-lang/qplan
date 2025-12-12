@@ -47,7 +47,8 @@ step id="prepare" desc="데이터 준비" {
 - desc: 사람/AI가 이해하기 위한 설명  
 - type: (선택) task, group, loop 등  
 - onError: error policy  
-- -> variable: step 전체의 결과 저장 (선택)
+- -> variable: step 전체의 결과 저장 (선택, 기본은 마지막 Action 결과)
+- `return key=value ...` 문으로 Step 결과를 명시적으로 구성할 수 있음
 
 ---
 
@@ -99,13 +100,19 @@ step id="fetch" desc="API 호출" onError="retry=3" {
 
 ---
 
-# 7. Step Output 규칙
+# 7. Step Output / Return 규칙
 
-Step 전체의 결과를 변수로 반환하려면:
+Step 전체의 결과를 변수로 반환하려면 `-> result` 를 사용하고, 필요하면 `return` 으로 원하는 값을 구성한다:
 
 ```
 step id="load" desc="데이터 로드" -> result {
     file op="read" path="./a.txt" -> raw
+    # return 생략 시 마지막 Action 결과(raw)가 저장됨
+}
+
+step id="summary" desc="명시적 반환" -> summary {
+    ...
+    return data=raw count=rawCount
 }
 ```
 

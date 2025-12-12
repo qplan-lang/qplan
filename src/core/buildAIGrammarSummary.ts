@@ -38,7 +38,8 @@ qplan DSL Core Grammar (AI-Friendly Summary)
   - desc: 사람이 이해하기 위한 설명
   - type: 임의 태그(task/group/loop 등)
   - onError: fail(기본) / continue / retry=<N> / jump="<stepId>"
-  - -> outputVar : Step 전체 결과를 ctx 변수에 저장 (마지막 action 값)
+  - -> outputVar : Step 전체 결과를 ctx 변수에 저장 (기본은 마지막 action 결과)
+  - (선택) return key=value ... : Step 결과를 명시적으로 구성하여 반환
 
 Jump 문법:
   jump to="<stepId>"

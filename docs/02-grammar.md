@@ -174,6 +174,20 @@ set config = {"limit":10}
 식(Expression)은 숫자/문자열/JSON literal/기존 변수/괄호/산술 연산(+,-,*,/)을 조합하여 작성할 수 있다.
 
 ---
+## 2.10 Step / Return
+
+```
+step id="fetch" desc="데이터" onError="retry=2" -> result {
+  http url="https://..." -> response
+  return data=response count=response.count
+}
+```
+
+- 모든 Action은 Step 블록 내부에서만 실행된다.
+- `return` 을 작성하지 않으면 Step 내부 **마지막 Action 결과**가 자동으로 Step 결과가 된다.
+- Step 내부에서 `return key=value ...` 문을 사용하면 원하는 값을 객체로 묶어 Step 결과로 반환할 수 있다 (결과는 `-> result` 변수와 Step 이벤트에 전달됨).
+
+---
 
 # 3. EBNF 전체 문법 (B 버전)
 
@@ -189,7 +203,10 @@ Statement       = Action
                 | EachStmt
                 | StopStmt
                 | SkipStmt
-                | SetStmt ;
+                | SetStmt
+                | StepStmt
+                | JumpStmt
+                | ReturnStmt ;
 
 Action          = ModuleName , [ Option ] , { Argument } , [ "->" , Identifier ] ;
 Option          = Identifier ;
@@ -321,3 +338,4 @@ parallel {
 ---
 
 **이 문서를 기반으로 qplan DSL을 완전히 파싱하고 실행할 수 있다.**
+ReturnStmt      = "return" , Identifier , "=" , Expression , { Identifier , "=" , Expression } ;
