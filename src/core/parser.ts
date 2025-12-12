@@ -22,6 +22,10 @@ import {
   StopNode,
   SkipNode,
   SetNode,
+  StepNode,
+  JumpNode,
+  ReturnNode,
+  ReturnEntry,
   ConditionClause,
   ConditionExpression,
   ExpressionNode
@@ -86,7 +90,7 @@ export class Parser {
   // Root
   // ----------------------------------------------------------
   parse(): ASTRoot {
-    const block = this.parseBlock();
+    const block = this.parseBlock(false);
     return {
       type: "Root",
       block,
@@ -97,7 +101,7 @@ export class Parser {
   // Block
   // { statements }
   // ----------------------------------------------------------
-  private parseBlock(): BlockNode {
+  private parseBlock(insideStep: boolean): BlockNode {
     const statements: ASTNode[] = [];
 
     while (
@@ -105,7 +109,7 @@ export class Parser {
       !this.match(TokenType.Symbol, "}") &&
       !this.match(TokenType.EOF)
     ) {
-      statements.push(this.parseStatement());
+      statements.push(this.parseStatement(insideStep));
     }
 
     return {
@@ -118,40 +122,49 @@ export class Parser {
   // ----------------------------------------------------------
   // Statement
   // ----------------------------------------------------------
-  private parseStatement(): ASTNode {
+  private parseStatement(insideStep: boolean): ASTNode {
     const t = this.peek();
 
     // IF
-    if (this.match(TokenType.Keyword, "IF")) return this.parseIf();
+    if (this.match(TokenType.Keyword, "IF")) return this.parseIf(insideStep);
 
     // PARALLEL
-    if (this.match(TokenType.Keyword, "PARALLEL")) return this.parseParallel();
+    if (this.match(TokenType.Keyword, "PARALLEL")) return this.parseParallel(insideStep);
 
     // EACH
-    if (this.match(TokenType.Keyword, "EACH")) return this.parseEach();
+    if (this.match(TokenType.Keyword, "EACH")) return this.parseEach(insideStep);
 
     // WHILE
-    if (this.match(TokenType.Keyword, "WHILE")) return this.parseWhile();
+    if (this.match(TokenType.Keyword, "WHILE")) return this.parseWhile(insideStep);
 
     // STOP
-    if (this.match(TokenType.Keyword, "STOP")) return this.parseStop();
+    if (this.match(TokenType.Keyword, "STOP")) return this.parseStop(insideStep);
 
     // SKIP
-    if (this.match(TokenType.Keyword, "SKIP")) return this.parseSkip();
+    if (this.match(TokenType.Keyword, "SKIP")) return this.parseSkip(insideStep);
+
+    // RETURN
+    if (this.match(TokenType.Keyword, "RETURN")) return this.parseReturn(insideStep);
 
     // SET
-    if (this.match(TokenType.Keyword, "SET")) return this.parseSet();
+    if (this.match(TokenType.Keyword, "SET")) return this.parseSet(insideStep);
+
+    // STEP
+    if (this.match(TokenType.Keyword, "STEP")) return this.parseStep();
+
+    // JUMP
+    if (this.match(TokenType.Keyword, "JUMP")) return this.parseJump(insideStep);
 
     // Block literal
     if (this.match(TokenType.Symbol, "{")) {
       this.consume(TokenType.Symbol, "{");
-      const block = this.parseBlock();
+      const block = this.parseBlock(insideStep);
       this.consume(TokenType.Symbol, "}");
       return block;
     }
 
     // Action
-    if (this.match(TokenType.Identifier)) return this.parseAction();
+    if (this.match(TokenType.Identifier)) return this.parseAction(insideStep);
 
     throw new ParserError(`Unexpected token '${t.value}'`, t.line);
   }
@@ -159,10 +172,14 @@ export class Parser {
   // ----------------------------------------------------------
   // Action
   // ----------------------------------------------------------
-  private parseAction(): ActionNode {
+  private parseAction(insideStep: boolean): ActionNode {
     const moduleToken = this.consume(TokenType.Identifier);
     const moduleName = moduleToken.value;
     const line = moduleToken.line;
+
+    if (!insideStep) {
+      throw new ParserError("Actions must be inside a step block", line);
+    }
 
     if (moduleName === "var") {
       return this.parseVarAction(moduleName, line);
@@ -251,8 +268,11 @@ export class Parser {
     };
   }
 
-  private parseSet(): SetNode {
+  private parseSet(insideStep: boolean): SetNode {
     const kw = this.consume(TokenType.Keyword, "SET");
+    if (!insideStep) {
+      throw new ParserError("SET is only allowed inside a step block", kw.line);
+    }
     const line = kw.line;
     const target = this.consumeIdentifier();
     this.consume(TokenType.Symbol, "=");
@@ -262,6 +282,124 @@ export class Parser {
       target,
       expression,
       line,
+    };
+  }
+
+  private parseStep(): StepNode {
+    const kw = this.consume(TokenType.Keyword, "STEP");
+    const line = kw.line;
+    let id: string | undefined;
+    let desc: string | undefined;
+    let stepType: string | undefined;
+    let onError: string | undefined;
+
+    let extraMeta:
+      | {
+          id?: string;
+          desc?: string;
+          stepType?: string;
+          onError?: string;
+        }
+      | undefined;
+
+    if (this.match(TokenType.String)) {
+      desc = this.consumeString();
+      extraMeta = this.parseStepMeta();
+    } else {
+      extraMeta = this.parseStepMeta();
+    }
+
+    if (extraMeta) {
+      id = extraMeta.id ?? id;
+      desc = extraMeta.desc ?? desc;
+      stepType = extraMeta.stepType ?? stepType;
+      onError = extraMeta.onError ?? onError;
+    }
+
+    let output: string | undefined;
+    if (this.check(TokenType.Symbol, "->")) {
+      this.consume(TokenType.Symbol, "->");
+      output = this.consumeIdentifier();
+    }
+
+    this.consume(TokenType.Symbol, "{");
+    const block = this.parseBlock(true);
+    this.consume(TokenType.Symbol, "}");
+
+    return {
+      type: "Step",
+      id,
+      desc,
+      stepType,
+      onError,
+      output,
+      block,
+      line,
+    };
+  }
+
+  private parseJump(insideStep: boolean): JumpNode {
+    const kw = this.consume(TokenType.Keyword, "JUMP");
+    if (!insideStep) {
+      throw new ParserError("JUMP is only allowed inside a step block", kw.line);
+    }
+    const line = kw.line;
+
+    const targetKey = this.consumeIdentifier();
+    if (targetKey.toLowerCase() !== "to") {
+      throw new ParserError("jump requires 'to=<stepId>'", line);
+    }
+    this.consume(TokenType.Symbol, "=");
+    let targetStepId: string;
+    if (this.match(TokenType.String)) {
+      targetStepId = this.consumeString();
+    } else {
+      targetStepId = this.consumeIdentifier();
+    }
+
+    return {
+      type: "Jump",
+      targetStepId,
+      line,
+    };
+  }
+
+  private parseStepMeta(): {
+    id?: string;
+    desc?: string;
+    stepType?: string;
+    onError?: string;
+  } {
+    const meta: { [key: string]: string | undefined } = {};
+
+    while (true) {
+      if (this.check(TokenType.Symbol, "{") || this.check(TokenType.Symbol, "->")) {
+        break;
+      }
+      if (!this.match(TokenType.Identifier)) {
+        break;
+      }
+      const key = this.consumeIdentifier();
+      this.consume(TokenType.Symbol, "=");
+      let value: string;
+      if (this.match(TokenType.String)) {
+        value = this.consumeString();
+      } else if (this.match(TokenType.Identifier)) {
+        value = this.consumeIdentifier();
+      } else if (this.match(TokenType.Number)) {
+        value = this.consume(TokenType.Number).value;
+      } else {
+        throw new ParserError(`Invalid step meta value '${this.peek().value}'`, this.peek().line);
+      }
+
+      meta[key] = value;
+    }
+
+    return {
+      id: meta["id"],
+      desc: meta["desc"],
+      stepType: meta["type"],
+      onError: meta["onError"] ?? meta["onerror"],
     };
   }
 
@@ -557,15 +695,18 @@ export class Parser {
   // ---------------------------------------
   // IF
   // ---------------------------------------
-  private parseIf(): IfNode {
+  private parseIf(insideStep: boolean): IfNode {
     const kw = this.consume(TokenType.Keyword, "IF");
+    if (!insideStep) {
+      throw new ParserError("IF is only allowed inside a step block", kw.line);
+    }
     const line = kw.line;
 
     const condition = this.parseConditionExpression();
 
     // then block: { ... }
     this.consume(TokenType.Symbol, "{");
-    const thenBlock = this.parseBlock();
+    const thenBlock = this.parseBlock(insideStep);
     this.consume(TokenType.Symbol, "}");
 
 
@@ -574,7 +715,7 @@ export class Parser {
     if (this.check(TokenType.Keyword, "ELSE")) {
       this.consume(TokenType.Keyword, "ELSE");
       this.consume(TokenType.Symbol, "{");
-      elseBlock = this.parseBlock();
+      elseBlock = this.parseBlock(insideStep);
       this.consume(TokenType.Symbol, "}");
     }
 
@@ -587,12 +728,15 @@ export class Parser {
     };
   }
 
-  private parseWhile(): WhileNode {
+  private parseWhile(insideStep: boolean): WhileNode {
     const kw = this.consume(TokenType.Keyword, "WHILE");
+    if (!insideStep) {
+      throw new ParserError("WHILE is only allowed inside a step block", kw.line);
+    }
     const line = kw.line;
     const condition = this.parseConditionExpression();
     this.consume(TokenType.Symbol, "{");
-    const block = this.parseBlock();
+    const block = this.parseBlock(insideStep);
     this.consume(TokenType.Symbol, "}");
     return {
       type: "While",
@@ -693,8 +837,11 @@ export class Parser {
   // ----------------------------------------------------------
   // PARALLEL
   // ----------------------------------------------------------
-  private parseParallel(): ParallelNode {
+  private parseParallel(insideStep: boolean): ParallelNode {
     const start = this.consume(TokenType.Keyword, "PARALLEL");
+    if (!insideStep) {
+      throw new ParserError("PARALLEL is only allowed inside a step block", start.line);
+    }
     const line = start.line;
 
     let ignoreErrors = false;
@@ -718,11 +865,11 @@ export class Parser {
 
     if (this.match(TokenType.Symbol, "{")) {
       this.consume(TokenType.Symbol, "{");
-      block = this.parseBlock();
+      block = this.parseBlock(insideStep);
       this.consume(TokenType.Symbol, "}");
     } else {
       this.consume(TokenType.Symbol, ":");
-      block = this.parseBlock();
+      block = this.parseBlock(insideStep);
       this.consume(TokenType.Keyword, "END");
     }
 
@@ -740,8 +887,11 @@ export class Parser {
   // ----------------------------------------------------------
   // EACH <identifier> [WITH index?] IN <identifier> { ... }
   // ----------------------------------------------------------
-  private parseEach(): EachNode {
+  private parseEach(insideStep: boolean): EachNode {
     const kw = this.consume(TokenType.Keyword, "EACH");
+    if (!insideStep) {
+      throw new ParserError("EACH is only allowed inside a step block", kw.line);
+    }
     const line = kw.line;
 
     let iterator: string;
@@ -763,7 +913,7 @@ export class Parser {
     const iterable = this.consumeIdentifier();
 
     this.consume(TokenType.Symbol, "{");
-    const block = this.parseBlock();
+    const block = this.parseBlock(insideStep);
     this.consume(TokenType.Symbol, "}");
 
     return {
@@ -779,13 +929,58 @@ export class Parser {
   // ----------------------------------------------------------
   // STOP / SKIP
   // ----------------------------------------------------------
-  private parseStop(): StopNode {
+  private parseStop(insideStep: boolean): StopNode {
     const kw = this.consume(TokenType.Keyword, "STOP");
+    if (!insideStep) {
+      throw new ParserError("STOP is only allowed inside a step block", kw.line);
+    }
     return { type: "Stop", line: kw.line };
   }
 
-  private parseSkip(): SkipNode {
+  private parseSkip(insideStep: boolean): SkipNode {
     const kw = this.consume(TokenType.Keyword, "SKIP");
+    if (!insideStep) {
+      throw new ParserError("SKIP is only allowed inside a step block", kw.line);
+    }
     return { type: "Skip", line: kw.line };
+  }
+
+  private parseReturn(insideStep: boolean): ReturnNode {
+    const kw = this.consume(TokenType.Keyword, "RETURN");
+    if (!insideStep) {
+      throw new ParserError("RETURN is only allowed inside a step block", kw.line);
+    }
+    const entries: ReturnEntry[] = [];
+
+    while (true) {
+      if (!this.match(TokenType.Identifier)) break;
+      const key = this.consumeIdentifier();
+      if (!this.check(TokenType.Symbol, "=")) {
+        throw new ParserError("return requires 'key=expression'", this.peek().line);
+      }
+      this.consume(TokenType.Symbol, "=");
+      const expression = this.parseExpression();
+      entries.push({ key, expression });
+
+      const next = this.peek();
+      if (
+        next.type === TokenType.Identifier &&
+        this.peek(1).type === TokenType.Symbol &&
+        this.peek(1).value === "="
+      ) {
+        continue;
+      }
+      break;
+    }
+
+    if (!entries.length) {
+      throw new ParserError("return requires at least one value", kw.line);
+    }
+
+    return {
+      type: "Return",
+      entries,
+      line: kw.line,
+    };
   }
 }

@@ -44,6 +44,37 @@ export interface BlockNode extends BaseNode {
 }
 
 /**
+ * Step 문
+ */
+export interface StepNode extends BaseNode {
+  type: "Step";
+  id?: string;
+  desc?: string;
+  stepType?: string;
+  onError?: string;
+  output?: string;
+  block: BlockNode;
+}
+
+export interface ReturnEntry {
+  key: string;
+  expression: ExpressionNode;
+}
+
+export interface ReturnNode extends BaseNode {
+  type: "Return";
+  entries: ReturnEntry[];
+}
+
+/**
+ * jump 문
+ */
+export interface JumpNode extends BaseNode {
+  type: "Jump";
+  targetStepId: string;
+}
+
+/**
  * 조건문
  */
 export interface IfNode extends BaseNode {
@@ -165,5 +196,8 @@ export type ASTNode =
   | EachNode
   | StopNode
   | SkipNode
+  | ReturnNode
   | SetNode
-  | BlockNode;
+  | BlockNode
+  | StepNode
+  | JumpNode;

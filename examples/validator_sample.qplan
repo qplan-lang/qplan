@@ -1,7 +1,9 @@
-var 0 -> count
+step id="sample" desc="validator demo" {
+  var 0 -> count
 
-while count < 3 {
-  set count = count + 1
+  while count < 3 {
+    set count = count + 1
+  }
+
+  print count
 }
-
-print count

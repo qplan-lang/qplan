@@ -43,6 +43,9 @@ const KEYWORDS = new Set([
   "NOT",
   "SET",
   "WHILE",
+  "STEP",
+  "JUMP",
+  "RETURN",
 ]);
 
 export function tokenize(input: string): Token[] {

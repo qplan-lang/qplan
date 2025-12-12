@@ -22,7 +22,7 @@ qplan은 **AI와 사람이 함께 사용할 수 있는 경량 DSL(Workflow Langu
 
 ### 3) Executor  
 AST를 순서대로 실행.  
-Future, join, parallel(concurrency), if 조건, each 반복 모두 처리.
+Future, join, parallel(concurrency), if 조건, each 반복과 함께 **Step 트리 및 jump/error policy**를 처리.
 
 ### 4) ExecutionContext  
 변수를 key/value 형태로 저장하는 런타임 컨텍스트.
@@ -59,8 +59,17 @@ Future, join, parallel(concurrency), if 조건, each 반복 모두 처리.
 ## 🎯 Why qplan?
 1) 사람이 쓰기 쉬움  
 2) AI가 생성하기 쉬움  
-3) 모듈 기반 확장성  
-4) 견고한 실행 엔진  
+3) Step 기반 워크플로우 구조화  
+4) 모듈 기반 확장성  
+5) 견고한 실행 엔진  
+
+## 🪜 Step System 하이라이트
+- `step id="..." desc="..." { ... }` 형태로 실행 단위를 정의  
+- Step 내부에서만 Action을 실행하고, 필요하면 sub-step을 중첩  
+- `jump to="<stepId>"` 로 다른 Step으로 이동 (블록 간 이동 포함)  
+- `onError="continue|retry=3|jump=\"cleanup\""` 등 정책 지정  
+- `runQplan(script, { stepEvents })` 로 `onStepStart/End/Error/Retry/Jump` 이벤트 훅을 받아 UI/로그에 반영  
+- Step 경로(`path`)와 순번(`order`)이 자동 생성되어 진행률 표시에 활용 가능
 
 ## 🎛 실행 흐름
 Script → Tokenizer → Parser(AST) → Executor → ExecutionContext  

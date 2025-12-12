@@ -31,12 +31,12 @@ export function buildAIPlanPrompt(requirement: string, registry: ModuleRegistry)
 -----------------------------------------
 qplan DSL 개요
 -----------------------------------------
-qplan은 ActionModule 기반 워크플로우 언어입니다.
-
-qplan 명령 형식:
-  <moduleName> key=value key=value -> outputVar
+qplan은 Step 기반 워크플로우 언어로, 모든 Action은 반드시 step 블록 내부에서 실행됩니다.
 
 기능 요약:
+- Step 정의: step id="..." desc="..." type="..." onError="..." -> output { ... }
+  - onError: fail(기본), continue, retry=N, jump="stepId"
+  - jump to="stepId" 로 다른 Step으로 이동 (블록 간 이동 가능)
 - Action 실행 (모듈 이름 뒤 옵션으로 op 지정 가능)
 - If 조건문 (>, <, >=, <=, ==, !=, EXISTS, NOT_EXISTS) + and/or/not 조합, 괄호 우선순위 지원
 - Each 반복문 (each item in iterable { ... } / each (item, idx) in iterable { ... })
@@ -66,6 +66,8 @@ ${requirement.trim()}
 생성 규칙
 -----------------------------------------
 - 오직 qplan DSL만 출력하세요.
+- 모든 Action은 반드시 step 블록 안에 배치하십시오.
+- 필요 시 여러 step을 사용하여 상위/하위 단계 구조화, jump, onError 정책을 활용하십시오.
 - 존재하지 않는 모듈을 사용하지 마세요.
 - 제공된 모듈의 usage와 inputs 규칙을 따라야 합니다.
 - 가능한 한 정확하고 간결하게 작성하세요.

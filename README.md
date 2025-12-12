@@ -18,8 +18,10 @@ qplan은 **AI가 작성하고 시스템이 실행하는** 경량 워크플로우
 - **모듈 기반 확장성**  
   원하는 기능을 `Module` 형태로 등록하여 바로 사용 가능.  
 
+- **Step 기반 흐름 제어**  
+  step/jump/error policy 구조로 복잡한 실행 단계를 정의하고, UI/로그와 연동되는 이벤트를 제공.  
 - **조건/반복/병렬 처리 지원**  
-  IF / ELSE / EACH / PARALLEL 블록으로 복잡한 흐름 표현.  
+  IF / ELSE / EACH / PARALLEL 블록과 함께 step 트리로 복잡한 흐름 표현 가능.  
 
 - **도메인 비종속**  
   주식 자동화뿐 아니라 데이터 파이프라인, 크롤링, DevOps 등 범용 사용 가능.
@@ -40,13 +42,35 @@ npm install qplan
 import { runQplan } from "qplan";
 
 const script = `
-FETCH price stock=005930 days=30 -> price
-CALC ma20 price -> ma20
+step id="load" desc="데이터 읽기" {
+  file op="read" path="./data.json" -> raw
+}
+
+step id="calc" desc="평균 계산" -> avg {
+  math op="avg" arr=raw -> result
+}
 `;
 
-const ctx = runQplan(script);
-console.log(ctx.toJSON());
+const ctx = await runQplan(script);
+console.log(ctx.toJSON()); // { raw: [...], result: 42, avg: 42 }
 ```
+
+### Step 이벤트 훅 연결
+```
+import { runQplan } from "qplan";
+
+const ctx = await runQplan(script, {
+  stepEvents: {
+    async onStepStart(info) {
+      console.log("▶ step start", info.stepId, info.path.join(" > "));
+    },
+    async onStepEnd(info, result) {
+      console.log("✔ step end", info.stepId, "result:", result);
+    },
+  },
+});
+```
+`RunQplanOptions.stepEvents` 를 이용하면 UI/CLI/로그와 연동해 진행률을 추적하거나, jump/retry/error 이벤트를 받을 수 있다.
 
 ---
 
@@ -123,6 +147,28 @@ registry.registerAll([ httpModule, aiModule ])
 ---
 
 # 📜 DSL 문법 (요약)
+
+### Step
+```
+step id="fetch" desc="데이터 가져오기" onError="retry=3" {
+  http url="https://api.example.com" -> response
+}
+
+step id="branch" desc="조건 분기" {
+  if response.count > 10 {
+    jump to="cleanup"
+  }
+}
+
+step id="cleanup" desc="정리" -> summary {
+  return data=response count=response.count
+}
+```
+- 모든 Action은 Step 내부에서 실행된다.
+- `id` 를 지정하면 다른 Step에서 `jump to="<id>"` 로 이동할 수 있다.
+- `onError` 정책(`fail`/`continue`/`retry=n`/`jump="cleanup"`)과 `-> outputVar` 로 Step 전체 결과를 변수에 저장할 수 있다.
+- `return key=value ...` 구문으로 Step 내부에서 원하는 값을 모아 Step 결과로 반환할 수 있다.
+
 
 ### Action
 ```

@@ -22,10 +22,21 @@ import {
   StopNode,
   SkipNode,
   SetNode,
-  ExpressionNode
+  ExpressionNode,
+  StepNode,
+  ReturnNode,
+  JumpNode
 } from "./ast.js";
 import { ModuleRegistry } from "./moduleRegistry.js";
 import { ExecutionContext } from "./executionContext.js";
+import { resolveSteps } from "../step/stepResolver.js";
+import { StepController } from "../step/stepController.js";
+import { JumpSignal, StepReturnSignal } from "../step/stepSignals.js";
+import {
+  StepEventEmitter,
+  defaultStepEventEmitter,
+} from "../step/stepEvents.js";
+import { StepInfo } from "../step/stepTypes.js";
 
 class LoopSignal extends Error {
   constructor(public kind: "break" | "continue") {
@@ -35,17 +46,73 @@ class LoopSignal extends Error {
 
 export class Executor {
   private loopDepth = 0;
+  private stepController?: StepController;
+  private lastActionResult: any;
+  private actionSequence = 0;
+  private stepEvents: StepEventEmitter;
+  private blockJumpOverrides = new Map<BlockNode, number>();
 
-  constructor(private registry: ModuleRegistry) {}
+  constructor(private registry: ModuleRegistry, stepEvents?: StepEventEmitter) {
+    this.stepEvents = stepEvents ?? defaultStepEventEmitter;
+  }
 
   async run(root: ASTRoot, ctx: ExecutionContext): Promise<ExecutionContext> {
-    await this.executeBlock(root.block, ctx);
+    const resolution = resolveSteps(root.block);
+    if (resolution.rootSteps.length > 0) {
+      this.stepController = new StepController(resolution, this.stepEvents);
+    } else {
+      this.stepController = undefined;
+    }
+    this.blockJumpOverrides.clear();
+    while (true) {
+      try {
+        await this.executeBlock(root.block, ctx);
+        break;
+      } catch (err) {
+        if (err instanceof JumpSignal) {
+          this.prepareJump(err.target);
+          continue;
+        }
+        throw err;
+      }
+    }
+    this.stepController = undefined;
     return ctx;
   }
 
   private async executeBlock(block: BlockNode, ctx: ExecutionContext) {
-    for (const stmt of block.statements) {
-      await this.executeNode(stmt, ctx);
+    const statements = block.statements;
+    const startIndex = this.consumeBlockOverride(block);
+    const initialIndex = startIndex !== undefined ? Math.max(0, startIndex) : 0;
+    for (let i = initialIndex; i < statements.length; i++) {
+      const stmt = statements[i];
+      try {
+        await this.executeNode(stmt, ctx);
+      } catch (err) {
+        if (err instanceof JumpSignal) {
+          if (err.target.block === block) {
+            i = err.target.statementIndex - 1;
+            continue;
+          }
+        }
+        throw err;
+      }
+    }
+  }
+
+  private consumeBlockOverride(block: BlockNode): number | undefined {
+    if (!this.blockJumpOverrides.has(block)) return undefined;
+    const index = this.blockJumpOverrides.get(block);
+    this.blockJumpOverrides.delete(block);
+    return index;
+  }
+
+  private prepareJump(target: StepInfo) {
+    this.blockJumpOverrides.clear();
+    let current: StepInfo | undefined = target;
+    while (current) {
+      this.blockJumpOverrides.set(current.block, current.statementIndex);
+      current = current.parent;
     }
   }
 
@@ -60,6 +127,9 @@ export class Executor {
       case "Stop": return this.execStop(node);
       case "Skip": return this.execSkip(node);
       case "Set": return this.execSet(node, ctx);
+      case "Return": return this.execReturn(node, ctx);
+      case "Step": return this.execStep(node, ctx);
+      case "Jump": return this.execJump(node);
       default: throw new Error(`Unknown AST node type: ${(node as any).type}`);
     }
   }
@@ -92,6 +162,9 @@ export class Executor {
     if (!(node.args as any)?.__suppressStore) {
       ctx.set(node.output, result);
     }
+
+    this.lastActionResult = result;
+    this.actionSequence++;
   }
 
   private async execIf(node: IfNode, ctx: ExecutionContext) {
@@ -242,6 +315,67 @@ export class Executor {
     }
     const value = this.evaluateExpressionNode(node.expression, ctx);
     ctx.set(node.target, value);
+  }
+
+  private execReturn(node: ReturnNode, ctx: ExecutionContext) {
+    const payload: Record<string, any> = {};
+    for (const entry of node.entries) {
+      payload[entry.key] = this.evaluateExpressionNode(entry.expression, ctx);
+    }
+    this.lastActionResult = payload;
+    this.actionSequence++;
+    throw new StepReturnSignal(payload);
+  }
+
+  private async execStep(node: StepNode, ctx: ExecutionContext) {
+    const beginAttempt = () => this.actionSequence;
+    const getResultSince = (snapshot: number) => ({
+      hasResult: this.actionSequence > snapshot,
+      value: this.lastActionResult,
+    });
+
+    if (!this.stepController) {
+      const snapshot = beginAttempt();
+      try {
+        await this.executeBlock(node.block, ctx);
+        if (node.output) {
+          const result = getResultSince(snapshot);
+          if (result.hasResult) {
+            ctx.set(node.output, result.value);
+          }
+        }
+      } catch (err) {
+        if (err instanceof StepReturnSignal) {
+          if (node.output) {
+            ctx.set(node.output, err.value);
+          }
+          this.lastActionResult = err.value;
+          this.actionSequence++;
+          return;
+        }
+        throw err;
+      }
+      return;
+    }
+
+    await this.stepController.runStep(
+      node,
+      ctx,
+      beginAttempt,
+      () => this.executeBlock(node.block, ctx),
+      getResultSince
+    );
+  }
+
+  private execJump(node: JumpNode) {
+    if (!this.stepController) {
+      throw new Error("jump requires at least one defined step");
+    }
+    const targetInfo = this.stepController.getStepInfoById(node.targetStepId);
+    if (!targetInfo) {
+      throw new Error(`jump target '${node.targetStepId}' not found`);
+    }
+    throw new JumpSignal(targetInfo);
   }
 
   private evaluateExpressionNode(expr: ExpressionNode, ctx: ExecutionContext): any {

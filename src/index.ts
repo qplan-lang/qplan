@@ -26,6 +26,7 @@ import { ExecutionContext } from "./core/executionContext.js";
 import { basicModules } from "./modules/index.js";
 import { ParserError } from "./core/parserError.js";
 import { ASTRoot } from "./core/ast.js";
+import type { StepEventEmitter } from "./step/stepEvents.js";
 
 // 🎯 외부에서 모듈 등록 가능하도록 registry export
 export const registry = new ModuleRegistry();
@@ -36,7 +37,11 @@ registry.registerAll(basicModules);
 /**
  * DSL 스크립트 실행 함수
  */
-export async function runQplan(script: string) {
+export interface RunQplanOptions {
+  stepEvents?: StepEventEmitter;
+}
+
+export async function runQplan(script: string, options: RunQplanOptions = {}) {
   // 1) Tokenize
   const tokens = tokenize(script);
 
@@ -46,7 +51,7 @@ export async function runQplan(script: string) {
 
   // 3) Execute
   const ctx = new ExecutionContext();
-  const executor = new Executor(registry);
+  const executor = new Executor(registry, options.stepEvents);
 
   await executor.run(ast, ctx);
   return ctx;
@@ -78,3 +83,7 @@ export function validateQplanScript(script: string): QplanValidationResult {
 }
 
 // 기본 모듈을 자동 등록하려면 여기에서 registry.registAll(defaultModules) 호출하면 됨
+
+export { defaultStepEventEmitter } from "./step/stepEvents.js";
+export type { StepEventEmitter } from "./step/stepEvents.js";
+export type { StepEventInfo } from "./step/stepTypes.js";

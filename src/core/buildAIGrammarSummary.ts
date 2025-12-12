@@ -19,7 +19,36 @@ export function buildAIGrammarSummary(): string {
 qplan DSL Core Grammar (AI-Friendly Summary)
 -----------------------------------------
 
-1) Action
+1) Step & Jump
+-----------------------------------------
+모든 명령은 step 블록 내부에서만 실행한다.
+
+기본 형태:
+  step "설명" {
+     ... action ...
+  }
+
+확장 형태:
+  step id="fetch" desc="API 호출" type="task" onError="retry=3" -> result {
+     ... action ...
+  }
+
+설명:
+  - id: jump 이동 대상이 되는 식별자
+  - desc: 사람이 이해하기 위한 설명
+  - type: 임의 태그(task/group/loop 등)
+  - onError: fail(기본) / continue / retry=<N> / jump="<stepId>"
+  - -> outputVar : Step 전체 결과를 ctx 변수에 저장 (마지막 action 값)
+
+Jump 문법:
+  jump to="<stepId>"
+
+규칙:
+  - Step ID로만 이동할 수 있다 (Action 줄로 점프 불가)
+  - 블록 간 이동 가능 (Step 트리를 따라 상위/하위 위치로 점프)
+
+
+2) Action
 -----------------------------------------
 <moduleName> [option] key=value key=value [-> outputVar]
 
@@ -28,7 +57,7 @@ math add a=1 b=2 -> x
 file read path="./a.txt" -> txt
 
 
-2) Arguments
+3) Arguments
 -----------------------------------------
 형식:
   key=value
@@ -44,13 +73,13 @@ value 타입:
   - 모듈 이름 뒤에 식별자를 둘 수 있으며 자동으로 op 로 전달됨 (내부적으로 __options[0])
 
 
-3) Output Binding
+4) Output Binding
 -----------------------------------------
 필요한 경우에만 "-> 변수명" 을 붙여 결과를 저장.
 생략하면 해당 액션의 반환값은 ctx에 저장되지 않음.
 
 
-4) If 문
+5) If 문
 -----------------------------------------
 형식:
 if <left> <OP> <right> [and/or <left> <OP> <right> ...] {
@@ -75,7 +104,7 @@ if total > 100 AND count < 5 {
 }
 
 
-5) Parallel 병렬 블록
+6) Parallel 병렬 블록
 -----------------------------------------
 형식:
 parallel concurrency=N ignoreErrors=true/false {
@@ -96,7 +125,7 @@ parallel concurrency=2 {
 }
 
 
-6) Each 반복문
+7) Each 반복문
 -----------------------------------------
 형식:
 each item in iterableVar {
@@ -123,7 +152,7 @@ each (price, idx) in prices {
   skip      → 다음 반복으로 건너뜀
 
 
-7) While 반복문
+8) While 반복문
 -----------------------------------------
 형식:
 while <condition> {
@@ -141,7 +170,7 @@ while total < limit {
 }
 
 
-8) Set 문
+9) Set 문
 -----------------------------------------
 형식:
 set <identifier> = <expression>
@@ -156,7 +185,7 @@ set count = count + 1
 set total = (total + delta) * 2
 
 
-9) Future 생성
+10) Future 생성
 -----------------------------------------
 형식:
 future key=value -> futureName
@@ -169,7 +198,7 @@ future key=value -> futureName
 future delay=300 value="done" -> f1
 
 
-10) Join (Future 결합)
+11) Join (Future 결합)
 -----------------------------------------
 형식:
 join futures="f1,f2,f3" -> out
@@ -179,7 +208,7 @@ join futures="f1,f2,f3" -> out
 - Promise.all 형태
 
 
-11) ctx 변수 규칙
+12) ctx 변수 규칙
 -----------------------------------------
 - action 결과는 ctx에 저장
 - key=value 에서 value가 문자열인데 ctx에 동일 key 가 있으면 ctx 값을 사용
@@ -189,13 +218,13 @@ echo msg="hello" -> x
 echo msg=x -> y    (여기서 x는 "hello")
 
 
-12) 문자열 규칙
+13) 문자열 규칙
 -----------------------------------------
 문자열은 반드시 "..." 로 감싸야 함.
 JSON 문자열 내부의 " 는 \\" 로 이스케이프해야 함.
 
 
-13) 스크립트 구조
+14) 스크립트 구조
 -----------------------------------------
 - 여러 action/if/parallel/future/join 명령들을 줄 단위로 나열
 - 블록 내부는 {} 로 감싸며 줄바꿈하여 작성
