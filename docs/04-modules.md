@@ -11,6 +11,7 @@ ActionModule 메타데이터:
 - execute()
 
 ## 기본 모듈
+- var
 - print
 - echo  
 - sleep  
@@ -31,4 +32,3 @@ ActionModule 메타데이터:
 registry.register(echoModule)
 registry.registerAll([mathModule, fileModule])
 ```
-

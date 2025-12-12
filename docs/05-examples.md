@@ -52,3 +52,11 @@ each n in nums {
   math add a=total b=n -> total
 }
 ```
+
+## Var 리터럴
+```
+var 0 -> count
+var "hello" -> msg
+var [1,2,3] -> items
+var {"a":1} -> config
+```

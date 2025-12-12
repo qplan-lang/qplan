@@ -114,7 +114,7 @@ export function tokenize(input: string): Token[] {
     }
     
     // Braces { } and parentheses ( )
-    if (c === "{" || c === "}" || c === "(" || c === ")") {
+    if (c === "{" || c === "}" || c === "(" || c === ")" || c === "[" || c === "]") {
       tokens.push({ type: TokenType.Symbol, value: c, line });
       i++;
       continue;

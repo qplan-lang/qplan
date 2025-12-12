@@ -155,6 +155,10 @@ export class Parser {
     const moduleName = moduleToken.value;
     const line = moduleToken.line;
 
+    if (moduleName === "var") {
+      return this.parseVarAction(moduleName, line);
+    }
+
     if (moduleName === "print") {
       return this.parsePrintAction(moduleName, line);
     }
@@ -319,6 +323,84 @@ export class Parser {
     }
 
     return entries;
+  }
+
+  private parseVarAction(moduleName: string, line: number): ActionNode {
+    const value = this.parseVarValue();
+    const args: Record<string, any> = { value };
+
+    if (!this.check(TokenType.Symbol, "->")) {
+      throw new ParserError("var requires '-> outputVar'", line);
+    }
+    this.consume(TokenType.Symbol, "->");
+    const output = this.consumeIdentifier();
+
+    return {
+      type: "Action",
+      module: moduleName,
+      args,
+      output,
+      line,
+    };
+  }
+
+  private parseVarValue(): any {
+    const token = this.peek();
+    if (token.type === TokenType.String) {
+      return this.consumeString();
+    }
+    if (token.type === TokenType.Number) {
+      return Number(this.consume(TokenType.Number).value);
+    }
+    if (token.type === TokenType.Symbol && (token.value === "[" || token.value === "{")) {
+      return this.parseJsonLiteralValue();
+    }
+    throw new ParserError(`Invalid var value '${token.value}'`, token.line);
+  }
+
+  private parseJsonLiteralValue(): any {
+    const start = this.consume(TokenType.Symbol);
+    const startSymbol = start.value;
+    const stack: string[] = [startSymbol === "[" ? "]" : "}"];
+    let jsonText = startSymbol;
+
+    while (stack.length > 0) {
+      const token = this.consumeAnyToken();
+      if (token.type === TokenType.Symbol) {
+        const value = token.value;
+        if (value === "[" || value === "{") {
+          stack.push(value === "[" ? "]" : "}");
+          jsonText += value;
+          continue;
+        }
+        if (value === stack[stack.length - 1]) {
+          stack.pop();
+          jsonText += value;
+          continue;
+        }
+        jsonText += value;
+        continue;
+      }
+
+      if (token.type === TokenType.String) {
+        jsonText += JSON.stringify(token.value);
+      } else {
+        jsonText += token.value;
+      }
+    }
+
+    try {
+      return JSON.parse(jsonText);
+    } catch {
+      throw new ParserError("Invalid JSON literal for var", start.line);
+    }
+  }
+
+  private consumeAnyToken(): Token {
+    if (this.pos >= this.tokens.length) {
+      return this.tokens[this.tokens.length - 1];
+    }
+    return this.tokens[this.pos++];
   }
 
   private collectModuleOptions(moduleLine: number): string[] {

@@ -93,6 +93,7 @@ execute(inputs, ctx)
 
 | 모듈 | 설명 |
 |------|------|
+| var | 리터럴 값을 ctx 변수로 저장 |
 | print | console.log 형태 출력 |
 | echo | 입력 그대로 반환 |
 | sleep | 딜레이(ms) |
