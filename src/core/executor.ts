@@ -14,6 +14,7 @@ import {
   ActionNode,
   BlockNode,
   IfNode,
+  WhileNode,
   ParallelNode,
   EachNode,
   ConditionClause,
@@ -52,6 +53,7 @@ export class Executor {
     switch (node.type) {
       case "Action": return this.execAction(node, ctx);
       case "If": return this.execIf(node, ctx);
+      case "While": return this.execWhile(node, ctx);
       case "Parallel": return this.execParallel(node, ctx);
       case "Each": return this.execEach(node, ctx);
       case "Block": return this.executeBlock(node, ctx);
@@ -118,7 +120,10 @@ export class Executor {
 
   private evaluateClause(clause: ConditionClause, ctx: ExecutionContext): boolean {
     const left = ctx.get(clause.left);
-    const right = clause.right;
+    let right = clause.right;
+    if (typeof right === "string" && ctx.has(right)) {
+      right = ctx.get(right);
+    }
 
     let result: boolean;
     switch (clause.comparator) {
@@ -198,16 +203,35 @@ export class Executor {
     }
   }
 
+  private async execWhile(node: WhileNode, ctx: ExecutionContext) {
+    this.loopDepth++;
+    try {
+      loop: while (this.evaluateCondition(node.condition, ctx)) {
+        try {
+          await this.executeBlock(node.block, ctx);
+        } catch (err) {
+          if (err instanceof LoopSignal) {
+            if (err.kind === "continue") continue loop;
+            if (err.kind === "break") break loop;
+          }
+          throw err;
+        }
+      }
+    } finally {
+      this.loopDepth--;
+    }
+  }
+
   private execStop(node: StopNode) {
     if (this.loopDepth === 0) {
-      throw new Error(`STOP is only allowed inside EACH loops (line ${node.line})`);
+      throw new Error(`STOP is only allowed inside loops (line ${node.line})`);
     }
     throw new LoopSignal("break");
   }
 
   private execSkip(node: SkipNode) {
     if (this.loopDepth === 0) {
-      throw new Error(`SKIP is only allowed inside EACH loops (line ${node.line})`);
+      throw new Error(`SKIP is only allowed inside loops (line ${node.line})`);
     }
     throw new LoopSignal("continue");
   }

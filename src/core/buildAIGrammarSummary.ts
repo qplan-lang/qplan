@@ -123,7 +123,25 @@ each (price, idx) in prices {
   skip      → 다음 반복으로 건너뜀
 
 
-7) Set 문
+7) While 반복문
+-----------------------------------------
+형식:
+while <condition> {
+   ... actions ...
+}
+
+설명:
+- if 조건과 동일한 문법/연산자를 사용
+- 조건이 참인 동안 블록 반복
+- 내부에서 stop/skip 사용 가능
+
+예)
+while total < limit {
+  set total = total + step
+}
+
+
+8) Set 문
 -----------------------------------------
 형식:
 set <identifier> = <expression>
@@ -138,7 +156,7 @@ set count = count + 1
 set total = (total + delta) * 2
 
 
-8) Future 생성
+9) Future 생성
 -----------------------------------------
 형식:
 future key=value -> futureName
@@ -151,7 +169,7 @@ future key=value -> futureName
 future delay=300 value="done" -> f1
 
 
-9) Join (Future 결합)
+10) Join (Future 결합)
 -----------------------------------------
 형식:
 join futures="f1,f2,f3" -> out
@@ -161,7 +179,7 @@ join futures="f1,f2,f3" -> out
 - Promise.all 형태
 
 
-10) ctx 변수 규칙
+11) ctx 변수 규칙
 -----------------------------------------
 - action 결과는 ctx에 저장
 - key=value 에서 value가 문자열인데 ctx에 동일 key 가 있으면 ctx 값을 사용
@@ -171,13 +189,13 @@ echo msg="hello" -> x
 echo msg=x -> y    (여기서 x는 "hello")
 
 
-11) 문자열 규칙
+12) 문자열 규칙
 -----------------------------------------
 문자열은 반드시 "..." 로 감싸야 함.
 JSON 문자열 내부의 " 는 \\" 로 이스케이프해야 함.
 
 
-12) 스크립트 구조
+13) 스크립트 구조
 -----------------------------------------
 - 여러 action/if/parallel/future/join 명령들을 줄 단위로 나열
 - 블록 내부는 {} 로 감싸며 줄바꿈하여 작성

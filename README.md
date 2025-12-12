@@ -163,6 +163,15 @@ each (item, idx) in items {
   echo msg=idx -> lastIndex
 }
 ```
+stop/skip 은 while 반복에서도 동일하게 동작.
+
+### While
+```
+while count < 10 {
+  set count = count + 1
+}
+```
+조건이 true 인 동안 블록을 반복 실행한다. stop/skip 으로 탈출/다음 회차 이동 가능.
 
 ### Set
 ```

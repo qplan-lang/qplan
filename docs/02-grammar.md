@@ -14,7 +14,7 @@ qplan DSL은 다음과 같은 형태로 구성된 작은 워크플로우 언어�
 
 - Action 실행  
 - Set 문으로 변수 수정  
-- If 조건문  
+- If / While 조건 반복  
 - Parallel 병렬 실행  
 - Future/Join 비동기 처리  
 - ExecutionContext 기반 참조  
@@ -145,11 +145,24 @@ each (price, i) in prices {
 }
 ```
 
-루프 내부에서는 `stop` / `skip` 를 사용해 흐름을 제어할 수 있다.
+루프 내부에서는 `stop` / `skip` 를 사용해 흐름을 제어할 수 있다 (while 에서도 동일하게 사용 가능).
 
 ---
 
-## 2.8 Set 문
+## 2.8 While 반복문
+
+```
+while count < 10 {
+  ...
+}
+```
+
+If 문과 동일한 조건식을 사용하며, 조건이 true 인 동안 블록을 반복 실행한다.  
+블록 안에서 `stop` / `skip` 으로 반복 제어가 가능하다.
+
+---
+
+## 2.9 Set 문
 
 ```
 set count = count + 1
@@ -171,6 +184,7 @@ Script          = { Statement } ;
 
 Statement       = Action
                 | IfStmt
+                | WhileStmt
                 | ParallelStmt
                 | EachStmt
                 | StopStmt
@@ -191,6 +205,8 @@ Value           = Number
                 | Identifier ;
 
 IfStmt          = "if" , Condition , Block , [ ElseBlock ] ;
+
+WhileStmt       = "while" , Condition , Block ;
 
 Condition       = SimpleCondition , { LogicOp , SimpleCondition } ;
 SimpleCondition = [ "NOT" ] , Identifier , Comparator , (Number | QuotedString | Identifier) ;

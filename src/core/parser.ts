@@ -16,6 +16,7 @@ import {
   ActionNode,
   BlockNode,
   IfNode,
+  WhileNode,
   ParallelNode,
   EachNode,
   StopNode,
@@ -128,6 +129,9 @@ export class Parser {
 
     // EACH
     if (this.match(TokenType.Keyword, "EACH")) return this.parseEach();
+
+    // WHILE
+    if (this.match(TokenType.Keyword, "WHILE")) return this.parseWhile();
 
     // STOP
     if (this.match(TokenType.Keyword, "STOP")) return this.parseStop();
@@ -579,6 +583,21 @@ export class Parser {
       condition,
       thenBlock,
       elseBlock,
+      line,
+    };
+  }
+
+  private parseWhile(): WhileNode {
+    const kw = this.consume(TokenType.Keyword, "WHILE");
+    const line = kw.line;
+    const condition = this.parseConditionExpression();
+    this.consume(TokenType.Symbol, "{");
+    const block = this.parseBlock();
+    this.consume(TokenType.Symbol, "}");
+    return {
+      type: "While",
+      condition,
+      block,
       line,
     };
   }

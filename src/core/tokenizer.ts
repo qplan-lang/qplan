@@ -8,7 +8,7 @@
  *  - Identifier (단어)
  *  - String ("문자열")
  *  - Number (123, 12.5)
- *  - Keyword (IF, ELSE, END, PARALLEL, USING, EACH, AS, IN, STOP, SKIP, AND, OR, NOT, SET)
+ *  - Keyword (IF, ELSE, END, PARALLEL, USING, EACH, AS, IN, STOP, SKIP, AND, OR, NOT, SET, WHILE)
  *  - Symbol (=, ->, :, ,, )
  */
 
@@ -42,6 +42,7 @@ const KEYWORDS = new Set([
   "OR",
   "NOT",
   "SET",
+  "WHILE",
 ]);
 
 export function tokenize(input: string): Token[] {

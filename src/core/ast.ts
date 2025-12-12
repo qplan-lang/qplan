@@ -92,6 +92,15 @@ export interface EachNode extends BaseNode {
 }
 
 /**
+ * while 루프
+ */
+export interface WhileNode extends BaseNode {
+  type: "While";
+  condition: ConditionExpression;
+  block: BlockNode;
+}
+
+/**
  * 반복 제어
  */
 export interface StopNode extends BaseNode {
@@ -151,6 +160,7 @@ export interface ASTRoot {
 export type ASTNode =
   | ActionNode
   | IfNode
+  | WhileNode
   | ParallelNode
   | EachNode
   | StopNode

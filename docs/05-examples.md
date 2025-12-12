@@ -67,3 +67,11 @@ var 0 -> count
 set count = count + 1
 set count = count * 2
 ```
+
+## While 반복
+```
+var 0 -> count
+while count < 5 {
+  set count = count + 1
+}
+```
