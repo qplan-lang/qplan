@@ -1,0 +1,71 @@
+{
+  "type": "Root",
+  "block": {
+    "type": "Block",
+    "statements": [
+      {
+        "type": "Step",
+        "id": "sample",
+        "desc": "validator demo",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "var",
+              "args": {
+                "value": 0
+              },
+              "output": "count"
+            },
+            {
+              "type": "While",
+              "condition": {
+                "type": "Simple",
+                "left": "count",
+                "comparator": "<",
+                "right": 3,
+                "negated": false
+              },
+              "block": {
+                "type": "Block",
+                "statements": [
+                  {
+                    "type": "Set",
+                    "target": "count",
+                    "expression": {
+                      "type": "BinaryExpression",
+                      "operator": "+",
+                      "left": {
+                        "type": "Identifier",
+                        "name": "count"
+                      },
+                      "right": {
+                        "type": "Literal",
+                        "value": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "identifier",
+                    "name": "count"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_0"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

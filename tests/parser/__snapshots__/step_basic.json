@@ -1,0 +1,301 @@
+{
+  "type": "Root",
+  "block": {
+    "type": "Block",
+    "statements": [
+      {
+        "type": "Step",
+        "id": "init",
+        "desc": "변수 초기화",
+        "output": "initResult",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "var",
+              "args": {
+                "value": 0
+              },
+              "output": "total"
+            },
+            {
+              "type": "Action",
+              "module": "var",
+              "args": {
+                "value": [
+                  1,
+                  2,
+                  3
+                ]
+              },
+              "output": "nums"
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "init done"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_0"
+            },
+            {
+              "type": "Return",
+              "entries": [
+                {
+                  "key": "tot",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "total"
+                  }
+                },
+                {
+                  "key": "nums",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "nums"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "type": "Step",
+        "id": "loop",
+        "desc": "합산 루프",
+        "onError": "retry=2",
+        "output": "loopResult",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "loop start"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_1"
+            },
+            {
+              "type": "Each",
+              "iterator": "item",
+              "indexVar": "idx",
+              "iterable": "nums",
+              "block": {
+                "type": "Block",
+                "statements": [
+                  {
+                    "type": "Action",
+                    "module": "math",
+                    "args": {
+                      "__options": [
+                        "add"
+                      ],
+                      "op": "add",
+                      "a": "total",
+                      "b": "item"
+                    },
+                    "output": "total"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "loop end"
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "total"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_2"
+            },
+            {
+              "type": "Action",
+              "module": "math",
+              "args": {
+                "__options": [
+                  "add"
+                ],
+                "op": "add",
+                "a": "total",
+                "b": 0
+              },
+              "output": "sumSnapshot"
+            }
+          ]
+        }
+      },
+      {
+        "type": "Step",
+        "id": "branch",
+        "desc": "조건 분기",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "If",
+              "condition": {
+                "type": "Simple",
+                "left": "total",
+                "comparator": "<=",
+                "right": 6,
+                "negated": false
+              },
+              "thenBlock": {
+                "type": "Block",
+                "statements": [
+                  {
+                    "type": "Jump",
+                    "targetStepId": "loop"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "계속 진행"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_3"
+            }
+          ]
+        }
+      },
+      {
+        "type": "Step",
+        "id": "cleanup",
+        "desc": "마무리",
+        "output": "finalResult",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "=== 마무리 ==="
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_4"
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "total:"
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "total"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_5"
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "initResult:"
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "initResult"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_6"
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "loopResult:"
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "loopResult"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_7"
+            },
+            {
+              "type": "Return",
+              "entries": [
+                {
+                  "key": "total",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "total"
+                  }
+                },
+                {
+                  "key": "init",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "initResult"
+                  }
+                },
+                {
+                  "key": "loop",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "loopResult"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

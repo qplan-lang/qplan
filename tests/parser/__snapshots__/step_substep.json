@@ -1,0 +1,485 @@
+{
+  "type": "Root",
+  "block": {
+    "type": "Block",
+    "statements": [
+      {
+        "type": "Step",
+        "id": "pipeline",
+        "desc": "루트 파이프라인",
+        "output": "pipelineResult",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "var",
+              "args": {
+                "value": {
+                  "numbers": []
+                }
+              },
+              "output": "prepareResult"
+            },
+            {
+              "type": "Action",
+              "module": "var",
+              "args": {
+                "value": {
+                  "sum": 0
+                }
+              },
+              "output": "aggregateResult"
+            },
+            {
+              "type": "Action",
+              "module": "var",
+              "args": {
+                "value": {
+                  "message": "pending"
+                }
+              },
+              "output": "reportResult"
+            },
+            {
+              "type": "Action",
+              "module": "var",
+              "args": {
+                "value": {
+                  "status": "pending"
+                }
+              },
+              "output": "finalizeResult"
+            },
+            {
+              "type": "Action",
+              "module": "var",
+              "args": {
+                "value": 0
+              },
+              "output": "total"
+            },
+            {
+              "type": "Step",
+              "id": "prepare",
+              "desc": "데이터 준비",
+              "output": "prepareResult",
+              "block": {
+                "type": "Block",
+                "statements": [
+                  {
+                    "type": "Action",
+                    "module": "var",
+                    "args": {
+                      "value": [
+                        1,
+                        2
+                      ]
+                    },
+                    "output": "numbers"
+                  },
+                  {
+                    "type": "Set",
+                    "target": "total",
+                    "expression": {
+                      "type": "Literal",
+                      "value": 0
+                    }
+                  },
+                  {
+                    "type": "Return",
+                    "entries": [
+                      {
+                        "key": "numbers",
+                        "expression": {
+                          "type": "Identifier",
+                          "name": "numbers"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Step",
+              "id": "aggregate",
+              "desc": "합계 계산",
+              "output": "aggregateResult",
+              "block": {
+                "type": "Block",
+                "statements": [
+                  {
+                    "type": "Each",
+                    "iterator": "n",
+                    "iterable": "numbers",
+                    "block": {
+                      "type": "Block",
+                      "statements": [
+                        {
+                          "type": "Action",
+                          "module": "math",
+                          "args": {
+                            "__options": [
+                              "add"
+                            ],
+                            "op": "add",
+                            "a": "total",
+                            "b": "n"
+                          },
+                          "output": "total"
+                        },
+                        {
+                          "type": "If",
+                          "condition": {
+                            "type": "Simple",
+                            "left": "total",
+                            "comparator": ">",
+                            "right": 6,
+                            "negated": false
+                          },
+                          "thenBlock": {
+                            "type": "Block",
+                            "statements": [
+                              {
+                                "type": "Action",
+                                "module": "math",
+                                "args": {
+                                  "__options": [
+                                    "add"
+                                  ],
+                                  "op": "add",
+                                  "a": "total",
+                                  "b": 0
+                                },
+                                "output": "partial"
+                              },
+                              {
+                                "type": "Return",
+                                "entries": [
+                                  {
+                                    "key": "sum",
+                                    "expression": {
+                                      "type": "Identifier",
+                                      "name": "partial"
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "type": "Return",
+                    "entries": [
+                      {
+                        "key": "sum",
+                        "expression": {
+                          "type": "Identifier",
+                          "name": "total"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Step",
+              "id": "validate",
+              "desc": "검증/재시도",
+              "onError": "continue",
+              "block": {
+                "type": "Block",
+                "statements": [
+                  {
+                    "type": "If",
+                    "condition": {
+                      "type": "Simple",
+                      "left": "total",
+                      "comparator": "<",
+                      "right": 6,
+                      "negated": false
+                    },
+                    "thenBlock": {
+                      "type": "Block",
+                      "statements": [
+                        {
+                          "type": "Action",
+                          "module": "print",
+                          "args": {
+                            "__entries": [
+                              {
+                                "kind": "literal",
+                                "value": "합계가 작아서 재시작"
+                              }
+                            ],
+                            "__suppressStore": true
+                          },
+                          "output": "__print_dummy_0"
+                        },
+                        {
+                          "type": "Action",
+                          "module": "var",
+                          "args": {
+                            "value": [
+                              1,
+                              2,
+                              3,
+                              4
+                            ]
+                          },
+                          "output": "expanded"
+                        },
+                        {
+                          "type": "Set",
+                          "target": "numbers",
+                          "expression": {
+                            "type": "Identifier",
+                            "name": "expanded"
+                          }
+                        },
+                        {
+                          "type": "Set",
+                          "target": "total",
+                          "expression": {
+                            "type": "Literal",
+                            "value": 0
+                          }
+                        },
+                        {
+                          "type": "Jump",
+                          "targetStepId": "aggregate"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Step",
+              "id": "report",
+              "desc": "리포트 작성",
+              "output": "reportResult",
+              "block": {
+                "type": "Block",
+                "statements": [
+                  {
+                    "type": "Action",
+                    "module": "print",
+                    "args": {
+                      "__entries": [
+                        {
+                          "kind": "literal",
+                          "value": "총합:"
+                        },
+                        {
+                          "kind": "identifier",
+                          "name": "total"
+                        }
+                      ],
+                      "__suppressStore": true
+                    },
+                    "output": "__print_dummy_1"
+                  },
+                  {
+                    "type": "Return",
+                    "entries": [
+                      {
+                        "key": "message",
+                        "expression": {
+                          "type": "Literal",
+                          "value": "완료"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Step",
+              "id": "finalize",
+              "desc": "최종 저장",
+              "output": "finalizeResult",
+              "block": {
+                "type": "Block",
+                "statements": [
+                  {
+                    "type": "Action",
+                    "module": "print",
+                    "args": {
+                      "__entries": [
+                        {
+                          "kind": "literal",
+                          "value": "최종 합계:"
+                        },
+                        {
+                          "kind": "identifier",
+                          "name": "total"
+                        }
+                      ],
+                      "__suppressStore": true
+                    },
+                    "output": "__print_dummy_2"
+                  },
+                  {
+                    "type": "Action",
+                    "module": "math",
+                    "args": {
+                      "__options": [
+                        "add"
+                      ],
+                      "op": "add",
+                      "a": "total",
+                      "b": 0
+                    },
+                    "output": "finalTotal"
+                  },
+                  {
+                    "type": "Return",
+                    "entries": [
+                      {
+                        "key": "status",
+                        "expression": {
+                          "type": "Literal",
+                          "value": "ok"
+                        }
+                      },
+                      {
+                        "key": "value",
+                        "expression": {
+                          "type": "Identifier",
+                          "name": "finalTotal"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Return",
+              "entries": [
+                {
+                  "key": "prepared",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "prepareResult"
+                  }
+                },
+                {
+                  "key": "aggregate",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "aggregateResult"
+                  }
+                },
+                {
+                  "key": "report",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "reportResult"
+                  }
+                },
+                {
+                  "key": "finalize",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "finalizeResult"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "type": "Step",
+        "id": "final",
+        "desc": "결과 출력",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "파이프라인:"
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "pipelineResult"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_3"
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "준비:"
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "prepareResult"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_4"
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "합계:"
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "aggregateResult"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_5"
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "리포트:"
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "reportResult"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_6"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

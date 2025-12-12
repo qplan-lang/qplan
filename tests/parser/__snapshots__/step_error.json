@@ -1,0 +1,371 @@
+{
+  "type": "Root",
+  "block": {
+    "type": "Block",
+    "statements": [
+      {
+        "type": "Step",
+        "id": "init",
+        "desc": "초기화",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "var",
+              "args": {
+                "value": 0
+              },
+              "output": "retryCounter"
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "초기화 완료"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_0"
+            }
+          ]
+        }
+      },
+      {
+        "type": "Step",
+        "id": "failExample",
+        "desc": "기본 fail (데모용)",
+        "onError": "continue",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "fail 예제 시작"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_1"
+            },
+            {
+              "type": "Action",
+              "module": "math",
+              "args": {
+                "__options": [
+                  "add"
+                ],
+                "op": "add",
+                "a": "missingVar",
+                "b": 1
+              },
+              "output": "broken"
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "이 코드는 실행되지 않습니다"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_2"
+            }
+          ]
+        }
+      },
+      {
+        "type": "Step",
+        "id": "continueExample",
+        "desc": "continue 정책",
+        "onError": "continue",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "continue 예제 시작"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_3"
+            },
+            {
+              "type": "Action",
+              "module": "math",
+              "args": {
+                "__options": [
+                  "add"
+                ],
+                "op": "add",
+                "a": "missingVar",
+                "b": 1
+              },
+              "output": "broken"
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "continue 예제 끝"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_4"
+            }
+          ]
+        }
+      },
+      {
+        "type": "Step",
+        "id": "retryExample",
+        "desc": "retry 정책",
+        "onError": "retry=2",
+        "output": "retryResult",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "retry 예제, 현재 카운터 ="
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "retryCounter"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_5"
+            },
+            {
+              "type": "If",
+              "condition": {
+                "type": "Simple",
+                "left": "retryCounter",
+                "comparator": "<",
+                "right": 1,
+                "negated": false
+              },
+              "thenBlock": {
+                "type": "Block",
+                "statements": [
+                  {
+                    "type": "Set",
+                    "target": "retryCounter",
+                    "expression": {
+                      "type": "BinaryExpression",
+                      "operator": "+",
+                      "left": {
+                        "type": "Identifier",
+                        "name": "retryCounter"
+                      },
+                      "right": {
+                        "type": "Literal",
+                        "value": 1
+                      }
+                    }
+                  },
+                  {
+                    "type": "Action",
+                    "module": "math",
+                    "args": {
+                      "__options": [
+                        "add"
+                      ],
+                      "op": "add",
+                      "a": "missingVar",
+                      "b": 1
+                    },
+                    "output": "broken"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Action",
+              "module": "math",
+              "args": {
+                "__options": [
+                  "add"
+                ],
+                "op": "add",
+                "a": "retryCounter",
+                "b": 10
+              },
+              "output": "ok"
+            },
+            {
+              "type": "Return",
+              "entries": [
+                {
+                  "key": "attempts",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "retryCounter"
+                  }
+                },
+                {
+                  "key": "result",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "ok"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "type": "Step",
+        "id": "jumpExample",
+        "desc": "jump 정책",
+        "onError": "jump='recovery'",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "jump 예제 시작"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_6"
+            },
+            {
+              "type": "Action",
+              "module": "math",
+              "args": {
+                "__options": [
+                  "add"
+                ],
+                "op": "add",
+                "a": "missingVar",
+                "b": 1
+              },
+              "output": "broken"
+            }
+          ]
+        }
+      },
+      {
+        "type": "Step",
+        "id": "recovery",
+        "desc": "점프 대상",
+        "output": "recoveryResult",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "recovery step 실행"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_7"
+            },
+            {
+              "type": "Return",
+              "entries": [
+                {
+                  "key": "message",
+                  "expression": {
+                    "type": "Literal",
+                    "value": "jump 처리 완료"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "type": "Step",
+        "id": "summary",
+        "desc": "결과 요약",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "retry 결과:"
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "retryResult"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_8"
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "recovery 결과:"
+                  },
+                  {
+                    "kind": "identifier",
+                    "name": "recoveryResult"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_9"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

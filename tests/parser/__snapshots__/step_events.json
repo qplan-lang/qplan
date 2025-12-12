@@ -1,0 +1,165 @@
+{
+  "type": "Root",
+  "block": {
+    "type": "Block",
+    "statements": [
+      {
+        "type": "Step",
+        "id": "prepare",
+        "desc": "데이터 준비",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "var",
+              "args": {
+                "value": 0
+              },
+              "output": "total"
+            },
+            {
+              "type": "Action",
+              "module": "var",
+              "args": {
+                "value": [
+                  1,
+                  2,
+                  3
+                ]
+              },
+              "output": "nums"
+            }
+          ]
+        }
+      },
+      {
+        "type": "Step",
+        "id": "sum",
+        "desc": "합산",
+        "output": "sumResult",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Each",
+              "iterator": "n",
+              "iterable": "nums",
+              "block": {
+                "type": "Block",
+                "statements": [
+                  {
+                    "type": "Action",
+                    "module": "math",
+                    "args": {
+                      "__options": [
+                        "add"
+                      ],
+                      "op": "add",
+                      "a": "total",
+                      "b": "n"
+                    },
+                    "output": "total"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "type": "Step",
+        "id": "branch",
+        "desc": "분기",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "If",
+              "condition": {
+                "type": "Simple",
+                "left": "total",
+                "comparator": ">=",
+                "right": 3,
+                "negated": false
+              },
+              "thenBlock": {
+                "type": "Block",
+                "statements": [
+                  {
+                    "type": "Jump",
+                    "targetStepId": "final"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "literal",
+                    "value": "branch continued"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_0"
+            }
+          ]
+        }
+      },
+      {
+        "type": "Step",
+        "id": "final",
+        "desc": "마무리",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "identifier",
+                    "name": "total"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_1"
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "identifier",
+                    "name": "sumResult"
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_2"
+            },
+            {
+              "type": "Return",
+              "entries": [
+                {
+                  "key": "summary",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "sumResult"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

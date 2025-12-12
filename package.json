@@ -13,7 +13,7 @@
     "build": "tsc",
     "dev": "tsc -w",
     "clean": "rm -rf dist",
-    "test": "echo \"No test yet\"",
+    "test": "npm run build && node tests/parser/parser-tests.js",
     "validate": "node dist/tools/validateScript.js"
   },
   "keywords": [
