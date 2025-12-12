@@ -37,6 +37,8 @@ qplan은 Step 기반 워크플로우 언어로, 모든 Action은 반드시 step 
 - Step 정의: step id="..." desc="..." type="..." onError="..." -> output { ... }
   - onError: fail(기본), continue, retry=N, jump="stepId"
   - jump to="stepId" 로 다른 Step으로 이동 (블록 간 이동 가능)
+  - step 내부에 다른 step 을 중첩(Sub-step)하여 계층 구조를 만들 수 있음
+  - 각 step 은 onError 정책으로 fail / continue / retry / jump 흐름을 제어
   - return 을 생략하면 마지막 Action 결과가 기본으로 활용되며, 필요 시 'return key=value ...' 형태로 Step 결과를 명시적으로 구성 가능
 - Action 실행 (모듈 이름 뒤 옵션으로 op 지정 가능)
 - If 조건문 (>, <, >=, <=, ==, !=, EXISTS, NOT_EXISTS) + and/or/not 조합, 괄호 우선순위 지원

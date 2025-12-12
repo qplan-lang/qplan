@@ -47,7 +47,7 @@ qplan은 "AI-친화적 워크플로우 DSL"입니다.
 - 간결한 문법
 - ActionModule 기반 확장성
 - AST + ExecutionContext 기반 안정적 실행
-- Step/jump/error policy 기반 흐름 제어
+- Step/Sub-step/jump/error policy 기반 흐름 제어
 - Future/Join/Each/Parallel 제어 흐름 지원
 - 모든 Action은 Step 내부에서 실행
 - AI가 자동으로 워크플로우를 생성할 수 있도록 설계됨
@@ -97,7 +97,7 @@ ${moduleText}
 1) 사용자의 요구를 분석해 **올바른 qplan 스크립트** 생성  
 2) 문법 오류 없는 qplan 생성  
 3) 모듈과 usage를 정확히 활용  
-4) Step/Sub-step 구조, jump, onError 정책, Step output을 정확히 구성  
+4) Step/Sub-step 구조, jump, onError 정책(fail/continue/retry/jump), Step output/return 을 정확히 구성  
 5) If / Each / Parallel / Future / Join 등 복합 로직 구성 (stop / skip 포함)  
 6) ctx 변수를 올바르게 참조  
 7) 존재하지 않는 모듈은 절대 사용하지 않음  

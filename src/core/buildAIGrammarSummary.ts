@@ -40,6 +40,7 @@ qplan DSL Core Grammar (AI-Friendly Summary)
   - onError: fail(기본) / continue / retry=<N> / jump="<stepId>"
   - -> outputVar : Step 전체 결과를 ctx 변수에 저장 (기본은 마지막 action 결과)
   - (선택) return key=value ... : Step 결과를 명시적으로 구성하여 반환
+  - step 내부에 다시 step 을 중첩(Sub-step)할 수 있으며, 각 sub-step도 자체 onError/jump 정책을 가진다
 
 Jump 문법:
   jump to="<stepId>"
@@ -47,6 +48,7 @@ Jump 문법:
 규칙:
   - Step ID로만 이동할 수 있다 (Action 줄로 점프 불가)
   - 블록 간 이동 가능 (Step 트리를 따라 상위/하위 위치로 점프)
+  - onError 정책에 따라 fail/continue/retry/jump 흐름을 제어할 수 있음
 
 
 2) Action

@@ -92,6 +92,43 @@ root
       └─ 계산 처리
 ```
 
+## 4.1 Sub-step 베스트 프랙티스
+- 상위 Step은 고수준 작업 이름만 담고, 세부 로직은 Sub-step 으로 분리
+- Sub-step 실행 중 에러가 나면 해당 Step의 onError 정책이 먼저 적용되며, 필요한 경우 Jump 로 상위 Step에서 에러 부분을 다시 호출할 수 있다.
+- Sub-step 에서 return 한 값은 부모 Step에서도 ctx 변수로 접근 가능하다.
+
+예시:
+```
+step id="pipeline" desc="루트 단계" -> pipelineResult {
+    step id="prepare" desc="데이터 준비" -> prepareResult {
+        file read path="./input.txt" -> raw
+        return data=raw
+    }
+
+    step id="aggregate" desc="집계" onError="retry=2" -> aggResult {
+        math add a=total b=unknown -> total   # 에러 → retry 정책 적용
+        return sum=total
+    }
+
+    step id="report" desc="리포트 작성" -> reportResult {
+        if aggResult.sum > 100 {
+            jump to="review"
+        }
+        return summary="done"
+    }
+
+    step id="review" desc="재검토" onError="jump=\"cleanup\"" {
+        ...
+    }
+
+    step id="cleanup" desc="마무리" {
+        ...
+    }
+
+    return prepare=prepareResult aggregate=aggResult report=reportResult
+}
+```
+
 ---
 
 # 5. Jump 문법 (흐름 제어)
@@ -144,6 +181,33 @@ step id="fetch" desc="네트워크 요청" onError="continue" {
 | continue | 에러 무시하고 다음 step으로 |
 | retry=3 | 3회 재시도 |
 | jump="cleanup" | 오류 발생 시 특정 step으로 이동 |
+
+## 7.1 정책별 동작 예시
+- **fail (기본)**: 에러 발생 시 즉시 중단. 다른 정책이 없으면 자동 적용.
+- **continue**: 에러를 기록하고 다음 Step 으로 이동. 실패한 Step 의 output 변수는 설정되지 않을 수 있음.
+- **retry=n**: 지정한 횟수만큼 Step 전체를 재시도. 성공하면 정상 종료, 실패하면 마지막 에러를 던짐.
+- **jump="stepId"**: 에러 발생 시 지정 Step 으로 바로 이동. Jump 대상이 존재해야 하며, Jump 후 실행은 해당 Step 의 첫 지점부터 진행.
+
+예시 시퀀스:
+```
+step id="prepare" desc="초기화" {
+    ...
+}
+
+step id="fetch" desc="데이터 수집" onError="retry=2" -> fetched {
+    http url="..." -> raw
+    math add a=raw b=unknown -> broken    # 실패 → retry
+    return data=raw
+}
+
+step id="transform" desc="부가 처리" onError="jump=\"cleanup\"" {
+    ...
+}
+
+step id="cleanup" desc="마무리" {
+    ...
+}
+```
 
 ---
 
