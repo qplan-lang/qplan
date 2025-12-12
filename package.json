@@ -1,6 +1,6 @@
 {
   "name": "qplan",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "AI-driven workflow DSL engine",
   "type": "module",
   "main": "dist/index.js",
@@ -10,9 +10,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "clean": "rimraf dist",
+    "build": "npm run clean && tsc",
     "dev": "tsc -w",
-    "clean": "rm -rf dist",
     "test": "npm run build && node tests/parser/parser-tests.js",
     "validate": "node dist/tools/validateScript.js"
   },
@@ -36,6 +36,7 @@
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^25.0.0",
+    "rimraf": "^6.1.2",
     "typescript": "^5.3.0"
   },
   "dependencies": {
