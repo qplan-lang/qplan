@@ -60,3 +60,10 @@ var "hello" -> msg
 var [1,2,3] -> items
 var {"a":1} -> config
 ```
+
+## Set 문
+```
+var 0 -> count
+set count = count + 1
+set count = count * 2
+```

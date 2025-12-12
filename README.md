@@ -164,6 +164,14 @@ each (item, idx) in items {
 }
 ```
 
+### Set
+```
+set total = total + 1
+set msg = "updated"
+set config = {"limit": 5}
+```
+기존 ctx 변수만 수정할 수 있으며 없으면 에러가 발생한다. 산술 연산(+,-,*,/), 괄호, 문자열/숫자/JSON/ctx 변수를 조합해 값을 계산한다.
+
 ### Future / Join
 ```
 future task="A" delay=200 -> f1

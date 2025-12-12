@@ -20,8 +20,10 @@ import {
   EachNode,
   StopNode,
   SkipNode,
+  SetNode,
   ConditionClause,
-  ConditionExpression
+  ConditionExpression,
+  ExpressionNode
 } from "./ast.js";
 import { ParserError } from "./parserError.js";
 
@@ -133,6 +135,9 @@ export class Parser {
     // SKIP
     if (this.match(TokenType.Keyword, "SKIP")) return this.parseSkip();
 
+    // SET
+    if (this.match(TokenType.Keyword, "SET")) return this.parseSet();
+
     // Block literal
     if (this.match(TokenType.Symbol, "{")) {
       this.consume(TokenType.Symbol, "{");
@@ -238,6 +243,20 @@ export class Parser {
       module: moduleName,
       args,
       output: out,
+      line,
+    };
+  }
+
+  private parseSet(): SetNode {
+    const kw = this.consume(TokenType.Keyword, "SET");
+    const line = kw.line;
+    const target = this.consumeIdentifier();
+    this.consume(TokenType.Symbol, "=");
+    const expression = this.parseExpression();
+    return {
+      type: "Set",
+      target,
+      expression,
       line,
     };
   }
@@ -445,6 +464,90 @@ export class Parser {
     if (args.op === undefined) {
       args.op = options[0];
     }
+  }
+
+  // ----------------------------------------------------------
+  // Expressions (for set)
+  // ----------------------------------------------------------
+  private parseExpression(precedence = 0): ExpressionNode {
+    let expr = this.parseUnaryExpression();
+
+    while (true) {
+      const token = this.peek();
+      if (token.type !== TokenType.Symbol) break;
+      const opPrecedence = this.getExpressionPrecedence(token.value);
+      if (opPrecedence === 0 || opPrecedence < precedence) break;
+      const op = this.consume(TokenType.Symbol).value;
+      const right = this.parseExpression(opPrecedence + 1);
+      expr = {
+        type: "BinaryExpression",
+        operator: op,
+        left: expr,
+        right,
+      };
+    }
+
+    return expr;
+  }
+
+  private getExpressionPrecedence(op: string): number {
+    if (op === "+" || op === "-") return 1;
+    if (op === "*" || op === "/") return 2;
+    return 0;
+  }
+
+  private parseUnaryExpression(): ExpressionNode {
+    if (this.match(TokenType.Symbol, "+")) {
+      this.consume(TokenType.Symbol, "+");
+      return this.parseUnaryExpression();
+    }
+    if (this.match(TokenType.Symbol, "-")) {
+      this.consume(TokenType.Symbol, "-");
+      return {
+        type: "UnaryExpression",
+        operator: "-",
+        argument: this.parseUnaryExpression(),
+      };
+    }
+    return this.parseExpressionPrimary();
+  }
+
+  private parseExpressionPrimary(): ExpressionNode {
+    const token = this.peek();
+    if (token.type === TokenType.Number) {
+      return {
+        type: "Literal",
+        value: Number(this.consume(TokenType.Number).value),
+      };
+    }
+    if (token.type === TokenType.String) {
+      return {
+        type: "Literal",
+        value: this.consumeString(),
+      };
+    }
+    if (token.type === TokenType.Identifier) {
+      return {
+        type: "Identifier",
+        name: this.consumeIdentifier(),
+      };
+    }
+    if (token.type === TokenType.Symbol && token.value === "(") {
+      this.consume(TokenType.Symbol, "(");
+      const expr = this.parseExpression();
+      this.consume(TokenType.Symbol, ")");
+      return expr;
+    }
+    if (
+      token.type === TokenType.Symbol &&
+      (token.value === "[" || token.value === "{")
+    ) {
+      return {
+        type: "Literal",
+        value: this.parseJsonLiteralValue(),
+      };
+    }
+    throw new ParserError(`Invalid expression token '${token.value}'`, token.line);
   }
 
   // ---------------------------------------

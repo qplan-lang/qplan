@@ -13,7 +13,7 @@ A 버전(기본 문법) + B 버전(전체 EBNF) 둘 다 포함되어 있으므�
 qplan DSL은 다음과 같은 형태로 구성된 작은 워크플로우 언어이다:
 
 - Action 실행  
-- 변수 저장  
+- Set 문으로 변수 수정  
 - If 조건문  
 - Parallel 병렬 실행  
 - Future/Join 비동기 처리  
@@ -149,6 +149,19 @@ each (price, i) in prices {
 
 ---
 
+## 2.8 Set 문
+
+```
+set count = count + 1
+set message = "hello"
+set config = {"limit":10}
+```
+
+기존 ctx 변수만 수정할 수 있다(없으면 에러).  
+식(Expression)은 숫자/문자열/JSON literal/기존 변수/괄호/산술 연산(+,-,*,/)을 조합하여 작성할 수 있다.
+
+---
+
 # 3. EBNF 전체 문법 (B 버전)
 
 아래는 qplan DSL의 **정식 EBNF 문법**이다.
@@ -161,7 +174,8 @@ Statement       = Action
                 | ParallelStmt
                 | EachStmt
                 | StopStmt
-                | SkipStmt ;
+                | SkipStmt
+                | SetStmt ;
 
 Action          = ModuleName , [ Option ] , { Argument } , [ "->" , Identifier ] ;
 Option          = Identifier ;
@@ -194,6 +208,17 @@ EachStmt        = "each" , ( "(" , Identifier , [ "," , Identifier ] , ")" | Ide
 
 StopStmt        = "stop" ;
 SkipStmt        = "skip" ;
+SetStmt         = "set" , Identifier , "=" , Expression ;
+
+Expression      = Term , { ("+" | "-") , Term } ;
+Term            = Factor , { ("*" | "/") , Factor } ;
+Factor          = Number
+                | QuotedString
+                | Identifier
+                | JsonObject
+                | JsonArray
+                | "(" , Expression , ")"
+                | "-" , Factor ;
 
 ParallelOptions = "concurrency=" , Number , [ "ignoreErrors=" , Boolean ] ;
 

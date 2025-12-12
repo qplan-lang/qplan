@@ -8,7 +8,7 @@
  *  - Identifier (단어)
  *  - String ("문자열")
  *  - Number (123, 12.5)
- *  - Keyword (IF, ELSE, END, PARALLEL, USING, EACH, AS, IN, STOP, SKIP, AND)
+ *  - Keyword (IF, ELSE, END, PARALLEL, USING, EACH, AS, IN, STOP, SKIP, AND, OR, NOT, SET)
  *  - Symbol (=, ->, :, ,, )
  */
 
@@ -27,7 +27,22 @@ export interface Token {
   line: number;
 }
 
-const KEYWORDS = new Set(["IF", "ELSE", "END", "PARALLEL", "USING", "EACH", "AS", "IN", "STOP", "SKIP", "AND", "OR", "NOT"]);
+const KEYWORDS = new Set([
+  "IF",
+  "ELSE",
+  "END",
+  "PARALLEL",
+  "USING",
+  "EACH",
+  "AS",
+  "IN",
+  "STOP",
+  "SKIP",
+  "AND",
+  "OR",
+  "NOT",
+  "SET",
+]);
 
 export function tokenize(input: string): Token[] {
   const tokens: Token[] = [];
@@ -113,7 +128,7 @@ export function tokenize(input: string): Token[] {
       continue;
     }
     
-    // Braces { } and parentheses ( )
+    // Braces/parentheses/brackets
     if (c === "{" || c === "}" || c === "(" || c === ")" || c === "[" || c === "]") {
       tokens.push({ type: TokenType.Symbol, value: c, line });
       i++;
@@ -127,10 +142,21 @@ export function tokenize(input: string): Token[] {
       continue;
     }
 
-    // Arrow (->)
-    if (c === "-" && input[i + 1] === ">") {
-      tokens.push({ type: TokenType.Symbol, value: "->", line });
-      i += 2;
+    // Arrow (->) or minus symbol
+    if (c === "-") {
+      if (input[i + 1] === ">") {
+        tokens.push({ type: TokenType.Symbol, value: "->", line });
+        i += 2;
+        continue;
+      }
+      tokens.push({ type: TokenType.Symbol, value: "-", line });
+      i++;
+      continue;
+    }
+
+    if (c === "+" || c === "*" || c === "/") {
+      tokens.push({ type: TokenType.Symbol, value: c, line });
+      i++;
       continue;
     }
 

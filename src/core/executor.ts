@@ -19,7 +19,9 @@ import {
   ConditionClause,
   ConditionExpression,
   StopNode,
-  SkipNode
+  SkipNode,
+  SetNode,
+  ExpressionNode
 } from "./ast.js";
 import { ModuleRegistry } from "./moduleRegistry.js";
 import { ExecutionContext } from "./executionContext.js";
@@ -55,6 +57,7 @@ export class Executor {
       case "Block": return this.executeBlock(node, ctx);
       case "Stop": return this.execStop(node);
       case "Skip": return this.execSkip(node);
+      case "Set": return this.execSet(node, ctx);
       default: throw new Error(`Unknown AST node type: ${(node as any).type}`);
     }
   }
@@ -207,5 +210,40 @@ export class Executor {
       throw new Error(`SKIP is only allowed inside EACH loops (line ${node.line})`);
     }
     throw new LoopSignal("continue");
+  }
+
+  private execSet(node: SetNode, ctx: ExecutionContext) {
+    if (!ctx.has(node.target)) {
+      throw new Error(`set target '${node.target}' does not exist (line ${node.line})`);
+    }
+    const value = this.evaluateExpressionNode(node.expression, ctx);
+    ctx.set(node.target, value);
+  }
+
+  private evaluateExpressionNode(expr: ExpressionNode, ctx: ExecutionContext): any {
+    switch (expr.type) {
+      case "Literal":
+        return expr.value;
+      case "Identifier":
+        if (!ctx.has(expr.name)) {
+          throw new Error(`Unknown identifier '${expr.name}' in set expression`);
+        }
+        return ctx.get(expr.name);
+      case "UnaryExpression":
+        return -this.evaluateExpressionNode(expr.argument, ctx);
+      case "BinaryExpression": {
+        const left = this.evaluateExpressionNode(expr.left, ctx);
+        const right = this.evaluateExpressionNode(expr.right, ctx);
+        switch (expr.operator) {
+          case "+": return left + right;
+          case "-": return left - right;
+          case "*": return left * right;
+          case "/": return left / right;
+          default: throw new Error(`Unsupported operator '${expr.operator}'`);
+        }
+      }
+      default:
+        throw new Error(`Unknown expression node ${(expr as any).type}`);
+    }
   }
 }

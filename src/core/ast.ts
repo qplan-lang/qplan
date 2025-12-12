@@ -103,6 +103,44 @@ export interface SkipNode extends BaseNode {
 }
 
 /**
+ * set 문
+ */
+export interface SetNode extends BaseNode {
+  type: "Set";
+  target: string;
+  expression: ExpressionNode;
+}
+
+export type ExpressionNode =
+  | LiteralExpression
+  | IdentifierExpression
+  | BinaryExpression
+  | UnaryExpression;
+
+export interface LiteralExpression {
+  type: "Literal";
+  value: any;
+}
+
+export interface IdentifierExpression {
+  type: "Identifier";
+  name: string;
+}
+
+export interface BinaryExpression {
+  type: "BinaryExpression";
+  operator: string;
+  left: ExpressionNode;
+  right: ExpressionNode;
+}
+
+export interface UnaryExpression {
+  type: "UnaryExpression";
+  operator: "-";
+  argument: ExpressionNode;
+}
+
+/**
  * 전체 AST 루트
  */
 export interface ASTRoot {
@@ -117,4 +155,5 @@ export type ASTNode =
   | EachNode
   | StopNode
   | SkipNode
+  | SetNode
   | BlockNode;
