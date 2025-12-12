@@ -168,6 +168,7 @@ step id="cleanup" desc="정리" -> summary {
 - `id` 를 지정하면 다른 Step에서 `jump to="<id>"` 로 이동할 수 있다.
 - `onError` 정책(`fail`/`continue`/`retry=n`/`jump="cleanup"`)과 `-> outputVar` 로 Step 전체 결과를 변수에 저장할 수 있다.
 - `return key=value ...` 구문으로 Step 내부에서 원하는 값을 모아 Step 결과로 반환할 수 있다.
+- 다양한 에러 처리(onError) 시나리오는 `examples/15_exam_step_error.js` 예제에서 확인할 수 있다.
 
 
 ### Action

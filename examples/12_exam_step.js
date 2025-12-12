@@ -8,6 +8,7 @@ step id="init" desc="변수 초기화" -> initResult {
   var 0 -> total
   var [1,2,3] -> nums
   print "init done"
+  return tot=total nums=nums
 }
 
 step id="loop" desc="합산 루프" onError="retry=2" -> loopResult {
