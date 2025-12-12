@@ -34,6 +34,17 @@ qplan은 **AI가 작성하고 시스템이 실행하는** 경량 워크플로우
 npm install qplan
 ```
 
+### 🔁 문서/코드 싱크 체크리스트
+새 DSL 문법·기능이 추가되면 아래 항목을 함께 갱신하세요.
+1. `docs/02-grammar.md` (정식 문법/EBNF)
+2. `README.md` (DSL 요약 및 예제)
+3. `src/core/buildAIGrammarSummary.ts`
+4. `src/core/buildAIPlanPrompt.ts`
+5. `src/core/buildQplanSuperPrompt.ts`
+6. 관련 문서/예제 (`docs/10-step-system.md`, `examples/*`, validator 등)
+
+필요 시 validator/test 스크립트도 업데이트하여 문서와 코드가 항상 동일한 기능을 설명하도록 유지합니다.
+
 ---
 
 ## 🧪 Quick Start
@@ -165,6 +176,7 @@ step id="cleanup" desc="정리" -> summary {
 }
 ```
 - 모든 Action은 Step 내부에서 실행된다.
+- Step 안에 다시 Step 을 중첩하여 복잡한 흐름을 나눌 수 있다.
 - `id` 를 지정하면 다른 Step에서 `jump to="<id>"` 로 이동할 수 있다.
 - `onError` 정책(`fail`/`continue`/`retry=n`/`jump="cleanup"`)과 `-> outputVar` 로 Step 전체 결과를 변수에 저장할 수 있다.
 - `return` 을 생략하면 Step 내부 마지막 Action 결과가 저장되며, 필요 시 `return key=value ...` 구문으로 원하는 값을 묶어 반환할 수 있다.
