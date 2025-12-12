@@ -24,6 +24,8 @@ import { Executor } from "./core/executor.js";
 import { ModuleRegistry } from "./core/moduleRegistry.js";
 import { ExecutionContext } from "./core/executionContext.js";
 import { basicModules } from "./modules/index.js";
+import { ParserError } from "./core/parserError.js";
+import { ASTRoot } from "./core/ast.js";
 
 // 🎯 외부에서 모듈 등록 가능하도록 registry export
 export const registry = new ModuleRegistry();
@@ -48,6 +50,31 @@ export async function runQplan(script: string) {
 
   await executor.run(ast, ctx);
   return ctx;
+}
+
+export type QplanValidationResult =
+  | { ok: true; ast: ASTRoot }
+  | { ok: false; error: string; line?: number };
+
+/**
+ * DSL 스크립트 문법만 검증하고 싶을 때 사용.
+ * 실행하지 않고 Tokenize + Parse 단계에서 오류 여부만 반환한다.
+ */
+export function validateQplanScript(script: string): QplanValidationResult {
+  try {
+    const tokens = tokenize(script);
+    const parser = new Parser(tokens);
+    const ast = parser.parse();
+    return { ok: true, ast };
+  } catch (err) {
+    if (err instanceof ParserError) {
+      return { ok: false, error: err.message, line: err.line };
+    }
+    if (err instanceof Error) {
+      return { ok: false, error: err.message };
+    }
+    return { ok: false, error: "Unknown validation error" };
+  }
 }
 
 // 기본 모듈을 자동 등록하려면 여기에서 registry.registAll(defaultModules) 호출하면 됨

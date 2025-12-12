@@ -1,0 +1,7 @@
+var 0 -> count
+
+while count < 3 {
+  set count = count + 1
+}
+
+print count

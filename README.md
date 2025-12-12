@@ -202,6 +202,25 @@ script
 
 ---
 
+# ✅ 문법 검증 도구
+
+AI가 생성한 스크립트나 수동 작성한 qplan 파일을 실행 전에 검사하려면 빌드 후 validator를 실행하세요.
+
+```
+npm run build
+npm run validate -- ./examples/validator_sample.qplan
+```
+
+표준 입력을 사용할 수도 있습니다.
+
+```
+echo 'var 0 -> count' | npm run validate -- -
+```
+
+성공 시 `✅ Valid qplan script` 문구가 표시되고, 실패 시 라인 번호와 에러 메시지를 출력하며 종료 코드 1을 반환합니다.
+
+---
+
 # 🧪 예제
 
 ```
