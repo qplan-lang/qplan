@@ -186,6 +186,36 @@ step id="fetch" desc="데이터" onError="retry=2" -> result {
 - 모든 Action은 Step 블록 내부에서만 실행된다.
 - `return` 을 작성하지 않으면 Step 내부 **마지막 Action 결과**가 자동으로 Step 결과가 된다.
 - Step 내부에서 `return key=value ...` 문을 사용하면 원하는 값을 객체로 묶어 Step 결과로 반환할 수 있다 (결과는 `-> result` 변수와 Step 이벤트에 전달됨).
+- Step 안에 다시 Step 을 중첩하여 Sub-step 트리를 만들 수 있다. 각 sub-step도 자체 onError/jump 정책을 가질 수 있다.
+- `onError` 정책으로 `fail` / `continue` / `retry=<N>` / `jump="<stepId>"` 흐름을 제어할 수 있다.
+
+예시:
+```
+step id="pipeline" desc="루트" -> pipelineResult {
+  step id="prepare" desc="준비" -> prepareResult {
+    file read path="./data.txt" -> raw
+    return raw=raw
+  }
+
+  step id="fetch" desc="API" onError="retry=3" -> fetchResult {
+    http url="https://example.com" -> api
+    return api=api
+  }
+
+  step id="branch" desc="분기" onError="jump=\"cleanup\"" {
+    if fetchResult.api.status != "ok" {
+      math add a=missing b=1 -> broken   # jump 로 cleanup 이동
+    }
+    return summary="done"
+  }
+
+  step id="cleanup" desc="정리" {
+    print "cleanup"
+  }
+
+  return prepared=prepareResult fetched=fetchResult
+}
+```
 
 ---
 
