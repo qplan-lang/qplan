@@ -1,7 +1,7 @@
 import { runQplan } from "../dist/index.js";
 
 /**
- * 예제: while 반복문
+ * Example: while loop patterns
  */
 const script = `
 var 0 -> count

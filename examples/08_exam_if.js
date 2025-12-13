@@ -1,28 +1,28 @@
 import { runQplan } from "../dist/index.js";
 
 /**
- * 예제: if 조건문 (기본 → 다중 조건 → 괄호 조합)
+ * Example: if statements (basic → complex → parentheses)
  */
 const script = `
 math add a=40 b=15 -> total
 math add a=2 b=2 -> count
 json parse data="null" -> nothing
 
-# 1) 기본 비교
+# 1) Basic comparison
 if total > 50 {
   echo msg="total > 50" -> msg1
 } else {
   echo msg="total <= 50" -> msg1
 }
 
-# 2) AND / OR / NOT 조합
+# 2) AND / OR / NOT combinations
 if total > 30 and not count > 3 {
   echo msg="complex true" -> msg2
 } else {
   echo msg="complex false" -> msg2
 }
 
-# 3) 괄호로 우선순위 제어
+# 3) Parentheses for precedence
 if (total > 60 and count > 3) or (total > 50 and count == 4) {
   echo msg="bracket true" -> msg3
 } else {

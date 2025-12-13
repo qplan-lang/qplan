@@ -1,7 +1,7 @@
 import { runQplan } from "../dist/index.js";
 
 /**
- * 파일 읽기 → 평균 → 조건문 → 결과 출력
+ * Future example: delay tasks and log completion
  */
 const script = `
 future task="A" delay=3000 value="task-1" -> f1

@@ -1,7 +1,7 @@
 import { runQplan } from "../dist/index.js";
 
 /**
- * 예제: set 문으로 기존 변수 업데이트
+ * Example: update existing variables with set
  */
 const script = `
 var 0 -> count

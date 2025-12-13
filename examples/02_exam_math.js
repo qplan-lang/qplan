@@ -1,7 +1,7 @@
 import { runQplan } from "../dist/index.js";
 
 /**
- * 파일 읽기 → 평균 → 조건문 → 결과 출력
+ * Example: read numbers, compute average, branch on result
  */
 const script = `
 file read path="./examples/nums.txt" -> raw

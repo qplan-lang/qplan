@@ -1,28 +1,28 @@
 import { runQplan } from "../dist/index.js";
 
 /**
- * 예제: stepEvents 훅을 사용해 Step 실행 로그 출력
+ * Example: log step execution via stepEvents hooks
  */
 const script = `
-step id="prepare" desc="데이터 준비" {
+step id="prepare" desc="Prepare data" {
   var 0 -> total
   var [1,2,3] -> nums
 }
 
-step id="sum" desc="합산" -> sumResult {
+step id="sum" desc="Sum" -> sumResult {
   each n in nums {
     math add a=total b=n -> total
   }
 }
 
-step id="branch" desc="분기" {
+step id="branch" desc="Branch" {
   if total >= 3 {
     jump to="final"
   }
   print "branch continued"
 }
 
-step id="final" desc="마무리" {
+step id="final" desc="Finalize" {
   print total
   print sumResult
   return summary=sumResult

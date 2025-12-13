@@ -1,7 +1,7 @@
 import { runQplan } from "../dist/index.js";
 
 /**
- * 예제: print 모듈 사용법
+ * Example: how to use the print module
  */
 const script = `
 file read path="./examples/print_user.json" -> userStr

@@ -1,7 +1,7 @@
 import { runQplan } from "../dist/index.js";
 
 /**
- * 예제: 입력 echo
+ * Example: simple echo input
  */
 const script = `
 echo msg="hello world" -> out

@@ -1,7 +1,7 @@
 import { runQplan } from "../dist/index.js";
 
 /**
- * 예제: var 모듈로 리터럴 값을 ctx에 저장
+ * Example: store literal values in ctx via the var module
  */
 const script = `
 var 0 -> count

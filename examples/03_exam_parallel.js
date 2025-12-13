@@ -1,7 +1,7 @@
 import { runQplan } from "../dist/index.js";
 
 /**
- * 파일 읽기 → 평균 → 조건문 → 결과 출력
+ * Example: simple parallel block with concurrency control
  */
 const script = `
 parallel concurrency=3 {
