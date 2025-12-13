@@ -20,7 +20,7 @@ var 0 -> count
 var "hello" -> msg
 var [1,2,3] -> items
 var {"a":1} -> config
-`,
+`.trim(),
     inputs: ["value"],
   }
 );

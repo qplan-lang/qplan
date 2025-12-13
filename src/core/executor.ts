@@ -53,7 +53,12 @@ export class Executor {
   private blockJumpOverrides = new Map<BlockNode, number>();
 
   constructor(private registry: ModuleRegistry, stepEvents?: StepEventEmitter) {
-    this.stepEvents = stepEvents ?? defaultStepEventEmitter;
+    this.stepEvents = stepEvents
+      ? {
+          ...defaultStepEventEmitter,
+          ...stepEvents
+        }
+      : defaultStepEventEmitter;
   }
 
   async run(root: ASTRoot, ctx: ExecutionContext): Promise<ExecutionContext> {

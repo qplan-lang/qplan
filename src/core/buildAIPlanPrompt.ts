@@ -44,6 +44,7 @@ QPlan은 Step 기반 워크플로우 언어로, 모든 Action은 반드시 step 
 - Action 실행: moduleName key=value ... -> outVar 형태
   - 문자열은 "..." 로 감싸고, ctx 변수를 참조할 때는 해당 변수명을 그대로 value 로 적되 따옴표를 쓰지 않습니다.
   - 모든 Action은 반드시 step 블록 내부에 위치해야 하며, 독립 실행은 허용되지 않습니다.
+- \`var\` 모듈은 숫자/문자열/JSON 리터럴만 value 로 허용됩니다. \`var value=diff -> copy\` 처럼 기존 ctx 변수를 다른 이름으로 복사하려고 쓰면 오류가 나므로, 그런 경우에는 \`set copy = diff\` (선행 초기화 필요) 또는 다른 모듈을 사용하십시오.
 - If 조건문 (>, <, >=, <=, ==, !=, EXISTS, NOT_EXISTS) + and/or/not 조합, 괄호 우선순위 지원
 - Each 반복문 (each item in iterable { ... } / each (item, idx) in iterable { ... })
 - Each 반복문에서 stop/skip 제어
@@ -74,6 +75,7 @@ ${requirement.trim()}
 생성 규칙
 -----------------------------------------
 - 오직 QPlan Language만 출력하세요.
+- QPlan script내 다른 프로그래밍 언어나 스크립트는 추가할 수 없습니다.
 - 모든 Action은 반드시 step 블록 안에 배치하십시오.
 - 필요 시 여러 step을 사용하여 상위/하위 단계 구조화, jump, onError 정책을 활용하십시오.
 - 존재하지 않는 모듈을 사용하지 마세요.
@@ -83,12 +85,11 @@ ${requirement.trim()}
 - 코드블록(\`\`\`)을 절대로 넣지 마세요.
 - step 블록 목록을 모두 출력했다면 즉시 종료하고, 뒤에 요약/정리/추가 텍스트(예: "A -> B" 체인)를 붙이지 마세요.
 - 동일한 step 을 반복하거나 빈 step 을 만들지 마세요.
-- step 결과를 참조할 때는 ctx 변수 이름만 사용하세요. \`stepId.value\` 같은 문법은 존재하지 않습니다.
-- 각 step 의 결과 변수는 헤더에서 \`-> resultVar\` 로 명시한 이름으로만 접근합니다. 예: \`step id="calc" -> stats { ... }\` 라면 이후에는 \`stats\` 객체만 사용하고, \`calc.total\` 처럼 step ID로 접근하지 마세요.
+- Action 결과 변수 이름도 재사용에 주의하고, 필요할 때만 명시적으로 \`return\` 으로 객체를 구성하세요.
+- step의 id로는 결과값에 접근할수 없습니다. \`stepId.value\` 같은 문법은 존재하지 않습니다.
 - ctx 변수나 Step 결과의 하위 필드는 \`stats.average\` 처럼 점(.) 표기로 접근할 수 있습니다. 필요한 필드는 해당 step 내에서 \`return average=...\` 형태로 노출하거나, JSON 모듈을 통해 구성해 두세요.
 - 의미 없는 wrapper step 을 만들지 말고, 요구사항을 해결하는 데 필요한 단계만 작성하세요.
 - 각 step 헤더의 출력 변수(\`-> resultVar\`)는 고유한 이름을 사용하세요. 같은 이름을 반복하면 이전 결과가 ctx 에서 덮어써집니다.
-- Action 결과 변수 이름도 재사용에 주의하고, 필요할 때만 명시적으로 \`return\` 으로 객체를 구성하세요.
 
 -----------------------------------------
 출력 형식
