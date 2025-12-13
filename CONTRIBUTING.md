@@ -1,104 +1,104 @@
 # Contributing to QPlan
 
-QPlan 프로젝트에 기여해주셔서 감사합니다!  
-이 문서는 코드, 문서, 아이디어 등 다양한 방식으로 기여하는 방법을 안내합니다.
+Thank you for contributing to QPlan!  
+This guide explains how to help across code, docs, tests, and ideas.
 
 ---
 
 # 1. How to Contribute
 
-QPlan은 초기 개발 단계이므로 다음과 같은 기여를 특히 환영합니다:
+QPlan is still early, so we especially welcome:
 
-- 버그 리포트  
-- 문법(Language) 개선 제안  
-- Parser / Lexer / AST 관련 코드  
-- Execution Engine 개선  
-- 새로운 모듈(ActionModule) 추가  
-- 문서 작성/보완  
-- 예제(Examples) 추가  
+- Bug reports  
+- Language/grammar proposals  
+- Parser / lexer / AST improvements  
+- Execution engine enhancements  
+- New ActionModules  
+- Documentation updates  
+- Additional examples  
 
 ---
 
 # 2. Issues
 
-버그 또는 기능 제안은 **GitHub Issues**에 등록해주세요.
+Report bugs or feature requests via **GitHub Issues**.
 
-이슈 작성 시 포함하면 좋은 내용:
+Include when possible:
 
-- 문제 요약  
-- 재현 방법  
-- 기대되는 동작  
-- 실제 동작  
-- 관련 코드 또는 스크립트  
-- 환경 정보(JDK 버전 등)
+- Summary  
+- Steps to reproduce  
+- Expected behavior  
+- Actual behavior  
+- Relevant scripts or code snippets  
+- Environment info (Node.js version, OS, etc.)  
 
 ---
 
 # 3. Pull Requests
 
-PR은 다음 절차에 따라 제출해주세요:
+Submit PRs using this flow:
 
-1. 저장소를 fork합니다.  
-2. 새로운 브랜치를 생성합니다.  
+1. Fork the repo.  
+2. Create a new branch.  
    ```
    git checkout -b feature/my-change
    ```
-3. 변경 사항을 커밋합니다.  
-4. PR을 제출하고, 변경 목적과 내용을 상세히 작성합니다.  
+3. Commit your changes.  
+4. Open a PR describing the motivation and details.  
 
 ### PR 기준
 
-- 빌드 에러 없어야 합니다.  
-- 문법/엔진과 관련된 변경은 반드시 문서도 수정해야 합니다.  
-- 가능한 작은 단위로 PR을 나누면 리뷰가 쉽습니다.  
+- No build errors.  
+- Update docs whenever grammar/engine behavior changes.  
+- Keep PRs focused and small when possible.  
 
 ---
 
 # 4. Code Style
 
-- Java 17+  
-- Class/Method 명은 명확하고 기능 중심으로 작성  
-- 모듈 이름은 대문자(SNAKE_CASE) 사용  
-- Language 관련 코드는 테스트 중심 개발 권장  
+- TypeScript 5+ (ESM)  
+- Prefer explicit types when exported APIs change  
+- Module IDs should stay lowercase, concise, and runtime-friendly  
+- Follow the existing style in `src/`; run `npm run build` before submitting  
 
 ---
 
 # 5. Tests
 
-추가되는 기능은 가능한 테스트와 함께 PR 제출을 부탁드립니다.
+Please add tests for each change whenever possible.
 
-테스트 구조 초안(예정):
-
-```
-src/
- └─ test/
-     ├─ lexer/
-     ├─ parser/
-     ├─ executor/
-     └─ modules/
-```
+- Default command: `npm test` (build + core parser tests).  
+- Add TypeScript/JavaScript tests under `tests/`, or integration tests using `.qplan` scripts as needed.  
+- For engine/grammar changes, reproduce failing cases first and keep regression coverage in place.  
 
 ---
 
 # 6. Documentation
 
-문서 개선도 큰 기여입니다.
+Documentation updates are valuable contributions.
 
-다음 파일을 업데이트하면 좋습니다:
+Relevant files include:
 
-- README.md  
-- grammar.md  
-- modules.md  
-- architecture.md  
-- examples.md  
+- README.md / README.ko.md  
+- docs/01-overview.md  
+- docs/02-grammar.md  
+- docs/03-architecture.md  
+- docs/04-modules.md  
+- docs/05-examples.md  
+- docs/06-executor.md  
+- docs/07-registry.md  
+- docs/08-writing-modules.md  
+- docs/09-ai-integration.md  
+- docs/10-step-system.md  
+- docs/11-qplan_quickstart_guide.md  
 
 ---
 
 # 7. Branch Strategy
 
-- `main`: 최신 안정 버전  
-- `dev`: 개발 브랜치  
-- 기능 개발은 `feature/*` 브랜치에서 진행  
+- `main`: latest stable  
+- `dev`: integration branch  
+- Feature work happens in `feature/*` branches  
 
 ---
 
@@ -106,57 +106,58 @@ src/
 
 ### Requirements
 
-- Java 17+  
-- Maven or Gradle  
-- IDE (IntelliJ 추천)
+- Node.js 18+  
+- npm (pnpm/yarn also work; docs assume npm)  
+- Editor with TypeScript support (VS Code, WebStorm, etc.)
 
-### Build
-
-```
-./gradlew build
-```
-
-또는
+### Install & Build
 
 ```
-mvn clean install
+npm install
+npm run build
 ```
+
+### Useful scripts
+
+- `npm run dev` — TypeScript watch build  
+- `npm test` — build + parser tests  
+- `npm run validate -- <file>` — CLI validator  
 
 ---
 
 # 9. Module Contribution Guide
 
-새로운 모듈 추가 시:
+When adding modules:
 
-1. `ActionModule` 구현  
-2. 필요한 입력 파라미터 정의  
-3. 예외 처리 추가  
-4. ModuleRegistry에 등록  
-5. examples.md에 예제 추가  
-6. modules.md 문서 업데이트  
+1. Implement an `ActionModule` and fill in `id/description/usage/inputs`.  
+2. Define required inputs and exceptions clearly.  
+3. Register via `registry.register()` or `registry.registerAll()`.  
+4. Add examples in `docs/05-examples.md` or related scripts.  
+5. Update docs such as `docs/04-modules.md`, `docs/08-writing-modules.md`, etc.  
+6. Add module-specific tests when possible to avoid regressions.  
 
 ---
 
 # 10. Code of Conduct
 
-모든 기여자는 다음을 지켜야 합니다:
+All contributors must:
 
-- 존중하는 커뮤니케이션  
-- 타인의 기여를 귀중하게 대함  
-- 비난/모욕/차별 금지  
-- 공동 목표: QPlan의 품질 향상  
+- Communicate respectfully  
+- Value others’ work  
+- Avoid harassment, insults, or discrimination  
+- Focus on improving QPlan together  
 
 ---
 
 # 11. License
 
-모든 기여는 QPlan의 MIT License에 따라 공개됩니다.
+All contributions fall under the QPlan MIT License.
 
 ---
 
 # 12. Questions?
 
-궁금한 점이 있다면 Issues 또는 Discussions에 자유롭게 남겨주세요.
+Feel free to open an Issue or Discussion for any questions.
 
-감사합니다!  
-QPlan Team
+Thanks!  
+The QPlan Team

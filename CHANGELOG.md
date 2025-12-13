@@ -1,51 +1,72 @@
 # Changelog
 
-QPlan의 변경 이력을 기록하는 문서입니다.  
-버전별 새로운 기능, 개선 사항, 버그 수정 등을 명확히 정리합니다.
+This document tracks QPlan releases.  
+Each version highlights new features, improvements, and bug fixes.
 
-형식은 [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) 스타일을 따릅니다.
+Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
 ## [Unreleased]
 
 ### Added
-- 초기 문서 구성: README, grammar.md, modules.md, architecture.md, examples.md  
-- CONTRIBUTING.md 추가  
-- CHANGELOG.md 생성  
-- QPlan Language 기본 문법 설계  
-- EBNF 기반 Language 스펙 정의  
-- 기본 모듈 구조(FETCH, CALC, AI, CALL) 개념 정의  
-- Execution Engine 아키텍처 설계 (Tokenizer → Parser → AST → Executor)
+- Initial doc set: README, grammar.md, modules.md, architecture.md, examples.md  
+- CONTRIBUTING.md  
+- CHANGELOG.md  
+- Base QPlan language grammar  
+- EBNF-driven language spec  
+- Concept for core modules (FETCH, CALC, AI, CALL)  
+- Execution engine architecture (Tokenizer → Parser → AST → Executor)
 
 ### Changed
-- 문서 구조 개선 (docs/ 폴더 기반 정리 예정)
+- Documentation structure cleanup (migrating into `docs/`)
 
 ### Fixed
-- 없음
+- None
 
 ---
 
-## [0.1.0] - Initial Draft (예정)
+## [0.1.5] - 2025-12-14
 
 ### Added
-- Tokenizer 초안
-- Parser 초안
-- AST Node 구조 정의
-- ExecutionContext / ModuleRegistry 골격
-- 기본 모듈 샘플(FETCH, CALC, AI)
-- 첫 실행 예제 스크립트 테스트
+- Comprehensive documentation pass covering overview, grammar, architecture, modules, executor, registry, AI integration, and quickstart.
+
+### Changed
+- Clarified contributing guide, module guide, and examples for the MVP scope.
+
+---
+
+## [0.1.4]
+
+### Added
+- MVP draft completed: tokenizer/parser/AST wiring, executor prototype, and registry bootstrap.
+- Initial CLI validator plus parser test harness.
 
 ### Notes
-- 이 버전은 MVP에 해당하며 실험적 상태
-- 병렬 실행(PARALLEL) 베타 적용 예정
+- Internal milestone proving the end-to-end “AI thinks, QPlan executes” loop.
+
+---
+
+## [0.1.0] - Initial Draft
+
+### Added
+- Tokenizer draft  
+- Parser draft  
+- AST node definitions  
+- ExecutionContext / ModuleRegistry skeleton  
+- Sample modules (FETCH, CALC, AI)  
+- First execution script tests
+
+### Notes
+- Early MVP, experimental state  
+- Parallel execution beta planned
 
 ---
 
 # Versioning
-본 프로젝트는 Semantic Versioning(semver.org)을 따릅니다.
+This project follows Semantic Versioning (semver.org).
 
 ---
 
 # License
-MIT License (예정)
+MIT License (planned)
