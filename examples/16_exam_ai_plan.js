@@ -73,32 +73,3 @@ const ctx = await runQplan(aiScript, {
 
 console.log("====== 실행 결과 컨텍스트 ======");
 console.log(ctx.toJSON());
-
-// function cleanQplanScript(output) {
-//   if (!output) return "";
-//   let text = output.trim();
-
-//   // LLM 응답이 코드 블록으로 감싸져 있을 경우 제거
-//   if (text.startsWith("```")) {
-//     text = text.replace(/^```[a-zA-Z0-9]*\n?/, "");
-//     text = text.replace(/```$/, "");
-//   }
-
-//   text = text.trim();
-
-//   // Model이 뒤에 요약/중복 코드를 덧붙였을 수 있으므로
-//   // prefix 단위로 validate를 통과한 가장 긴 부분만 취한다.
-//   const lines = text.split(/\r?\n/);
-//   let acc = "";
-//   let bestValid = "";
-
-//   for (const line of lines) {
-//     acc = acc ? `${acc}\n${line}` : line;
-//     const validation = validateQplanScript(acc);
-//     if (validation.ok) {
-//       bestValid = acc;
-//     }
-//   }
-
-//   return (bestValid || text).trim();
-// }
