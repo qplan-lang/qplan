@@ -1,7 +1,7 @@
 {
   "name": "qplan",
   "version": "0.1.0",
-  "description": "AI-driven workflow DSL engine",
+  "description": "AI Planning Language & Execution Engine",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -17,12 +17,16 @@
     "validate": "node dist/tools/validateScript.js"
   },
   "keywords": [
-    "dsl",
     "workflow",
     "ai",
     "automation",
+    "planning",
+    "plan",
+    "language",
+    "execution-engine",
+    "orchestration",
     "parser",
-    "engine"
+    "runner"
   ],
   "author": "gyu",
   "repository": {
