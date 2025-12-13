@@ -1,357 +1,307 @@
-# qplan  
-**AI-Generated Workflow DSL & Execution Engine**
+# qplan — AI-Driven Workflow Execution Engine  
+경량 워크플로우 DSL & 실행 엔진
+
+---
+
+## 1. Introduction
 
 qplan은 **AI가 작성하고 시스템이 실행하는** 경량 워크플로우 DSL이다.  
-데이터 수집, 분석, 자동화, 주식 시스템, RPA 등 다양한 도메인에서  
+데이터 수집, 분석, 자동화, RPA 등 다양한 도메인에서  
 **플랜을 언어로 표현하고 실행**할 수 있도록 설계되었다.
 
----
+일반적인 AI(LLM)는 자연어 요청을 이해하고 설명하거나 답변하는 데 매우 뛰어나지만,  
+"검색 → 필터 → 사용자 선택 → 결제" 와 같은 **실제 기능 실행**은 직접 수행하지 못합니다.
 
-## ✨ Features
+qplan은 이 한계를 해결합니다.  
+AI가 작성한 계획을 qplan 스크립트로 받아, 실제 코드처럼 단계별로 실행합니다.
 
-- **AI-friendly DSL**  
-  자연어 기반 AI가 작성하기 쉬운 최소 문법으로 구성.  
+즉,
 
-- **Deterministic Execution**  
-  모든 명령은 AST로 파싱되어 안정적으로 실행.  
-
-- **모듈 기반 확장성**  
-  원하는 기능을 `Module` 형태로 등록하여 바로 사용 가능.  
-
-- **Step 기반 흐름 제어**  
-  step/jump/error policy 구조로 복잡한 실행 단계를 정의하고, UI/로그와 연동되는 이벤트를 제공.  
-- **조건/반복/병렬 처리 지원**  
-  IF / ELSE / EACH / PARALLEL 블록과 함께 step 트리로 복잡한 흐름 표현 가능.  
-
-- **도메인 비종속**  
-  주식 자동화뿐 아니라 데이터 파이프라인, 크롤링, DevOps 등 범용 사용 가능.
+> **AI가 생각하고(qplan 계획 생성), qplan이 실행합니다.**
 
 ---
 
-## 📦 Installation
+## 3. Why qplan?
+
+### 3.1 문제
+
+LLM이 "곰돌이 티셔츠 사줘" 같은 요청을 받을 때:
+- 어디서 검색해야 하는지  
+- 어떤 조건으로 필터링해야 하는지  
+- 어떤 로직을 따라 실행해야 하는지  
+알고 있지만, **실행 능력**은 없습니다.
+
+### 3.2 해결
+
+qplan은 다음 흐름을 제공합니다:
+
+1. 사용자 요청  
+2. `buildAIPlanPrompt()` 로 AI에 실행 계획 요청  
+3. AI는 step 기반 qplan 실행 계획을 생성  
+4. qplan 엔진이 실제 기능 실행  
+5. Step 결과를 UI/시스템에서 사용
+
+---
+
+## 4. 매우 간단한 예시
+
+- 사용자 요청:  
+  > “곰돌이가 그려진 흰색 티셔츠를 구매해줘”
+
+- 시스템(qplan + AI):  
+  1) 흰색 티셔츠 검색  
+  2) 곰돌이 프린트 필터  
+  3) 사용자에게 상품 선택 요청  
+  4) 결제 모듈 실행  
+
+- 결과:  
+  → **구매 완료**
+
+이 예시는 qplan의 핵심 사용 패턴을 가장 간단히 보여줍니다.
+
+---
+
+## 5. How It Works (High-Level)
+
+```text
+사용자 요구사항
+     ↓
+buildAIPlanPrompt (사용자 요구사항을 기준으로 qplan요청 프롬프트를 생성)
+     ↓
+AI가 실행 계획 (qplan script) 생성
+     ↓
+runQplan (script)
+     ↓
+각 Step 실행 (검색 / 필터 / 선택 / 결제 등)
+```
+
+---
+
+## 6. QuickStart
+
+### 6.1 📦 Install
 
 ```bash
 npm install qplan
 ```
 
-### 🔁 문서/코드 싱크 체크리스트
-새 DSL 문법·기능이 추가되면 아래 항목을 함께 갱신하세요.
-1. `docs/02-grammar.md` (정식 문법/EBNF)
-2. `README.md` (DSL 요약 및 예제)
-3. `src/core/buildAIGrammarSummary.ts`
-4. `src/core/buildAIPlanPrompt.ts`
-5. `src/core/buildQplanSuperPrompt.ts`
-6. 관련 문서/예제 (`docs/10-step-system.md`, `examples/*`, validator 등)
-
-필요 시 validator/test 스크립트도 업데이트하여 문서와 코드가 항상 동일한 기능을 설명하도록 유지합니다.
-
 ---
 
-## 🧪 Quick Start
+### 6.2 Create a Module
 
 ```ts
-import { runQplan } from "qplan";
-
-const script = `
-step id="load" desc="데이터 읽기" {
-  file op="read" path="./data.json" -> raw
-}
-
-step id="calc" desc="평균 계산" -> avg {
-  math op="avg" arr=raw -> result
-}
-`;
-
-const ctx = await runQplan(script);
-console.log(ctx.toJSON()); // { raw: [...], result: 42, avg: 42 }
+export const searchModule = {
+  id: "search",
+  description: "상품 검색",
+  inputs: ["keyword"],
+  async execute({ keyword }) {
+    return await searchDB(keyword);
+  }
+};
 ```
 
-### Step 이벤트 훅 연결
-```
-import { runQplan } from "qplan";
+---
 
-const ctx = await runQplan(script, {
+### 6.3 Register Modules
+
+```ts
+const registry = new ModuleRegistry();
+registry.registerAll([
+  searchModule,
+  filterModule,
+  askUserModule,
+  paymentModule
+]);
+```
+
+---
+
+### 6.4 Generate AI Plan
+
+qplan은 사용자 요구사항을 기반으로  
+AI에게 실행 계획을 요청하기 위한 프롬프트를 자동 생성하는 함수를 제공합니다.
+
+```ts
+import { buildAIPlanPrompt } from "qplan";
+
+const requirement = "곰돌이가 그려진 흰색 티셔츠를 구매해줘";
+const prompt = buildAIPlanPrompt(requirement);
+
+const aiScript = await callLLM(prompt);   // LLM을 호출하는 귀하의 코드
+```
+
+---
+
+### 6.5 Execute the Plan
+
+```ts
+const ctx = await runQplan(aiScript, {
   stepEvents: {
-    async onStepStart(info) {
-      console.log("▶ step start", info.stepId, info.path.join(" > "));
-    },
-    async onStepEnd(info, result) {
-      console.log("✔ step end", info.stepId, "result:", result);
-    },
-  },
+    async onStepStart(info) { console.log("start:", info.stepId); },// step의 시작시
+    async onStepEnd(info, result) { console.log("done:", info.stepId, result); },// step의 종료시
+    async onStepError(info, error) { console.error("error:", info.stepId, error); }// 에러시
+    async onStepRetry(info, attempt, error) {}, // 재시도
+    async onStepJump(info, targetStepId) {},  // 다른 스텝으로 이동시
+  }
 });
 ```
-`RunQplanOptions.stepEvents` 를 이용하면 UI/CLI/로그와 연동해 진행률을 추적하거나, jump/retry/error 이벤트를 받을 수 있다.
+stepEvents를 이용해 UI/CLI/로그와 연동해 진행률을 표시하거나, jump/retry/error 이벤트를 받을 수 있습니다.
 
 ---
 
-# 📂 프로젝트 구조
+## 7. Example Plan (AI Generated)
 
-```
-src/
- ├ core/                # Engine: Tokenizer, Parser, Executor, Context
- ├ modules/             # Built-in & Extended Modules
- └ index.ts             # runQplan entry
-docs/
- ├ 01-overview.md
- ├ 02-grammar.md
- ├ 03-architecture.md
- ├ 04-modules.md
- ├ 05-examples.md
- ├ 06-executor.md
- ├ 07-registry.md
- ├ 08-writing-modules.md
- └ 09-ai-integration.md
-```
-
----
-
-# 🧠 ActionModule (핵심 개념)
-
-모든 기능은 **ActionModule** 을 통해 확장됩니다.
-
-각 모듈은 다음 메타데이터를 포함할 수 있습니다:
-
-```
-id: string
-description?: string
-usage?: string
-inputs?: string[]
-execute(inputs, ctx)
-```
-
-함수형 / 객체형 모두 지원합니다.
-
----
-
-# 🔧 기본 제공 모듈 (Minimal Built-in Set)
-
-| 모듈 | 설명 |
-|------|------|
-| var | 리터럴 값을 ctx 변수로 저장 |
-| print | console.log 형태 출력 |
-| echo | 입력 그대로 반환 |
-| sleep | 딜레이(ms) |
-| file | 파일 읽기/쓰기 |
-| math | add/sub/mul/div/sum/avg/ma |
-| future | 비동기 Future 생성 |
-| join | Future 결과 병합 |
-
----
-
-# 🌱 확장 모듈 (Optional)
-
-| 모듈 | 설명 |
-|------|------|
-| http | GET/POST HTTP 요청 |
-| html | HTML 파싱(body/tag/tags/text) |
-| json | JSON parse/stringify |
-| string | 문자열 유틸 |
-| ai | OpenAI 기반 LLM 호출 |
-
-필요 시 다음처럼 등록합니다:
-
-```
-registry.registerAll([ httpModule, aiModule ])
-```
-
----
-
-# 📜 DSL 문법 (요약)
-
-### Step
-```
-step id="fetch" desc="데이터 가져오기" onError="retry=3" {
-  http url="https://api.example.com" -> response
+```qplan
+step id="search" desc="흰색 티셔츠 검색" -> items {
+  search keyword="흰색 티셔츠" -> result
+  return list=result
 }
 
-step id="branch" desc="조건 분기" {
-  if response.count > 10 {
-    jump to="cleanup"
-  }
+step id="filter" desc="곰돌이 프린트 필터링" -> filtered {
+  filter list=items.list pattern="곰돌이" -> out
+  return list=out
 }
 
-step id="cleanup" desc="정리" -> summary {
-  return data=response count=response.count
+step id="select" desc="사용자 선택" -> chosen {
+  askUser list=filtered.list -> sel
+  return item=sel
 }
-```
-- 모든 Action은 Step 내부에서 실행된다.
-- Step 안에 다시 Step 을 중첩하여 복잡한 흐름을 나눌 수 있다.
-- `id` 를 지정하면 다른 Step에서 `jump to="<id>"` 로 이동할 수 있다.
-- `onError` 정책(`fail`/`continue`/`retry=n`/`jump="cleanup"`)과 `-> outputVar` 로 Step 전체 결과를 변수에 저장할 수 있다.
-- `return` 을 생략하면 Step 내부 마지막 Action 결과가 저장되며, 필요 시 `return key=value ...` 구문으로 원하는 값을 묶어 반환할 수 있다.
-- 다양한 에러 처리(onError) 시나리오는 `examples/15_exam_step_error.js` 예제에서 확인할 수 있다.
 
-
-### Action
-```
-math op="add" a=1 b=2 -> x
-file read path="./data.txt" -> txt
-sleep ms=500          # 결과 저장 없음
-```
-모듈 이름 뒤에 option을 붙이면 자동으로 `op` 값으로 전달됩니다(내부적으로 `__options[0]`).
-
-### If
-```
-if not total > 100 and count < 5 {
-  echo msg="big" -> r
-} else {
-  echo msg="small" -> r
-}
-```
-괄호 `()` 를 사용하면 복잡한 and/or 조합의 우선순위를 조정할 수 있습니다.
-
-### Parallel
-```
-parallel concurrency=2 {
-  echo msg="A" -> a
-  echo msg="B" -> b
-}
-```
-
-### Each
-```
-each (item, idx) in items {
-  math add a=total b=item -> total
-  if idx >= 5 {
-    stop
-  }
-  if item == 0 {
-    skip
-  }
-  echo msg=idx -> lastIndex
-}
-```
-stop/skip 은 while 반복에서도 동일하게 동작.
-
-### While
-```
-while count < 10 {
-  set count = count + 1
-}
-```
-조건이 true 인 동안 블록을 반복 실행한다. stop/skip 으로 탈출/다음 회차 이동 가능.
-
-### Set
-```
-set total = total + 1
-set msg = "updated"
-set config = {"limit": 5}
-```
-기존 ctx 변수만 수정할 수 있으며 없으면 에러가 발생한다. 산술 연산(+,-,*,/), 괄호, 문자열/숫자/JSON/ctx 변수를 조합해 값을 계산한다.
-
-### Future / Join
-```
-future task="A" delay=200 -> f1
-future task="B" delay=500 -> f2
-join futures="f1,f2" -> out
-```
-
----
-
-# 🚀 실행 흐름
-
-```
-script  
- → Tokenizer  
- → Parser(AST)  
- → Executor  
- → ExecutionContext(ctx)
-```
-
----
-
-# ✅ 문법 검증 도구
-
-AI가 생성한 스크립트나 수동 작성한 qplan 파일을 실행 전에 검사하려면 빌드 후 validator를 실행하세요.
-
-```
-npm run build
-npm run validate -- ./examples/validator_sample.qplan
-```
-
-표준 입력을 사용할 수도 있습니다.
-
-```
-echo 'var 0 -> count' | npm run validate -- -
-```
-
-성공 시 `✅ Valid qplan script` 문구가 표시되고, 실패 시 라인 번호와 에러 메시지를 출력하며 종료 코드 1을 반환합니다.
-
----
-
-# 🧪 예제
-
-```
-file read path="./nums.txt" -> txt
-math op="avg" arr=txt -> avg
-echo value=avg -> result
-```
-
----
-
-# 🧩 AI 연동
-
-AI는 다음 정보를 기반으로 qplan 스크립트를 생성할 수 있습니다:
-
-```
-registry.list()
-→ [{ id, description, usage, inputs }]
-```
-
-이를 프롬프트에 전달하면  
-AI가 자동으로 qplan 워크플로우를 생성할 수 있습니다.
-
----
-
-# 📦 설치 & 실행
-
-```
-npm install
-npm run build
-node examples/demo.js
-```
-
----
-
-# 🤝 모듈 작성 가이드
-
-### 함수형
-
-```
-export const addModule = Object.assign(
-  (inputs) => Number(inputs.a) + Number(inputs.b),
-  { id:"add", description:"..." }
-)
-```
-
-### 객체형
-
-```
-export const fileModule = {
-  id:"file",
-  description:"파일 읽기/쓰기",
-  async execute(inputs, ctx) { ... }
+step id="checkout" desc="결제" {
+  payment item=chosen.item
 }
 ```
 
 ---
 
-# 📘 문서 링크
+## 8. Concepts Overview
 
-모든 문서는 docs/ 폴더에 포함:
+### 8.1 ActionModule
 
-- 01-overview  
-- 02-grammar  
-- 03-architecture  
-- 04-modules  
-- 05-examples  
-- 06-executor  
-- 07-registry  
-- 08-writing-modules  
-- 09-ai-integration
+- 기능 단위(검색/필터/결제 등)를 표현하는 모듈입니다.  
+- AI는 `id`, `description`, `inputs` 정보를 보고 이 모듈을 사용하는 qplan 코드를 생성합니다.
+
+### 8.2 ModuleRegistry
+
+- 등록된 모듈 목록을 관리합니다.  
+- `registry.list()` 를 통해 AI에게 제공할 메타데이터를 얻습니다.
+
+### 8.3 Step System
+
+- Step / Sub-step 구조로 복잡한 플로우를 나눌 수 있습니다.  
+- Error Policy(retry, continue, jump)를 통해 실패 상황을 제어합니다.  
+- Step Events(onStepStart/onStepEnd/onStepError 등) 로 UI/로그를 연동할 수 있습니다.
+
+### 8.4 ExecutionContext
+
+- 실행 중 생성된 변수들이 저장되는 컨텍스트입니다.  
+- 각 Action/Step의 결과가 ctx에 저장되고, 이후 Step에서 재사용할 수 있습니다.
+
+### 8.5 Flow Control
+
+- 조건: `if`  
+- 반복: `while`, `each`  
+- 병렬: `parallel`  
+- 비동기: `future`, `join`  
+- 제어: `stop`, `skip`, `jump`
 
 ---
 
-# 🏁 License
+## 9. API Overview
+
+### 9.1 `runQplan(script, options)`
+
+qplan 스크립트를 실행하는 메인 함수입니다.
+
+- `script`: qplan 코드 문자열  
+- `options.stepEvents`: Step 단위 이벤트 핸들러
+
+반환값: `ExecutionContext` (ctx)
+
+---
+
+### 9.2 `buildAIPlanPrompt(requirement: string)`
+
+사용자 요구사항을 입력하면,  
+AI가 qplan 실행 계획을 생성할 수 있도록 돕는 프롬프트 문자열을 반환합니다.
+
+포함 내용:
+
+- DSL 요약(grammar summary)  
+- 사용 가능한 모듈 목록(`registry.list()` 기반)  
+- Step 설계 가이드 및 예시
+
+---
+
+### 9.3 `registry: ModuleRegistry`
+
+ModuleRegistry는 ActionModule 메타데이터를 보관하고, AI 및 실행기에 전달하는 허브 역할을 합니다.
+
+- `register(module)` : 단일 모듈 등록
+- `registerAll([m1, m2])` : 여러 모듈을 한 번에 등록
+- `list()` : 등록된 모듈 목록을 AI-friendly 형태로 반환
+
+```ts
+registry.register(searchModule);
+registry.registerAll([filterModule, askUserModule]);
+
+const modulesForAI = registry.list(); // buildAIPlanPrompt 등에 전달
+```
+
+모듈 설명이 잘 정리되어 있어야 AI가 qplan 계획을 만들 때 올바르게 조합할 수 있으므로,
+module id/description/inputs 등을 명확히 작성한 뒤 registry에 등록하는 것이 중요합니다.
+
+---
+
+### 9.4 `validateQplanScript(script: string)`
+
+qplan 스크립트를 실행하기 전에 **문법·시맨틱 검증만** 하고 싶을 때 사용합니다.
+
+- 정상일 경우: `{ ok: true, ast }` 반환
+- 오류일 경우: `{ ok: false, error, line?, issues? }`
+
+```ts
+const validation = validateQplanScript(aiScript);
+if (!validation.ok) {
+  console.error("계획 검증 실패:", validation.error, validation.line);
+  return;
+}
+await runQplan(aiScript, { registry });
+```
+
+토큰화/파싱/간단한 시맨틱 검사(예: 선언되지 않은 변수 사용 등) 결과만 알려주므로,
+안전하게 실행 가능한지 사전 확인할 때 유용합니다.
+
+---
+
+## 10. Grammar Spec (요약)
+
+- **Action**:  
+  `moduleName key1=value1 key2=value2 -> outVar`
+
+- **Step**:  
+  `step id="stepId" desc="설명" { ... }`
+
+- **조건 / 반복**:  
+  `if`, `while`, `each`
+
+- **병렬 / 비동기**:  
+  `parallel`, `future`, `join`
+
+- **제어**:  
+  `stop`, `skip`, `jump`, `onError` 정책
+
+자세한 문법은 별도의 grammar 문서를 참고할 수 있습니다.
+
+---
+
+## 11. License
+
 MIT
+
+---
+
+## 12. Contribute
+
+Issue 및 PR는 언제든지 환영합니다.  
+qplan을 활용한 사례, 추가 모듈, 개선 제안 등을 공유해 주세요.

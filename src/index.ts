@@ -29,12 +29,21 @@ import { ASTRoot } from "./core/ast.js";
 import type { StepEventEmitter } from "./step/stepEvents.js";
 import { validateSemantics } from "./core/semanticValidator.js";
 import type { SemanticIssue } from "./core/semanticValidator.js";
+import { buildAIPlanPrompt as buildPrompt } from "./core/buildAIPlanPrompt.js";
 
 // 🎯 외부에서 모듈 등록 가능하도록 registry export
 export const registry = new ModuleRegistry();
 
 // 기본모듈 등록
 registry.registerAll(basicModules);
+
+/**
+ * 기본 registry(또는 전달된 registry)를 기반으로
+ * AI 실행계획 프롬프트를 생성한다.
+ */
+export function buildAIPlanPrompt(requirement: string) {
+  return buildPrompt(requirement, registry);
+}
 
 /**
  * DSL 스크립트 실행 함수
