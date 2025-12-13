@@ -24,13 +24,17 @@ console.log(prompt);
 console.log("============= buildAIPlanPrompt PROMPT end ==================");
 
 // 2) OpenAI 호출 → 순수 QPlan 스크립트 획득
-const model = process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
+// const model = process.env.OPENAI_MODEL ?? "gpt-4.1-mini"; // 잘 안됨
+const model = process.env.OPENAI_MODEL ?? "gpt-4.1";
 
 let aiScript = "";            // LLM이 생성한 qplan스크립트
 const maxRetries = 3;         // 최대 재시도 횟수
 let lastErrorMessage = "";
 
 for (let attempt = 1; attempt <= maxRetries; attempt++) {
+  if(attempt > 1) {
+    console.log(`=========== 재시도중 (${attempt}) ===================`);
+  }
   const completion = await client.chat.completions.create({
     model,
     temperature: 0.2,
@@ -41,7 +45,7 @@ for (let attempt = 1; attempt <= maxRetries; attempt++) {
   });
 
   const raw = completion.choices[0]?.message?.content ?? "";
-  console.log(`raw (attempt ${attempt}):`, JSON.stringify(raw));
+  // console.log(`raw (attempt ${attempt}):`, JSON.stringify(raw));
 
   aiScript = raw.trim();
 
