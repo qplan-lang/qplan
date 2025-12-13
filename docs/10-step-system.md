@@ -1,127 +1,126 @@
 # QPlan Step System — Consolidated Design (v2 Draft)
 
-본 문서는 지금까지 논의된 **QPlan Step 시스템 전체 설계 내용을 정리한 공식 스펙 문서**이다.  
-Step은 QPlan 실행 흐름을 표현하고, 구조화하며, 점프/제어 기능까지 확장하기 위한 핵심 요소이다.
+This is the formal specification capturing every design decision made so far on the **QPlan Step System**.  
+Steps are the core construct for representing execution flow, structuring logic, and enabling jump/control features.
 
 ---
 
-# 1. Step 도입 목적
+# 1. Purpose of introducing steps
 
-Step은 다음을 가능하게 한다:
+Steps enable:
 
-- 실행 단위의 명확한 구조화  
-- 상위/하위 스텝 계층적 표현  
-- UI 단계별 진행률 표시  
-- AI가 스텝 기반 실행 계획을 생성  
-- jump/break/loop 등 **흐름 제어(flow control)** 확장  
+- Clearly structured execution units  
+- Parent/child hierarchy  
+- Stage-by-stage UI progress  
+- AI-friendly step-based plans  
+- Flow-control extensions (jump/break/loop, etc.)  
 
-주석 기반 스텝(description-only)은 흐름 제어가 불가능하므로,  
-**정식 문법 요소로 승격**하는 방향으로 확정.
+Description-only “pseudo steps” cannot handle flow control, so steps must be **promoted to a formal grammar element**.
 
 ---
 
-# 2. Step 문법 정의
+# 2. Step grammar
 
-## 기본 형태
+## Basic form
 ```
-step "설명" {
+step "Description" {
     <statements>
 }
 ```
 
-## 확장 형태
+## Extended form
 ```
-step id="read" desc="파일 읽기" {
+step id="read" desc="Read file" {
     file op="read" path="./a.txt" -> raw
 }
 ```
 
-## 추가 확장안 (선택)
+## Further optional attributes
 ```
-step id="calc" type="task" desc="계산 단계" {
+step id="calc" type="task" desc="Calculation phase" {
     math op="avg" arr=raw -> avg
 }
 ```
 
 ---
 
-# 3. StepNode 구조 (AST)
+# 3. StepNode structure (AST)
 
 ```
 StepNode {
     id?: string
     desc?: string
-    type?: string                // optional (task, group, loop 등)
+    type?: string                // optional (task, group, loop, etc.)
     errorPolicy?: ErrorPolicy    // fail | continue | retry | jump
-    outputVar?: string           // step 전체 결과를 받을 변수
-    order: number                // 자동 증가
-    path: string[]               // 계층 경로 (자동 생성)
+    outputVar?: string           // variable receiving the step result
+    order: number                // auto-increment
+    path: string[]               // hierarchical path (auto-generated)
     parent?: StepNode
     children: Statement[]
 }
 ```
 
-자동 생성 필드: `order`, `path`, `parent`, `children`
+Auto-generated fields: `order`, `path`, `parent`, `children`
 
 ---
 
-# 4. Sub-step 구조
+# 4. Sub-step structure
 
-Step은 Step을 포함할 수 있다:
+Steps may contain nested steps:
 
 ```
-step "전체 처리" {
+step "Full processing" {
 
-    step "파일 읽기" {
+    step "Read file" {
         file op="read" path="./a.txt" -> raw
     }
 
-    step "계산 처리" {
+    step "Compute" {
         math op="avg" arr=raw -> avg
     }
 
 }
 ```
 
-계층 트리 예:
+Hierarchy example:
 
 ```
 root
- └─ 전체 처리
-      ├─ 파일 읽기
-      └─ 계산 처리
+ └─ Full processing
+      ├─ Read file
+      └─ Compute
 ```
 
-## 4.1 Sub-step 베스트 프랙티스
-- 상위 Step은 고수준 작업 이름만 담고, 세부 로직은 Sub-step 으로 분리
-- Sub-step 실행 중 에러가 나면 해당 Step의 onError 정책이 먼저 적용되며, 필요한 경우 Jump 로 상위 Step에서 에러 부분을 다시 호출할 수 있다.
-- Sub-step 에서 return 한 값은 부모 Step에서도 ctx 변수로 접근 가능하다.
+## 4.1 Sub-step best practices
+- Keep high-level names in parent steps and place detailed logic in sub-steps.
+- If a sub-step fails, its own onError policy triggers first; the parent may jump elsewhere as needed.
+- Returned values from sub-steps remain accessible via ctx in parent steps.
 
-예시:
+Example:
 ```
-step id="pipeline" desc="루트 단계" -> pipelineResult {
-    step id="prepare" desc="데이터 준비" -> prepareResult {
+step id="pipeline" desc="Root stage" -> pipelineResult {
+    step id="prepare" desc="Data prep" -> prepareResult {
         file read path="./input.txt" -> raw
         return data=raw
     }
 
-    step id="aggregate" desc="집계" onError="retry=2" -> aggResult {
-        math add a=total b=unknown -> total   # 에러 → retry 정책 적용
+    step id="aggregate" desc="Aggregate" onError="retry=2" -> aggResult {
+        math add a=total b=unknown -> total   # triggers retry policy
         return sum=total
     }
 
-    step id="report" desc="리포트 작성" -> reportResult {
+    step id="report" desc="Report" -> reportResult {
         if aggResult.sum > 100 {
             jump to="review"
         }
         return summary="done"
     }
 
-    step id="review" desc="재검토" onError="jump=\"cleanup\"" {
+    step id="review" desc="Re-check" onError="jump=\"cleanup\"" {
         ...
     }
 
-    step id="cleanup" desc="마무리" {
+    step id="cleanup" desc="Finalize" {
         ...
     }
 
@@ -131,90 +130,88 @@ step id="pipeline" desc="루트 단계" -> pipelineResult {
 
 ---
 
-# 5. Jump 문법 (흐름 제어)
+# 5. Jump syntax (flow control)
 
-## 문법
+## Syntax
 ```
 jump to="read"
 ```
 
-Jump는 **Step ID** 로만 이동 가능  
-(개별 Action 라인으로 점프 불가)
+A jump targets **step IDs only** (no per-action jumps).
 
-## 동작
-- Executor는 StepNode 테이블에서 id 조회  
-- 실행 포인터를 해당 Step 블록의 첫 문장으로 이동  
+## Behavior
+- The executor looks up the StepNode by ID.  
+- Execution resumes at the first statement inside that step block.
 
 ---
 
-# 6. Step Output (옵션)
+# 6. Step output (optional)
 
-스텝 전체를 함수처럼 반환:
+Treat a step like a function:
 
 ```
-step id="read" desc="파일 읽기" -> result {
+step id="read" desc="Read file" -> result {
     file op="read" path="./a.txt" -> raw
     return data=raw count=rawCount
 }
 ```
 
-동작 방식:
-- block 내 가장 마지막 Action 결과를 자동 반환  
-- 또는 명시적 반환 방식 추가 가능
-  - `return key=value ...` 문을 사용하면 Step 결과를 원하는 형태의 객체로 명시적으로 반환 가능
-- Step 결과는 ctx 변수로 저장되며, `result.total`, `result.status.code` 처럼 점(dot) 표기를 통해 하위 필드를 직접 참조할 수 있다.
+Behavior:
+- By default the final action result becomes the step result.  
+- Use `return key=value ...` to shape explicit outputs.
+- Step outputs store in ctx, allowing dot-path access such as `result.total` or `result.status.code`.
 
 ---
 
-# 7. Step Error Policy (필수 기능)
+# 7. Step error policy (mandatory)
 
 ```
-step id="fetch" desc="네트워크 요청" onError="continue" {
+step id="fetch" desc="Network request" onError="continue" {
     http url="https://..." -> out
 }
 ```
 
-지원 옵션:
+Supported options:
 
-| 옵션 | 의미 |
+| Option | Meaning |
 |------|------|
-| fail | (기본) 에러 발생 시 전체 중단 |
-| continue | 에러 무시하고 다음 step으로 |
-| retry=3 | 3회 재시도 |
-| jump="cleanup" | 오류 발생 시 특정 step으로 이동 |
+| fail | Default; stop immediately on error. |
+| continue | Ignore errors and move to the next step. |
+| retry=3 | Retry up to 3 times. |
+| jump="cleanup" | Jump to a specific step on error. |
 
-## 7.1 정책별 동작 예시
-- **fail (기본)**: 에러 발생 시 즉시 중단. 다른 정책이 없으면 자동 적용.
-- **continue**: 에러를 기록하고 다음 Step 으로 이동. 실패한 Step 의 output 변수는 설정되지 않을 수 있음.
-- **retry=n**: 지정한 횟수만큼 Step 전체를 재시도. 성공하면 정상 종료, 실패하면 마지막 에러를 던짐.
-- **jump="stepId"**: 에러 발생 시 지정 Step 으로 바로 이동. Jump 대상이 존재해야 하며, Jump 후 실행은 해당 Step 의 첫 지점부터 진행.
+## 7.1 Policy behavior examples
+- **fail (default)**: abort immediately unless another policy is set.
+- **continue**: log the error and continue; the output variable may remain unset.
+- **retry=n**: re-run the entire step up to n times; throw the last error if all attempts fail.
+- **jump="stepId"**: jump to the given step if it exists, starting from its first statement.
 
-예시 시퀀스:
+Example sequence:
 ```
-step id="prepare" desc="초기화" {
+step id="prepare" desc="Init" {
     ...
 }
 
-step id="fetch" desc="데이터 수집" onError="retry=2" -> fetched {
+step id="fetch" desc="Collect data" onError="retry=2" -> fetched {
     http url="..." -> raw
-    math add a=raw b=unknown -> broken    # 실패 → retry
+    math add a=raw b=unknown -> broken    # triggers retry
     return data=raw
 }
 
-step id="transform" desc="부가 처리" onError="jump=\"cleanup\"" {
+step id="transform" desc="Extra processing" onError="jump=\"cleanup\"" {
     ...
 }
 
-step id="cleanup" desc="마무리" {
+step id="cleanup" desc="Finalize" {
     ...
 }
 ```
 
 ---
 
-# 8. Executor Step Events
+# 8. Executor step events
 
-UI와 연동하기 위한 확장 이벤트:
+Events for UI integrations:
 
 ```
 onStepStart(stepInfo)
@@ -224,20 +221,20 @@ onStepRetry(stepInfo, attempt, error)
 onStepJump(stepInfo, targetStepId)
 ```
 
-### stepInfo 예시:
+### Example stepInfo:
 ```
 {
     stepId: "calc",
-    desc: "평균 계산",
+    desc: "Compute average",
     order: 3,
     parentStepId: "root",
-    path: ["전체처리", "계산"],
+    path: ["Full processing", "Compute"],
 }
 ```
 
 ---
 
-# 9. Grammar (EBNF 확장)
+# 9. Grammar (EBNF extension)
 
 ```
 StepStmt      = "step" , StepMeta , [ OutputBinding ] , Block ;
@@ -248,106 +245,103 @@ JumpStmt      = "jump" , "to=" , Identifier ;
 OutputBinding = "->" , Identifier ;
 ```
 
-기존 Script → Statement 구문에 StepStmt / JumpStmt 추가.
+Add StepStmt / JumpStmt to the existing Script → Statement grammar.
 
 ---
 
-# 10. Step Path 자동 생성 규칙
+# 10. Automatic step path rules
 
-예:
+Example:
 ```
-step "전체 처리" {
-    step "파일 읽기" { ... }
+step "Full processing" {
+    step "Read file" { ... }
 }
 ```
 
-결과:
+Result:
 ```
-전체 처리      → ["전체 처리"]
-파일 읽기     → ["전체 처리", "파일 읽기"]
+Full processing      → ["Full processing"]
+Read file            → ["Full processing", "Read file"]
 ```
 
-UI에서 트리 렌더링, 진행률 표시 등에 활용.
+Use these paths for UI tree rendering, progress indicators, etc.
 
 ---
 
-# 11. Step 아키텍처: Executor에 넣지 않고 **별도 파일로 분리해야 하는 이유**
+# 11. Why step architecture stays separate from the executor
 
-Step은 **flow-control layer**이고  
-Executor는 **AST 실행기**이기 때문에 **역할이 완전히 다르다**.
+Steps form the **flow-control layer**, while the executor is purely an **AST runner**; their roles are entirely different.
 
-### Executor에 Step 로직을 넣을 경우 문제점:
-- 모든 흐름 제어(jump, retry, loop)가 Executor를 오염시킴  
-- parallel/if/while 확장 시 유지보수 폭증  
-- Step 트리 관리 불가능  
-- 테스트 불가능  
-- 향후 확장 포인트 차단  
+### Issues if step logic lives inside the executor:
+- All flow control (jump/retry/loop) pollutes executor logic.  
+- Extending parallel/if/while becomes unmanageable.  
+- Impossible to maintain step trees cleanly.  
+- Difficult to test.  
+- Blocks future extension points.
 
-### 따라서 Step 시스템은 **독립된 모듈로 분리**해야 한다.
+### Therefore, the step system must be a **separate module**.
 
 ---
 
-# 12. 권장 파일 구조 
+# 12. Recommended file structure
 
 ```
 src/
  ├─ core/
- │    ├─ executor.ts            # AST 순수 실행기
+ │    ├─ executor.ts            # Pure AST executor
  │    ├─ parser.ts
  │    └─ executionContext.ts
  ├─ step/
- │    ├─ stepTypes.ts           # StepNode 타입
- │    ├─ stepParser.ts          # Step 문법 파싱
- │    ├─ stepResolver.ts        # ID/Path/Order 생성
- │    ├─ stepController.ts      # Jump, Retry, ErrorPolicy 처리
- │    └─ stepEvents.ts          # 이벤트 발생기(onStepStart 등)
+ │    ├─ stepTypes.ts           # StepNode types
+ │    ├─ stepParser.ts          # Step grammar parsing
+ │    ├─ stepResolver.ts        # ID/path/order generation
+ │    ├─ stepController.ts      # Jump, retry, error policy handling
+ │    └─ stepEvents.ts          # Event emitter (onStepStart, etc.)
  └─ modules/                    # Action Modules
 ```
 
-### 역할 요약
+### Role summary
 
-| 파일 | 역할 |
+| File | Role |
 |------|------|
-| stepParser.ts | step 문법 파싱 → StepNode 생성 |
-| stepResolver.ts | Step ID 테이블, 경로(path), order 생성 |
-| stepController.ts | jump / retry / errorPolicy 처리 |
-| stepEvents.ts | Executor 호출용 이벤트 디스패처 |
-| executor.ts | 오직 AST 실행만 담당 (Step 로직 없음) |
+| stepParser.ts | Parse step syntax → build StepNodes |
+| stepResolver.ts | Create ID tables, paths, orders |
+| stepController.ts | Handle jump/retry/error policies |
+| stepEvents.ts | Dispatch events back to the executor |
+| executor.ts | Run the AST only (no step logic) |
 
-이 아키텍처는 가장 깔끔하고 확장성 높음.
+This architecture remains the cleanest and most extensible.
 
 ---
 
-# 13. 전체 기능 요약
+# 13. Feature summary
 
-| 기능 | 설명 | 상태 |
+| Feature | Description | Status |
 |------|------|------|
-| Step 문법 | 실행 단위 구조화 | ✔ |
-| Sub-step | 계층 트리 지원 | ✔ |
-| Step Output | Step 결과 반환 | 옵션 |
-| Step Type | task/group/loop 분류 | 옵션 |
-| Step Error Policy | 실행 실패 대응 | ✔ 필수 |
-| Jump | 스텝 이동 흐름 제어 | ✔ |
-| Step Events | UI/로그 연동 | ✔ |
-| Step Path | 트리 렌더링/로그 | ✔ |
-| Step 아키텍처 분리 | 유지보수성/확장성 향상 | ✔ |
+| Step grammar | Structured execution units | ✔ |
+| Sub-steps | Hierarchical tree support | ✔ |
+| Step output | Return step results | Optional |
+| Step type | task/group/loop tags | Optional |
+| Step error policy | Failure handling | ✔ (required) |
+| Jump | Step-to-step control | ✔ |
+| Step events | UI/log integration | ✔ |
+| Step path | Tree rendering/logging | ✔ |
+| Separate step architecture | Maintainability/extensibility | ✔ |
 
 ---
 
-# 14. 결론
+# 14. Conclusion
 
-이 Step 시스템은  
-**워크플로우 엔진 수준의 유연성**,  
-**AI 생성 친화성**,  
-**직관적 UI 연동**  
-을 모두 충족하는 구조이며,  
-이번 설계는 QPlan을 “단순 Language”에서  
-**정식 워크플로우 실행 엔진**으로 확장하는 핵심 기반이다.
+This step system delivers  
+**workflow-engine flexibility**,  
+**AI-friendly generation**,  
+**intuitive UI integration**,  
+and upgrades QPlan from a “language” into a **full workflow execution engine**.
 
-- 문법 구조 명확  
-- AST 트리 기반 step 모델  
-- jump/flow-control 모듈화  
-- executor 단순화  
-- UI/AI 통합 최적화  
+- Clear grammar structure  
+- Step model built on AST trees  
+- Modular jump/flow control  
+- Simplified executor  
+- Optimized UI/AI integration  
 
-본 문서는 **QPlan Step System v2 — Final Specification**으로 간주된다.
+This document stands as the **QPlan Step System v2 — Final Specification**.

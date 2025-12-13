@@ -1,43 +1,43 @@
 # 09-ai-integration.md
 
-## 1. 목적
-QPlan은 “AI가 스크립트를 작성하고 엔진이 실행”하는 시나리오를 염두에 두고 설계되었다. 이 문서는 LLM과 QPlan을 연결할 때 필요한 정보, `buildAIPlanPrompt`/`buildQplanSuperPrompt` 사용법, 모듈 메타데이터 준비 방법을 다룬다.
+## 1. Goal
+QPlan targets the “AI writes, engine executes” workflow. This guide explains the info needed for LLM integration, how to use `buildAIPlanPrompt`/`buildQplanSuperPrompt`, and how to prepare module metadata.
 
-## 2. 최소 제공 정보
+## 2. Minimum data to provide
 ```ts
 const modules = registry.list();
 ```
-`registry.list()` 결과에는 `id`, `description`, `usage`, `inputs` 가 포함되며 LLM에 전달할 모듈 가이드의 핵심이 된다. 모듈 메타데이터를 충실히 작성할수록 AI가 정확한 QPlan 명령을 생성한다.
+`registry.list()` returns `id`, `description`, `usage`, and `inputs`, forming the core module guide for the LLM. Richer metadata leads to more accurate QPlan code.
 
-## 3. buildAIPlanPrompt() 워크플로우
+## 3. buildAIPlanPrompt() workflow
 ```ts
 import { buildAIPlanPrompt, runQplan, registry } from "qplan";
 
 registry.register(customModule);
-const prompt = buildAIPlanPrompt("파일을 읽어 평균을 계산해줘");
+const prompt = buildAIPlanPrompt("Read a file and compute the average");
 const aiScript = await callLLM(prompt);
 const ctx = await runQplan(aiScript);
 console.log(ctx.toJSON());
 ```
-`buildAIPlanPrompt(requirement)` 는 다음 정보를 자동으로 포함한다.
-1. QPlan 언어 개요와 “Step 내부에서만 Action 실행” 같은 규칙
-2. `buildAIGrammarSummary()` 로 생성한 AI-friendly 문법 요약
-3. registry.list() 로 얻은 모듈 메타데이터(`usage` 예시 포함)
-4. onError/jump/dot-path 등 실행 규칙 및 출력 형식
+`buildAIPlanPrompt(requirement)` embeds:
+1. QPlan overview and key rules (e.g., actions only inside steps).
+2. AI-friendly grammar summary from `buildAIGrammarSummary()`.
+3. Module metadata from `registry.list()` (including `usage`).
+4. Execution rules/output format covering onError, jumps, dot paths, etc.
 
-LLM은 이 프롬프트를 기반으로 Step 기반 QPlan 스크립트만 출력하게 된다.
+With this prompt, the LLM outputs step-based QPlan scripts only.
 
 ## 4. buildQplanSuperPrompt()
-장기적인 LLM 시스템 프롬프트가 필요하면 `buildQplanSuperPrompt(registry)` 를 사용한다. 이 함수는 QPlan 철학, 엔진 구조, Grammar 요약, 모듈 목록을 모두 담은 “슈퍼 프롬프트”를 생성한다. `buildAIPlanPrompt` 보다 길지만 반복 대화나 Agent 세팅에 유리하다.
+Use `buildQplanSuperPrompt(registry)` for long-lived system prompts. It packs QPlan philosophy, engine structure, grammar summary, and module lists into a “super prompt.” Longer than `buildAIPlanPrompt`, but ideal for multi-turn or agent setups.
 
-## 5. AI 프롬프트 구성 팁
-- **모듈 설명/usage 명확히 하기**: AI는 description/usage를 그대로 읽어 명령을 구성한다. 예시를 실제 QPlan 코드로 작성하자.
-- **필요한 모듈만 등록**: 사용하지 않을 모듈은 registry에서 제외하면 AI 프롬프트 길이를 줄이고 오용을 방지할 수 있다.
-- **요구사항 템플릿화**: 사용자 요청을 정제한 문자열을 `requirement` 로 넘겨 AI가 필요한 컨텍스트를 충분히 받도록 한다.
-- **출력 형식 강조**: buildAIPlanPrompt는 “QPlan 코드만 출력” 규칙을 포함하지만, 추가로 시스템/사용자 프롬프트에서 동일 규칙을 반복하면 안전하다.
+## 5. Prompt design tips
+- **Clarify module description/usage**: the AI reads them verbatim, so show real QPlan examples.
+- **Register only needed modules**: keeping the registry lean shortens prompts and prevents misuse.
+- **Template requirements**: clean up user requests before passing them as `requirement` for better context.
+- **Reinforce output format**: buildAIPlanPrompt already says “output QPlan only,” but repeating the rule in system/user prompts adds safety.
 
-## 6. 실행 전 검증
-AI가 생성한 스크립트는 실행 전에 검사하는 것이 좋다.
+## 6. Validate before running
+Always inspect AI-generated scripts before execution.
 ```ts
 import { validateQplanScript } from "qplan";
 
@@ -48,11 +48,11 @@ if (!result.ok) {
 }
 await runQplan(aiScript);
 ```
-- 문법/Step 구조/jump 대상 오류를 `validateQplanScript` 로 먼저 잡아내면 안전하다.
-- CI 파이프라인에서는 `npm run validate -- script.qplan` 형태로 자동 검사할 수 있다.
+- Catch grammar/step/jump issues with `validateQplanScript` before execution.
+- CI pipelines can run `npm run validate -- script.qplan` for automated checks.
 
-## 7. Step 이벤트와 AI 모니터링
-`runQplan(script, { stepEvents })` 옵션으로 Step 시작/종료/오류/재시도/점프 이벤트를 수신하면 LLM이 만든 플랜의 실행 상태를 UI에 표시하거나 재실행 전략을 세울 수 있다.
+## 7. Step events for monitoring
+`runQplan(script, { stepEvents })` lets you subscribe to start/end/error/retry/jump events. Use them to visualize LLM-generated plans or plan re-runs.
 
 ```ts
 await runQplan(aiScript, {
@@ -63,10 +63,10 @@ await runQplan(aiScript, {
 });
 ```
 
-## 8. 권장 전략 요약
-1. 기본 모듈 + 필요한 확장 모듈만 registry에 등록하고 `registry.list()` 를 LLM에 제공한다.
-2. `buildAIPlanPrompt(requirement)` 로 사용자 요청을 구조화된 프롬프트로 변환한다.
-3. AI 결과를 `validateQplanScript`/`runQplan` 으로 검증/실행한다.
-4. Step 이벤트 로그와 ctx 결과를 UI/백엔드에서 활용해 진행률과 성공 여부를 사용자에게 보여준다.
+## 8. Recommended strategy
+1. Register only core + necessary modules, expose `registry.list()` to the LLM.
+2. Use `buildAIPlanPrompt(requirement)` to structure the user request.
+3. Validate/execute the AI output via `validateQplanScript` and `runQplan`.
+4. Surface step events and ctx results in the UI/backend to show progress and success.
 
-이 흐름을 따르면 “AI thinks, QPlan executes” 패턴을 빠르게 구현할 수 있다.
+Following this flow delivers the “AI thinks, QPlan executes” pattern quickly.

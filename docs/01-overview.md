@@ -1,34 +1,34 @@
 # 01-overview.md
 **QPlan Language — AI Planning Language & Execution Engine**
 
-## 🚀 QPlan이란?
-QPlan은 **AI가 설계하고 사람이 검증할 수 있는 Step 기반 워크플로우 언어/엔진**이다. LLM이 자연어 요구사항을 QPlan 스크립트로 작성하고, 엔진이 해당 스크립트를 안전하게 실행해 실제 작업(파일 처리, 데이터 가공, 외부 호출 등)을 수행한다.
+## 🚀 What is QPlan?
+QPlan is a **step-based workflow language/engine that lets AI design plans and humans validate them**. An LLM turns natural-language requirements into a QPlan script, and the engine executes that script safely to perform real-world tasks (file I/O, data processing, external calls, and more).
 
-핵심 목표:
-- **Simple**: 한 줄 명령이라도 즉시 실행 가능하고 문법은 docs/02-grammar.md 한 장으로 끝난다.
-- **Composable**: Step/Sub-step, jump, onError로 복잡한 플로우를 구조화한다.
-- **AI-Friendly**: registry 메타데이터 + AI 친화적 문법 요약을 제공해 모델이 스크립트를 자동 생성한다.
-- **Extensible**: ActionModule 만 작성하면 registry에 즉시 플러그인된다.
-- **Deterministic & Observable**: Step order/path/event 로깅을 통해 언제든 재현/모니터링이 쉽다.
-- **Future-proof**: Future/Parallel/Join, dot-path 변수 참조 등 현대적 제어 흐름을 기본 지원한다.
+Core goals:
+- **Simple**: even a single-line command can run immediately, and the grammar fits on one page (`docs/02-grammar.md`).
+- **Composable**: steps/sub-steps, jump, and onError let you structure complex flows.
+- **AI-Friendly**: registry metadata plus an AI-oriented grammar summary help models generate scripts automatically.
+- **Extensible**: writing an ActionModule is all it takes to plug into the registry.
+- **Deterministic & Observable**: step order/path/event logging makes every run reproducible and traceable.
+- **Future-proof**: Future/Parallel/Join, dot-path variable references, and other modern controls are first-class.
 
 > **AI thinks, QPlan executes.**
 
-## 🧩 엔진 구성요소
-1. **Tokenizer & Parser** — `src/core/tokenizer.ts`, `parser.ts` 구성. 스크립트를 토큰화 후 AST(Action/If/Parallel/Each/Step/JUMP 등)로 변환한다. Parser가 Step 내부 여부를 엄격히 검사하므로 Action/제어문은 Step 밖에서 사용할 수 없다.
-2. **Semantic Validator & Step Resolver** — `semanticValidator.ts` 는 jump/onError 대상 Step을 검증하고 경고 리스트를 반환한다. `stepResolver.ts` 는 Step 트리를 분석해 order/path/parent 관계를 만든다.
-3. **Executor & StepController** — `executor.ts` 는 AST를 순차/병렬 실행하고, Future/Join/Parallel/Each/While/Jump/Return/Set 을 모두 다룬다. `stepController.ts` 는 Step의 onError(fail/continue/retry/jump) 정책, retry 루프, Step 이벤트 방출을 담당한다.
-4. **ExecutionContext(ctx)** — `executionContext.ts` 는 `set/get/has/toJSON` 을 제공하는 런타임 저장소다. `stats.total` 처럼 dot-path 접근을 지원해 Step 결과 객체의 하위 필드를 즉시 재사용할 수 있다.
-5. **ModuleRegistry & ActionModule** — `moduleRegistry.ts` 는 모듈 등록/조회/메타데이터 추출을 관리한다. ActionModule 은 함수형이나 `execute()` 메서드를 가진 객체형 모두 지원하며 `id/description/usage/inputs` 메타데이터를 포함할 수 있다. `src/index.ts` 에서 `registry` 를 export 하며 `basicModules` 를 자동 등록한다.
-6. **Prompt Builders** — `buildAIPlanPrompt`, `buildQplanSuperPrompt`, `buildAIGrammarSummary` 가 registry에 등록된 모듈과 문법 요약을 묶어 LLM에 전달할 시스템/사용자 프롬프트를 동적으로 만들어 준다.
+## 🧩 Engine components
+1. **Tokenizer & Parser**—`src/core/tokenizer.ts` and `parser.ts` tokenize the script and convert it into an AST (Action/If/Parallel/Each/Step/Jump, etc.). The parser enforces that actions and control structures only appear inside steps.
+2. **Semantic Validator & Step Resolver**—`semanticValidator.ts` verifies jump/onError targets and returns warning lists. `stepResolver.ts` analyzes the step tree to compute order/path/parent relationships.
+3. **Executor & StepController**—`executor.ts` runs the AST sequentially or in parallel and handles Future/Join/Parallel/Each/While/Jump/Return/Set. `stepController.ts` manages onError policies (fail/continue/retry/jump), retry loops, and step event emission.
+4. **ExecutionContext (ctx)**—`executionContext.ts` provides `set/get/has/toJSON` for runtime state storage. It supports dot-path access (e.g., `stats.total`) so sub-fields of step results are immediately reusable.
+5. **ModuleRegistry & ActionModule**—`moduleRegistry.ts` manages registration, lookup, and metadata extraction. ActionModules can be functions or objects with an `execute()` method, optionally including `id/description/usage/inputs`. `src/index.ts` exports `registry` and auto-registers `basicModules`.
+6. **Prompt Builders**—`buildAIPlanPrompt`, `buildQplanSuperPrompt`, and `buildAIGrammarSummary` combine registry metadata and grammar summaries to dynamically craft system/user prompts for LLMs.
 
-## 🪜 Step System & 실행 규칙
-- **Action은 항상 Step 내부**에서만 실행된다. 최상위 루트에는 Step 블록만 존재하며, Step 안에서 Action/If/While/Each/Parallel/Jump 등을 사용할 수 있다.
-- `step id="..." desc="..." type="..." onError="..." -> result { ... }` 형태를 갖는다. `type` 필드는 UI 태깅, `onError` 는 fail(기본)/continue/retry=N/jump="stepId" 를 지원한다.
-- Step 내부에서 `return key=value ...` 를 사용하면 Step 결과를 명시적으로 구성하고, 없으면 마지막 Action 결과가 Step 결과가 된다.
-- `jump to="stepId"` 문으로 Step 간 이동이 가능하다. Jump 대상은 Step ID여야 하며, semantic validator가 존재 여부를 검사한다.
-- Step 은 중첩(Sub-step) 가능하며, Step 트리는 `order`(실행 순번)와 `path`(예: `1.2.3`)가 자동 부여된다.
-- `runQplan` 호출 시 `stepEvents` 훅으로 Step 실행 상태를 관찰할 수 있다.
+## 🪜 Step system & execution rules
+- **Actions always run inside steps**. The root level contains only `step` blocks, and actions/control statements (If/While/Each/Parallel/Jump, etc.) appear inside them.
+- Steps follow `step id="..." desc="..." type="..." onError="..." -> result { ... }`. `type` tags the UI, and `onError` supports fail (default), continue, retry=N, or jump="stepId".
+- Use `return key=value ...` inside a step to build an explicit result; otherwise, the last action result becomes the step result.
+- `jump to="stepId"` moves between steps. Targets must be step IDs, and the semantic validator ensures they exist.
+- Steps can nest (sub-steps). The resolver auto-assigns `order` (execution sequence) and `path` (e.g., `1.2.3`).
+- When calling `runQplan`, `stepEvents` hooks let you observe step execution in real time.
 
 ```ts
 import { runQplan } from "qplan";
@@ -44,74 +44,74 @@ await runQplan(script, {
 });
 ```
 
-## 🔄 제어 흐름 & 언어 기능
-- **If / While** — 조건식은 `> < >= <= == != EXISTS NOT_EXISTS` 와 `AND/OR/not` 및 괄호를 지원한다. While 은 동일한 조건 구문을 반복에 사용한다.
-- **Each** — `each item in iterable { ... }` 또는 `each (item, idx) in iterable { ... }` 로 배열을 순회한다. 내부에서 `stop`/`skip` 사용 가능.
-- **Parallel** — `parallel concurrency=3 ignoreErrors=true { ... }` 로 블록을 병렬 실행한다.
-- **Future & Join** — `future` 모듈은 Promise를 `__future` 래퍼에 담아 ctx에 저장하고, `join futures="f1,f2" -> list` 가 여러 Future를 합친다.
-- **Set & Return** — `set total = (total + delta) * 0.5` 처럼 산술 표현식을 기존 변수에 적용하고, `return key=value ...` 로 Step 출력 객체를 직접 구성한다.
-- **Stop / Skip** — Each, While 루프 안에서 탈출/건너뛰기를 제어한다.
-- **ExecutionContext** — `ctx.get("order.summary.status")` 처럼 dot-path로 하위 값을 읽을 수 있고, `ctx.toJSON()` 으로 전체 상태를 덤프할 수 있다.
-- **문법 전체**는 `docs/02-grammar.md` 를 참고하면 된다. `buildAIGrammarSummary()` 는 해당 문법을 LLM용으로 요약한 버전을 자동 생성한다.
+## 🔄 Control flow & language features
+- **If / While**—conditions support `> < >= <= == != EXISTS NOT_EXISTS`, logical `AND/OR/not`, and parentheses. While loops reuse the same condition syntax.
+- **Each**—`each item in iterable { ... }` or `each (item, idx) in iterable { ... }` iterates arrays, with `stop`/`skip` available inside.
+- **Parallel**—`parallel concurrency=3 ignoreErrors=true { ... }` runs a block in parallel.
+- **Future & Join**—the `future` module stores a Promise in ctx under a `__future` wrapper, and `join futures="f1,f2" -> list` combines multiple futures.
+- **Set & Return**—`set total = (total + delta) * 0.5` applies arithmetic expressions to existing variables, and `return key=value ...` shapes step outputs manually.
+- **Stop / Skip**—control exit/continue in Each or While loops.
+- **ExecutionContext**—`ctx.get("order.summary.status")` reads nested values via dot paths, and `ctx.toJSON()` dumps the entire state.
+- **Full grammar** lives in `docs/02-grammar.md`; `buildAIGrammarSummary()` auto-generates a condensed, LLM-friendly version.
 
-## 📦 기본 제공 모듈 (basicModules)
-기본 registry에는 다음 9개 모듈이 자동 등록된다(`src/modules/index.ts`).
-- **var** — 문자열/숫자/JSON 리터럴을 그대로 ctx 변수에 저장한다. 기존 변수를 복사하려면 `set` 을 사용해야 한다.
-- **print** — `console.log` 스타일 출력. 문자열/숫자/ctx 변수를 혼합해 찍고 마지막 출력 값을 반환한다.
-- **echo** — 입력 인수를 그대로 객체로 반환하는 디버깅 모듈.
-- **sleep** — 지정한 ms 동안 대기 후 `"slept Xms"` 를 반환한다.
-- **file** — `op=read/write` 로 파일을 읽거나 저장한다. write 시 객체 입력은 JSON으로 직렬화한다.
-- **math** — `add/sub/mul/div/sum/avg` 를 제공한다. `arr` 는 JSON 배열 또는 공백/콤마 분리 문자열을 모두 허용한다.
-- **future** — 비동기 Future를 생성해 ctx에 Promise를 저장한다(`{ __future: Promise }` 형태).
-- **join** — `futures="a,b,c"` 로 등록된 Future 이름 배열을 `Promise.all` 한 결과를 반환한다.
-- **json** — `parse/stringify/get/set/keys/values/entries` 로 JSON을 다루고, 문자열 입력 시 자동 파싱을 시도한다.
+## 📦 Built-in modules (basicModules)
+The default registry auto-registers nine modules (`src/modules/index.ts`):
+- **var**—stores string/number/JSON literals in ctx variables. Use `set` to copy existing values.
+- **print**—`console.log` style output mixing strings/numbers/ctx variables; returns the last printed value.
+- **echo**—returns inputs as an object for debugging.
+- **sleep**—waits for the given ms and returns `"slept Xms"`.
+- **file**—`op=read/write` reads or writes files, JSON-serializing objects on write.
+- **math**—provides `add/sub/mul/div/sum/avg`; `arr` accepts JSON arrays or whitespace/comma-delimited strings.
+- **future**—creates async futures and stores promises in ctx (`{ __future: Promise }`).
+- **join**—`futures="a,b,c"` resolves multiple futures via `Promise.all`.
+- **json**—`parse/stringify/get/set/keys/values/entries` utilities with auto-parsing for string inputs.
 
-## ➕ 확장 모듈 & Registry 활용
-저장소에는 추가 모듈(`ai`, `http`, `html`, `string`, `timeout` 등)이 `src/modules/basic/*.ts` 로 포함되어 있다. 기본 번들에는 포함되지 않으므로 필요 시 직접 가져와 registry에 등록하면 된다.
+## ➕ Extension modules & registry usage
+Additional modules (`ai`, `http`, `html`, `string`, `timeout`, etc.) live under `src/modules/basic/*.ts`. They are excluded from the default bundle, so import and register them manually when needed.
 
 ```ts
 import { registry } from "qplan";
-import { httpModule } from "qplan/dist/modules/basic/http.js"; // 또는 src 경로에서 직접 import
+import { httpModule } from "qplan/dist/modules/basic/http.js"; // or import from src
 
 registry.register(httpModule);
 registry.registerAll([htmlModule, stringModule, aiModule]);
 ```
 
-모듈은 함수 혹은 `{ execute(inputs, ctx) { ... } }` 형태의 객체로 작성할 수 있으며, `inputs` 메타데이터를 채우면 `buildAIPlanPrompt()` 가 자동으로 AI 프롬프트에 사용 방법을 삽입한다.
+Modules can be functions or objects like `{ execute(inputs, ctx) { ... } }`. When `inputs` metadata is defined, `buildAIPlanPrompt()` automatically injects usage hints into the AI prompt.
 
-## 🤖 AI 통합 기능
-- **buildAIPlanPrompt(requirement)** — 현재 registry에 등록된 모듈 목록 + 문법 요약 + 실행 규칙을 포함한 프롬프트를 생성해 LLM에게 “QPlan 코드만 작성하라”고 지시한다. onError, jump, dot-path 규칙 등이 모두 명시된다.
-- **buildQplanSuperPrompt(registry)** — LLM 시스템 프롬프트 버전. QPlan 철학, 엔진 구조, Grammar 요약, 모듈 메타데이터가 포함된 “최상위 가이드”를 만들어 준다.
-- **buildAIGrammarSummary()** — 긴 grammar 문서를 AI 친화 문장으로 압축한다.
+## 🤖 AI integration features
+- **buildAIPlanPrompt(requirement)**—builds a prompt with registered modules, grammar summary, and execution rules, instructing the LLM to “write QPlan code only.” onError, jump, and dot-path rules are all spelled out.
+- **buildQplanSuperPrompt(registry)**—creates the LLM system prompt: QPlan philosophy, engine structure, grammar summary, and module metadata rolled into a “master guide.”
+- **buildAIGrammarSummary()**—compresses the long grammar doc into AI-friendly prose.
 
 ```ts
 import { buildAIPlanPrompt, registry } from "qplan";
 
 registry.register(customModule);
-const prompt = buildAIPlanPrompt("재고 집계 보고서를 만들어줘");
+const prompt = buildAIPlanPrompt("Create an inventory summary report");
 const aiScript = await callLlm(prompt);
 ```
 
-이렇게 생성된 스크립트는 `runQplan` 으로 즉시 실행하거나 `validateQplanScript` 로 사전 검증할 수 있다.
+Scripts generated this way can run immediately via `runQplan` or be pre-validated with `validateQplanScript`.
 
-## ✅ 검증 & 실행 도구
-- **validateQplanScript(script)** — Tokenize, Parse, Semantic Validation 결과를 반환한다. 성공 시 `{ ok: true, ast }`, 실패 시 `{ ok: false, error, line, issues }` 구조다.
-- **CLI 검증기** — `src/tools/validateScript.ts` 를 통해 `npm run validate -- examples/12_exam_step.qplan` 처럼 파일 또는 stdin(`-`)을 검사할 수 있다.
-- **Semantic Validator** — jump to 대상 Step 누락, onError="jump" 대상 검증 등 구조적 오류를 미리 탐지한다.
-- **ExecutionContext 디버깅** — `ctx.toJSON()` 으로 현재 변수 상태를 전부 출력해 UI/로그에서 쉽게 확인할 수 있다.
-- **Step Events** — UI/모니터링 시스템이 Step 시작/종료/오류/재시도/점프 이벤트를 구독해 Gantt, 진행률, 감사 로그 등을 구성할 수 있다.
+## ✅ Validation & execution tools
+- **validateQplanScript(script)**—returns tokenize/parse/semantic-validation results. Success: `{ ok: true, ast }`; failure: `{ ok: false, error, line, issues }`.
+- **CLI validator**—`src/tools/validateScript.ts` powers `npm run validate -- examples/12_exam_step.qplan`, inspecting files or stdin (`-`).
+- **Semantic Validator**—catches structural errors like missing jump targets or invalid onError="jump" references early.
+- **ExecutionContext debugging**—`ctx.toJSON()` dumps the full variable state for UI/log inspection.
+- **Step Events**—UI/monitoring systems can subscribe to start/end/error/retry/jump events to build Gantt views, progress meters, or audit logs.
 
-## 🧪 실행 예시
-아래는 기본 모듈만으로 구성한 간단한 Step 기반 파이프라인이다.
+## 🧪 Example run
+Below is a simple step-based pipeline that uses only the basic modules.
 
 ```
-step id="load" desc="데이터 로드" -> dataset {
+step id="load" desc="Load data" -> dataset {
   file read path="./data/raw.json" -> rawTxt
   json parse data=rawTxt -> parsed
   return list=parsed
 }
 
-step id="aggregate" desc="누적/평균 계산" -> stats {
+step id="aggregate" desc="Sum & average" -> stats {
   var 0 -> total
   each value in dataset.list {
     set total = total + value
@@ -120,18 +120,18 @@ step id="aggregate" desc="누적/평균 계산" -> stats {
   return total=total average=average
 }
 
-step id="report" desc="결과 출력" onError="continue" {
-  print message="평균" value=stats.average
+step id="report" desc="Print result" onError="continue" {
+  print message="Average" value=stats.average
   echo summary="done" total=stats.total avg=stats.average -> final
   return result=final
 }
 ```
 
-## 📌 디자인 철학
-1. **모듈 중심 확장성** — ActionModule 만 작성하면 실행계획/프롬프트/검증에 자동 반영된다.
-2. **AI-First Grammar** — Step 강제, dot-path, Future/Parallel 등 AI가 오판하기 쉬운 규칙을 명시적으로 문서화하고 Prompt Builder가 반복해서 상기시킨다.
-3. **관측 가능성** — Step tree, order, path, event hook, ctx dump 로 실행 과정을 완전히 추적할 수 있다.
-4. **단순함 유지** — 최소한의 문법으로 다양한 제어 흐름을 표현하고, Action 구현은 모두 TypeScript 모듈에 맡긴다.
-5. **결정론적 실행** — 같은 스크립트 + 같은 ctx + 같은 모듈이면 항상 동일한 결과를 반환하도록 설계되었다.
+## 📌 Design philosophy
+1. **Module-centric extensibility**—write an ActionModule once and it automatically feeds execution plans, prompts, and validation.
+2. **AI-first grammar**—rules that AIs often mis-handle (step-only actions, dot-paths, Future/Parallel, etc.) are documented explicitly and reiterated via the prompt builders.
+3. **Observability**—step trees, order/path, event hooks, and ctx dumps capture the entire execution trail.
+4. **Keep it simple**—express diverse control flows with minimal syntax while implementing heavy lifting in TypeScript modules.
+5. **Deterministic execution**—identical scripts + ctx + modules always yield identical results.
 
-이 문서는 QPlan 프로젝트의 전체 윤곽을 소개하고, 보다 상세한 문법/EBNF 는 `docs/02-grammar.md`, 모듈/예시는 `examples/` 디렉터리를 참고하면 된다.
+This document presents the big-picture view of QPlan. For the full grammar/EBNF see `docs/02-grammar.md`, and browse `examples/` for module usage and sample scripts.

@@ -1,7 +1,7 @@
 # 03-architecture.md
 
-## 1. 시스템 전반 개요
-QPlan은 **"LLM이 작성 → 엔진이 실행"**이라는 시나리오를 위해 설계된 Step 기반 워크플로우 엔진이다. 사용자가 작성한 QPlan 스크립트는 Tokenizer → Parser → Semantic Validator → Step Resolver → Executor 파이프라인을 거쳐 실행되고, 모든 중간 값은 ExecutionContext(ctx)에 저장된다. 아래 구성요소는 모두 `src/` 디렉터리에 구현되어 있으며, 외부에서는 `runQplan`, `registry`, `buildAIPlanPrompt` 등을 통해 접근한다.
+## 1. System overview
+QPlan is a step-based workflow engine built for the **“LLM writes → engine executes”** scenario. A QPlan script flows through Tokenizer → Parser → Semantic Validator → Step Resolver → Executor, and every intermediate value is stored in the ExecutionContext (ctx). The components below live in `src/`, and external callers access them via `runQplan`, `registry`, `buildAIPlanPrompt`, etc.
 
 ```
 Script
@@ -15,57 +15,57 @@ Validated AST + StepResolution
 ExecutionContext (variables, futures, step outputs)
 ```
 
-## 2. 핵심 컴포넌트
-| 컴포넌트 | 설명 | 주요 파일 |
+## 2. Core components
+| Component | Description | Key files |
 | --- | --- | --- |
-| Tokenizer | 스크립트를 토큰 리스트로 분해. 문자열, 숫자, JSON, Identifier, 키워드 등을 구분한다. | `src/core/tokenizer.ts` |
-| Parser | 토큰을 AST(Action, If, While, Each, Parallel, Step, Jump 등)로 변환한다. 모든 Action/제어문이 Step 내부에 있는지 검사하고, var/print 같은 특별 구문도 처리한다. | `src/core/parser.ts`, `src/core/ast.ts` |
-| Semantic Validator | Step ID 중복, onError="jump" 대상 존재 여부, `jump to` 대상 존재 여부 등을 미리 검증해 Issues 배열을 돌려준다. | `src/core/semanticValidator.ts` |
-| Step Resolver / Controller | Step 트리를 분석해 order/path/parent 관계를 계산하고, 실행 중에는 onError 정책(fail/continue/retry/jump)과 Step 이벤트(onStepStart/End/Error/Retry/Jump)를 관리한다. | `src/step/stepResolver.ts`, `src/step/stepController.ts`, `src/step/stepEvents.ts` |
-| Executor | AST를 순차/병렬로 실행한다. If/While/Each/Parallel/Jump/Set/Return/Future/Join/Stop/Skip을 모두 처리하며 ExecutionContext를 갱신한다. | `src/core/executor.ts` |
-| ExecutionContext | ctx.set/get/has/toJSON 을 제공하는 런타임 저장소. dot-path(`stats.total`) 접근을 지원해 Step 결과 객체의 하위 필드를 재사용할 수 있다. | `src/core/executionContext.ts` |
-| ModuleRegistry | ActionModule 등록/조회/메타데이터 노출 담당. `registry` 인스턴스는 기본 모듈을 자동 등록하고 그대로 export 된다. | `src/core/moduleRegistry.ts`, `src/index.ts` |
-| ActionModule | 함수형 또는 `{ execute(inputs, ctx) {} }` 객체형 모듈 규격. `id/description/usage/inputs` 메타데이터가 있으면 LLM/문서화에 활용된다. | `src/core/actionModule.ts` |
-| Prompt Builders | `buildAIPlanPrompt`, `buildQplanSuperPrompt`, `buildAIGrammarSummary` 는 현재 registry에 등록된 모듈과 문법 요약을 묶어 LLM 프롬프트를 생성한다. | `src/core/buildAIPlanPrompt.ts`, `src/core/buildQplanSuperPrompt.ts`, `src/core/buildAIGrammarSummary.ts` |
+| Tokenizer | Breaks scripts into tokens; recognizes strings, numbers, JSON, identifiers, keywords. | `src/core/tokenizer.ts` |
+| Parser | Converts tokens into AST nodes (Action, If, While, Each, Parallel, Step, Jump, etc.), verifying all actions/control statements are inside steps and handling var/print syntax. | `src/core/parser.ts`, `src/core/ast.ts` |
+| Semantic Validator | Pre-checks duplicate step IDs, ensures onError="jump" targets and `jump to` targets exist, and returns issues. | `src/core/semanticValidator.ts` |
+| Step Resolver / Controller | Computes order/path/parent relationships for the step tree and, during execution, manages onError policies (fail/continue/retry/jump) plus step events (onStepStart/End/Error/Retry/Jump). | `src/step/stepResolver.ts`, `src/step/stepController.ts`, `src/step/stepEvents.ts` |
+| Executor | Runs the AST sequentially/parallel, handling If/While/Each/Parallel/Jump/Set/Return/Future/Join/Stop/Skip and updating the ExecutionContext. | `src/core/executor.ts` |
+| ExecutionContext | Runtime store offering ctx.set/get/has/toJSON. Supports dot-path access (`stats.total`) so sub-fields of step outputs can be reused. | `src/core/executionContext.ts` |
+| ModuleRegistry | Manages ActionModule registration/lookup/metadata exposure. The exported `registry` auto-registers basic modules. | `src/core/moduleRegistry.ts`, `src/index.ts` |
+| ActionModule | Function-style or `{ execute(inputs, ctx) {} }` modules. Metadata `id/description/usage/inputs` powers docs and LLM prompts. | `src/core/actionModule.ts` |
+| Prompt Builders | `buildAIPlanPrompt`, `buildQplanSuperPrompt`, `buildAIGrammarSummary` combine registered modules and grammar summaries into LLM prompts. | `src/core/buildAIPlanPrompt.ts`, `src/core/buildQplanSuperPrompt.ts`, `src/core/buildAIGrammarSummary.ts` |
 
-## 3. Step 시스템 아키텍처
-1. **Step 정의** – `step id="..." desc="..." type="..." onError="..." -> result { ... }` 형태. Parser가 Step 헤더를 읽고 StepNode를 만든다.
-2. **Step Resolution** – 실행 전 `resolveSteps()` 가 Step 트리를 순회해 `order`, `path`, `parent`, `errorPolicy` 메타데이터를 생성하고, Step ID → StepNode 매핑을 만든다.
-3. **StepController** – Executor가 Step을 실행할 때 StepController가 다음 로직을 담당한다:
-   - onStepStart/End/Error/Retry/Jump 이벤트 발생 (`stepEvents` 옵션으로 핸들러 전달 가능)
-   - `onError="continue"` : 오류 발생 시 Step만 종료하고 다음 명령으로 이동
-   - `onError="retry=N"` : 실패 시 최대 N회 재시도(각 시도마다 onStepRetry 이벤트 호출)
-   - `onError="jump='cleanup'"` : JumpSignal을 발생시켜 지정한 Step으로 이동
-4. **Jump 처리** – `jump to="stepId"` 문이나 onError jump 정책이 발생하면 StepController가 JumpSignal을 던지고, Executor는 block override 테이블을 업데이트해 루프/블록을 재시작한다.
-5. **Step 결과** – Step 블록 내 `return` 이 있으면 해당 객체를, 없으면 마지막 Action 결과를 ctx에 저장한다. Step 헤더의 `-> output` 에 지정한 변수명으로 저장된다.
+## 3. Step system architecture
+1. **Step definition** – `step id="..." desc="..." type="..." onError="..." -> result { ... }`. The parser reads the header and builds a StepNode.
+2. **Step resolution** – Before execution, `resolveSteps()` walks the tree to compute `order`, `path`, `parent`, and `errorPolicy` metadata, plus a StepID → StepNode map.
+3. **StepController** – When the executor runs a step, the controller handles:
+   - Emitting onStepStart/End/Error/Retry/Jump events (supplied via `stepEvents`).
+   - `onError="continue"`: end the step on error and move on.
+   - `onError="retry=N"`: retry up to N times, calling onStepRetry each attempt.
+   - `onError="jump='cleanup'"`: raise a JumpSignal to another step.
+4. **Jump handling** – `jump to="stepId"` statements or onError jumps throw JumpSignals; the executor updates block overrides to restart loops/blocks accordingly.
+5. **Step result** – If the step block contains `return`, that object becomes the result; otherwise, the final action result is stored under the header’s `-> output`.
 
-## 4. 모듈 구조
-- **기본 번들** – `src/modules/index.ts` 에서 `var/print/echo/sleep/file/math/future/join/json` 9개 모듈을 기본 registry에 등록한다.
-- **확장 모듈** – `src/modules/basic/*.ts` 폴더에는 http, html, string, ai, timeout 등 추가 모듈 구현이 포함되어 있으며 필요 시 `registry.register()` 로 활성화한다.
-- **ActionModule 실행 규칙** – Executor가 모듈을 꺼내 `typeof mod === "function"` 인지 확인하고 곧바로 호출하거나 `mod.execute()` 를 호출한다. Future 모듈이 `{ __future: Promise }` 를 반환하면 ctx에는 해당 Promise만 저장하여 join이 활용할 수 있게 한다.
+## 4. Module structure
+- **Default bundle** – `src/modules/index.ts` registers nine modules (`var/print/echo/sleep/file/math/future/join/json`) into the default registry.
+- **Extension modules** – `src/modules/basic/*.ts` contains optional modules (http, html, string, ai, timeout, etc.) that can be activated via `registry.register()`.
+- **ActionModule execution** – The executor fetches a module, calls it directly if it’s a function or `mod.execute()` if it’s an object. When a future module returns `{ __future: Promise }`, only the promise is stored in ctx so join can consume it.
 
-## 5. Prompt / AI 통합 구성
-1. **buildAIPlanPrompt(requirement)** – 현재 registry에 등록된 모듈 메타데이터, AI-friendly grammar summary, 실행 규칙, 사용자 요구사항을 묶어 LLM에게 “QPlan 스크립트만 출력하라”고 지시하는 프롬프트를 생성한다.
-2. **buildQplanSuperPrompt(registry)** – LLM 시스템 프롬프트 버전으로 QPlan 철학/엔진 구조/모듈 목록/grammar 요약을 제공한다.
-3. **buildAIGrammarSummary()** – `docs/02-grammar.md` 전체를 대신할 경량 문법 요약을 생성해 LLM 입력 길이를 줄인다.
+## 5. Prompt / AI integration
+1. **buildAIPlanPrompt(requirement)** – Bundles registered module metadata, AI-friendly grammar summary, execution rules, and user requirements into a prompt telling the LLM to “output QPlan only.”
+2. **buildQplanSuperPrompt(registry)** – System-level prompt describing QPlan philosophy, architecture, modules, and grammar summary.
+3. **buildAIGrammarSummary()** – Produces a lightweight grammar synopsis versus the full `docs/02-grammar.md`, reducing LLM input size.
 
-## 6. ExecutionContext & 데이터 흐름
-- **저장** – Action 결과 또는 Step 결과를 `ctx.set(name, value)` 로 저장.
-- **조회** – 다른 Action이 문자열 인수를 전달하면 ctx에 동일 이름이 있는지 확인 후 자동 바인딩한다. `ctx.has/ctx.get` 는 dot-path를 지원하므로 Step에서 `return stats={ total, count }` 를 해두면 `stats.total` 로 재사용 가능.
-- **Dump** – `ctx.toJSON()` 으로 전체 상태를 로깅/디버깅할 수 있다.
+## 6. ExecutionContext & data flow
+- **Store** – Save action or step results via `ctx.set(name, value)`.
+- **Read** – When another action passes a string argument, it auto-binds if the ctx has a matching name. `ctx.has/ctx.get` support dot paths, so returning `stats={ total, count }` lets you reuse `stats.total`.
+- **Dump** – `ctx.toJSON()` dumps the entire state for logging/debugging.
 
-## 7. Tooling & Validation
-- **validateQplanScript(script)** – Tokenize + Parse + Semantic Validation 결과를 반환. 문제 없으면 `{ ok: true, ast }`, 에러 시 `{ ok: false, error, line, issues? }` 구조다.
-- **CLI** – `npm run validate -- <file>` (`src/tools/validateScript.ts`) 로 파일 또는 stdin을 검사해 CI/에디터 통합에 활용한다.
-- **Step Events** – `runQplan(script, { stepEvents })` 로 Step 진행 상황을 관찰하고 UI/로그/모니터링 시스템에 반영한다.
+## 7. Tooling & validation
+- **validateQplanScript(script)** – Returns tokenize/parse/semantic-validation results; `{ ok: true, ast }` on success, `{ ok: false, error, line, issues? }` on failure.
+- **CLI** – `npm run validate -- <file>` (backed by `src/tools/validateScript.ts`) checks files or stdin for CI/editor integrations.
+- **Step events** – `runQplan(script, { stepEvents })` lets observers mirror step progress into UIs/logs/monitoring.
 
-## 8. 확장 & 통합 포인트
-1. **모듈 추가** – ActionModule 작성 후 `registry.register(customModule)` 호출. 메타데이터를 채우면 Prompt Builder가 자동으로 사용법을 포함한다.
-2. **커스텀 Executor hook** – `stepEvents` 로 Step 시작/종료/오류 등의 이벤트를 수신해 Gantt, 진행률, 감사 로그를 구현한다.
-3. **LLM 통합** – `buildAIPlanPrompt` 로 프롬프트를 만들고 `runQplan` 으로 실행하면 “AI thinks, QPlan executes” 패턴을 완성할 수 있다.
-4. **Grammar/Docs** – `docs/02-grammar.md`, `docs/06-executor.md`, `docs/10-step-system.md` 등 세부 문서를 참고해 기능별로 확장 전략을 수립한다.
+## 8. Extension & integration points
+1. **Add modules** – Implement an ActionModule and call `registry.register(customModule)`. With metadata filled in, prompt builders automatically include usage info.
+2. **Custom executor hooks** – Use `stepEvents` to capture start/end/error events and feed Gantt charts, progress, or audit logs.
+3. **LLM integration** – Generate prompts via `buildAIPlanPrompt` and execute with `runQplan` to realize “AI thinks, QPlan executes.”
+4. **Further docs** – See `docs/02-grammar.md`, `docs/06-executor.md`, `docs/10-step-system.md`, etc., for deeper extension strategies.
 
-## 9. 요약 다이어그램
+## 9. Summary diagram
 ```
 +---------------------+
 |  QPlan Script       |
@@ -99,4 +99,4 @@ ExecutionContext (variables, futures, step outputs)
 +---------------------+
 ```
 
-위 구조를 통해 QPlan은 간결한 문법, Step 기반 제어, 모듈 확장성을 동시에 제공하며 AI/사람이 공동으로 워크플로우를 설계하고 실행할 수 있는 환경을 마련한다.
+This architecture delivers concise grammar, step-based control, and module extensibility so AI and humans can co-design and run workflows.
