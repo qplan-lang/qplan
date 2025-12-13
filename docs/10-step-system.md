@@ -1,7 +1,7 @@
-# qplan Step System — Consolidated Design (v2 Draft)
+# QPlan Step System — Consolidated Design (v2 Draft)
 
-본 문서는 지금까지 논의된 **qplan Step 시스템 전체 설계 내용을 정리한 공식 스펙 문서**이다.  
-Step은 qplan 실행 흐름을 표현하고, 구조화하며, 점프/제어 기능까지 확장하기 위한 핵심 요소이다.
+본 문서는 지금까지 논의된 **QPlan Step 시스템 전체 설계 내용을 정리한 공식 스펙 문서**이다.  
+Step은 QPlan 실행 흐름을 표현하고, 구조화하며, 점프/제어 기능까지 확장하기 위한 핵심 요소이다.
 
 ---
 
@@ -340,7 +340,7 @@ src/
 **AI 생성 친화성**,  
 **직관적 UI 연동**  
 을 모두 충족하는 구조이며,  
-이번 설계는 qplan을 “단순 DSL”에서  
+이번 설계는 QPlan을 “단순 DSL”에서  
 **정식 워크플로우 실행 엔진**으로 확장하는 핵심 기반이다.
 
 - 문법 구조 명확  
@@ -349,4 +349,4 @@ src/
 - executor 단순화  
 - UI/AI 통합 최적화  
 
-본 문서는 **qplan Step System v2 — Final Specification**으로 간주된다.
+본 문서는 **QPlan Step System v2 — Final Specification**으로 간주된다.

@@ -1,15 +1,15 @@
 # 01-overview.md  
-**qplan DSL — AI-Driven Workflow Language**
+**QPlan DSL — AI-Driven Workflow Language**
 
-## 🚀 qplan이란?
-qplan은 **AI와 사람이 함께 사용할 수 있는 경량 DSL(Workflow Language)** 로,  
+## 🚀 QPlan이란?
+QPlan은 **AI와 사람이 함께 사용할 수 있는 경량 DSL(Workflow Language)** 로,  
 작업 흐름(Workflow), 데이터 처리, 비동기 제어(Future/Parallel) 등을  
 **간결한 스크립트 형태로 구성**할 수 있도록 만든 실행 엔진이다.
 
 핵심 목표:
 - **Simple**: 한 줄 명령 → 즉시 실행  
 - **Composable**: 작은 모듈들을 조합해 복잡한 작업 구성  
-- **AI-Friendly**: 메타데이터 기반으로 AI가 qplan 스크립트 자동 생성  
+- **AI-Friendly**: 메타데이터 기반으로 AI가 QPlan 스크립트 자동 생성  
 - **Extensible**: 개발자가 쉽게 모듈을 추가  
 - **Deterministic**: 실행 결과가 항상 동일  
 
@@ -56,7 +56,7 @@ Future, join, parallel(concurrency), if 조건, each 반복과 함께 **Step 트
 - string  
 - ai(OpenAI 기반)
 
-## 🎯 Why qplan?
+## 🎯 Why QPlan?
 1) 사람이 쓰기 쉬움  
 2) AI가 생성하기 쉬움  
 3) Step 기반 워크플로우 구조화  

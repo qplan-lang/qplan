@@ -1,13 +1,13 @@
-# Contributing to qplan
+# Contributing to QPlan
 
-qplan 프로젝트에 기여해주셔서 감사합니다!  
+QPlan 프로젝트에 기여해주셔서 감사합니다!  
 이 문서는 코드, 문서, 아이디어 등 다양한 방식으로 기여하는 방법을 안내합니다.
 
 ---
 
 # 1. How to Contribute
 
-qplan은 초기 개발 단계이므로 다음과 같은 기여를 특히 환영합니다:
+QPlan은 초기 개발 단계이므로 다음과 같은 기여를 특히 환영합니다:
 
 - 버그 리포트  
 - 문법(DSL) 개선 제안  
@@ -144,13 +144,13 @@ mvn clean install
 - 존중하는 커뮤니케이션  
 - 타인의 기여를 귀중하게 대함  
 - 비난/모욕/차별 금지  
-- 공동 목표: qplan의 품질 향상  
+- 공동 목표: QPlan의 품질 향상  
 
 ---
 
 # 11. License
 
-모든 기여는 qplan의 MIT License에 따라 공개됩니다.
+모든 기여는 QPlan의 MIT License에 따라 공개됩니다.
 
 ---
 
@@ -159,4 +159,4 @@ mvn clean install
 궁금한 점이 있다면 Issues 또는 Discussions에 자유롭게 남겨주세요.
 
 감사합니다!  
-qplan Team
+QPlan Team

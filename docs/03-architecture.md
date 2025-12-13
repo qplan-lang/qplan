@@ -1,7 +1,7 @@
 # 03-architecture.md
 
 ## 시스템 아키텍처 개요
-qplan은 다음 6개 핵심 컴포넌트로 구성된다:
+QPlan은 다음 6개 핵심 컴포넌트로 구성된다:
 
 1. Tokenizer – 스크립트를 토큰 단위로 변환  
 2. Parser – 토큰을 AST로 구축  

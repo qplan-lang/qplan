@@ -1,6 +1,6 @@
-# qplan Roadmap
+# QPlan Roadmap
 
-이 문서는 qplan의 단기·중기·장기 개발 방향을 제시하는 공식 로드맵입니다.  
+이 문서는 QPlan의 단기·중기·장기 개발 방향을 제시하는 공식 로드맵입니다.  
 버전은 Semantic Versioning을 기준으로 구성됩니다.
 
 ---
@@ -52,14 +52,14 @@
 # 🌳 0.3.x — Extensibility & Plugin System
 
 ### 🎯 목표  
-qplan을 확장 가능한 **플랫폼**으로 성장시키는 단계.
+QPlan을 확장 가능한 **플랫폼**으로 성장시키는 단계.
 
 ### 📌 기능
 - [ ] Plugin Module System
 - [ ] 외부 모듈 자동 로딩 (ServiceLoader 기반)
 - [ ] Logging / Tracing 시스템
 - [ ] Execution Graph 시각화 API
-- [ ] qplan CLI 초기 버전
+- [ ] QPlan CLI 초기 버전
 - [ ] 테스트 구조 확립
 
 ### ✨ 문서
@@ -70,13 +70,13 @@ qplan을 확장 가능한 **플랫폼**으로 성장시키는 단계.
 # 🌲 0.4.x — Developer Experience
 
 ### 🎯 목표  
-qplan을 개발자 친화적인 도구로 개선.
+QPlan을 개발자 친화적인 도구로 개선.
 
 ### 📌 기능
-- [ ] qplan Studio (GUI Builder) 프로토타입
+- [ ] QPlan Studio (GUI Builder) 프로토타입
 - [ ] Syntax Highlighting (VSCode extension)
 - [ ] Inline Documentation
-- [ ] qplan 프로젝트 템플릿 생성기
+- [ ] QPlan 프로젝트 템플릿 생성기
 
 ### ✨ 문서
 - [ ] UI/UX 가이드  
@@ -90,7 +90,7 @@ qplan을 개발자 친화적인 도구로 개선.
 멀티 노드 실행 및 고신뢰 워크플로우 지원.
 
 ### 📌 기능
-- [ ] qplan Distributed Runner
+- [ ] QPlan Distributed Runner
 - [ ] Remote Module Execution
 - [ ] Retry / Backoff 정책
 - [ ] Workflow Checkpoint/Resume
@@ -115,7 +115,7 @@ qplan을 개발자 친화적인 도구로 개선.
 # 🌳 1.0.0 — Stable Release
 
 ### 🎯 목표  
-qplan을 안정적이고 성숙한 프로덕션 워크플로우 엔진으로 완성.
+QPlan을 안정적이고 성숙한 프로덕션 워크플로우 엔진으로 완성.
 
 ### 📌 포함
 - 완성된 문법
@@ -130,10 +130,10 @@ qplan을 안정적이고 성숙한 프로덕션 워크플로우 엔진으로 완
 
 # 🛰 Long-term Vision (2.x+)
 
-### qplan은 장기적으로 아래를 지향합니다:
+### QPlan은 장기적으로 아래를 지향합니다:
 
 - **AI Native Workflow Language 표준**  
-- **qplan Cloud** (SaaS 형태의 실행 플랫폼)  
+- **QPlan Cloud** (SaaS 형태의 실행 플랫폼)  
 - **Marketplace** (모듈 공유/판매 생태계)  
 - **자동화 전용 IDE**  
 - **Enterprise-grade Observability**  
@@ -142,4 +142,4 @@ qplan을 안정적이고 성숙한 프로덕션 워크플로우 엔진으로 완
 ---
 
 # Version  
-qplan Roadmap v1.0 (Draft)
+QPlan Roadmap v1.0 (Draft)

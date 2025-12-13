@@ -1,13 +1,13 @@
-# qplan Variable System & Safety Rules
+# QPlan Variable System & Safety Rules
 
-이 문서는 qplan DSL에서 변수가 생성·수정·사용되는 방식을 하나의 규칙으로 통합해 정리한 공식 문서다.  
+이 문서는 QPlan DSL에서 변수가 생성·수정·사용되는 방식을 하나의 규칙으로 통합해 정리한 공식 문서다.  
 모든 내용은 최신 문법( `var` 모듈, `set` 문, `each/while` 반복, validator 등)에 맞춰져 있다.
 
 ---
 
 ## 1. 왜 “통제된 변수 시스템”이 필요한가?
 
-qplan의 핵심 목표는 **Deterministic / Traceable / AI-friendly** 한 워크플로우다.  
+QPlan의 핵심 목표는 **Deterministic / Traceable / AI-friendly** 한 워크플로우다.  
 따라서 파서/실행기가 정확히 이해할 수 있는 위치에서만 변수가 생기거나 바뀌어야 한다.
 
 안전한 모델을 유지하면 다음을 보장할 수 있다.
@@ -161,7 +161,7 @@ while total < 40 {
 
 ## 9. 결론
 
-- qplan 은 “동적 변수 생성 금지”가 아니라 **“통제되지 않은 경로의 변수 생성 금지”** 를 지향한다.
+- QPlan 은 “동적 변수 생성 금지”가 아니라 **“통제되지 않은 경로의 변수 생성 금지”** 를 지향한다.
 - Action output + `var` + `set` + validator 조합 덕분에
   - 예측 가능
   - 안전

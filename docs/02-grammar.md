@@ -1,16 +1,16 @@
 
 # 02-grammar.md  
-**qplan DSL Grammar — Full Specification (EBNF 포함)**
+**QPlan DSL Grammar — Full Specification (EBNF 포함)**
 
-본 문서는 qplan DSL의 **정식 문법(Grammar)** 을 정의한다.  
+본 문서는 QPlan DSL의 **정식 문법(Grammar)** 을 정의한다.  
 A 버전(기본 문법) + B 버전(전체 EBNF) 둘 다 포함되어 있으므로  
 **이 문서 하나로 전체 DSL을 완전히 이해할 수 있다.**
 
 ---
 
-# 1. qplan DSL 개요
+# 1. QPlan DSL 개요
 
-qplan DSL은 다음과 같은 형태로 구성된 작은 워크플로우 언어이다:
+QPlan DSL은 다음과 같은 형태로 구성된 작은 워크플로우 언어이다:
 
 - Action 실행  
 - Set 문으로 변수 수정  
@@ -221,7 +221,7 @@ step id="pipeline" desc="루트" -> pipelineResult {
 
 # 3. EBNF 전체 문법 (B 버전)
 
-아래는 qplan DSL의 **정식 EBNF 문법**이다.
+아래는 QPlan DSL의 **정식 EBNF 문법**이다.
 
 ```
 Script          = { Statement } ;
@@ -367,5 +367,5 @@ parallel {
 
 ---
 
-**이 문서를 기반으로 qplan DSL을 완전히 파싱하고 실행할 수 있다.**
+**이 문서를 기반으로 QPlan DSL을 완전히 파싱하고 실행할 수 있다.**
 ReturnStmt      = "return" , Identifier , "=" , Expression , { Identifier , "=" , Expression } ;

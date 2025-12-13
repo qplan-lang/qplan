@@ -1,27 +1,27 @@
-# qplan — AI-Driven Workflow Execution Engine  
+# QPlan — AI Planning Language & Execution Engine  
 경량 워크플로우 DSL & 실행 엔진
 
 ---
 
 ## 1. Introduction
 
-qplan은 **AI가 작성하고 시스템이 실행하는** 경량 워크플로우 DSL이다.  
+QPlan은 **AI가 작성하고 시스템이 실행하는** 경량 워크플로우 DSL이다.  
 데이터 수집, 분석, 자동화, RPA 등 다양한 도메인에서  
 **플랜을 언어로 표현하고 실행**할 수 있도록 설계되었다.
 
 일반적인 AI(LLM)는 자연어 요청을 이해하고 설명하거나 답변하는 데 매우 뛰어나지만,  
 "검색 → 필터 → 사용자 선택 → 결제" 와 같은 **실제 기능 실행**은 직접 수행하지 못합니다.
 
-qplan은 이 한계를 해결합니다.  
-AI가 작성한 계획을 qplan 스크립트로 받아, 실제 코드처럼 단계별로 실행합니다.
+QPlan은 이 한계를 해결합니다.  
+AI가 작성한 계획을 QPlan 스크립트로 받아, 실제 코드처럼 단계별로 실행합니다.
 
 즉,
 
-> **AI가 생각하고(qplan 계획 생성), qplan이 실행합니다.**
+> **AI가 생각하고(QPlan 계획 생성), QPlan이 실행합니다.**
 
 ---
 
-## 3. Why qplan?
+## 3. Why QPlan?
 
 ### 3.1 문제
 
@@ -33,12 +33,12 @@ LLM이 "곰돌이 티셔츠 사줘" 같은 요청을 받을 때:
 
 ### 3.2 해결
 
-qplan은 다음 흐름을 제공합니다:
+QPlan은 다음 흐름을 제공합니다:
 
 1. 사용자 요청  
 2. `buildAIPlanPrompt()` 로 AI에 실행 계획 요청  
-3. AI는 step 기반 qplan 실행 계획을 생성  
-4. qplan 엔진이 실제 기능 실행  
+3. AI는 step 기반 QPlan 실행 계획을 생성  
+4. QPlan 엔진이 실제 기능 실행  
 5. Step 결과를 UI/시스템에서 사용
 
 ---
@@ -48,7 +48,7 @@ qplan은 다음 흐름을 제공합니다:
 - 사용자 요청:  
   > “곰돌이가 그려진 흰색 티셔츠를 구매해줘”
 
-- 시스템(qplan + AI):  
+- 시스템(QPlan + AI):  
   1) 흰색 티셔츠 검색  
   2) 곰돌이 프린트 필터  
   3) 사용자에게 상품 선택 요청  
@@ -57,7 +57,7 @@ qplan은 다음 흐름을 제공합니다:
 - 결과:  
   → **구매 완료**
 
-이 예시는 qplan의 핵심 사용 패턴을 가장 간단히 보여줍니다.
+이 예시는 QPlan의 핵심 사용 패턴을 가장 간단히 보여줍니다.
 
 ---
 
@@ -66,9 +66,9 @@ qplan은 다음 흐름을 제공합니다:
 ```text
 사용자 요구사항
      ↓
-buildAIPlanPrompt (사용자 요구사항을 기준으로 qplan요청 프롬프트를 생성)
+buildAIPlanPrompt (사용자 요구사항을 기준으로 QPlan요청 프롬프트를 생성)
      ↓
-AI가 실행 계획 (qplan script) 생성
+AI가 실행 계획 (QPlan script) 생성
      ↓
 runQplan (script)
      ↓
@@ -118,7 +118,7 @@ registry.registerAll([
 
 ### 6.4 Generate AI Plan
 
-qplan은 사용자 요구사항을 기반으로  
+QPlan은 사용자 요구사항을 기반으로  
 AI에게 실행 계획을 요청하기 위한 프롬프트를 자동 생성하는 함수를 제공합니다.
 
 ```ts
@@ -179,7 +179,7 @@ step id="checkout" desc="결제" {
 ### 8.1 ActionModule
 
 - 기능 단위(검색/필터/결제 등)를 표현하는 모듈입니다.  
-- AI는 `id`, `description`, `inputs` 정보를 보고 이 모듈을 사용하는 qplan 코드를 생성합니다.
+- AI는 `id`, `description`, `inputs` 정보를 보고 이 모듈을 사용하는 QPlan 코드를 생성합니다.
 
 ### 8.2 ModuleRegistry
 
@@ -211,9 +211,9 @@ step id="checkout" desc="결제" {
 
 ### 9.1 `runQplan(script, options)`
 
-qplan 스크립트를 실행하는 메인 함수입니다.
+QPlan 스크립트를 실행하는 메인 함수입니다.
 
-- `script`: qplan 코드 문자열  
+- `script`: QPlan 코드 문자열  
 - `options.stepEvents`: Step 단위 이벤트 핸들러
 
 반환값: `ExecutionContext` (ctx)
@@ -223,7 +223,7 @@ qplan 스크립트를 실행하는 메인 함수입니다.
 ### 9.2 `buildAIPlanPrompt(requirement: string)`
 
 사용자 요구사항을 입력하면,  
-AI가 qplan 실행 계획을 생성할 수 있도록 돕는 프롬프트 문자열을 반환합니다.
+AI가 QPlan 실행 계획을 생성할 수 있도록 돕는 프롬프트 문자열을 반환합니다.
 
 포함 내용:
 
@@ -248,14 +248,14 @@ registry.registerAll([filterModule, askUserModule]);
 const modulesForAI = registry.list(); // buildAIPlanPrompt 등에 전달
 ```
 
-모듈 설명이 잘 정리되어 있어야 AI가 qplan 계획을 만들 때 올바르게 조합할 수 있으므로,
+모듈 설명이 잘 정리되어 있어야 AI가 QPlan 계획을 만들 때 올바르게 조합할 수 있으므로,
 module id/description/inputs 등을 명확히 작성한 뒤 registry에 등록하는 것이 중요합니다.
 
 ---
 
 ### 9.4 `validateQplanScript(script: string)`
 
-qplan 스크립트를 실행하기 전에 **문법·시맨틱 검증만** 하고 싶을 때 사용합니다.
+QPlan 스크립트를 실행하기 전에 **문법·시맨틱 검증만** 하고 싶을 때 사용합니다.
 
 - 정상일 경우: `{ ok: true, ast }` 반환
 - 오류일 경우: `{ ok: false, error, line?, issues? }`
@@ -304,4 +304,4 @@ MIT
 ## 12. Contribute
 
 Issue 및 PR는 언제든지 환영합니다.  
-qplan을 활용한 사례, 추가 모듈, 개선 제안 등을 공유해 주세요.
+QPlan을 활용한 사례, 추가 모듈, 개선 제안 등을 공유해 주세요.
