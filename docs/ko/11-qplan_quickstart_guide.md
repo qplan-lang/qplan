@@ -79,9 +79,10 @@ QPlan은 이 과정을 돕기 위해,
 사용자 요구사항을 넣으면 AI 호출용 프롬프트를 자동으로 생성해주는 함수를 제공합니다.
 
 ```ts
-import { buildAIPlanPrompt } from "qplan";
+import { buildAIPlanPrompt, setUserLanguage } from "qplan";
 
 const requirement = "신입 직원 마이크가 들어오니까 다음 주 월요일부터 일할 수 있도록 준비해줘";
+setUserLanguage("ko"); // 원하는 문자열 지정 가능
 const prompt = buildAIPlanPrompt(requirement);
 // → grammar summary, 모듈 목록(registry.list()) 등이 포함된,
 //   QPlan 실행 계획 생성을 위한 LLM 프롬프트 문자열

@@ -11,9 +11,10 @@ const modules = registry.list();
 
 ## 3. buildAIPlanPrompt() workflow
 ```ts
-import { buildAIPlanPrompt, runQplan, registry } from "qplan";
+import { buildAIPlanPrompt, runQplan, registry, setUserLanguage } from "qplan";
 
 registry.register(customModule);
+setUserLanguage("en"); // pass any language string, e.g., "ja"
 const prompt = buildAIPlanPrompt("Read a file and compute the average");
 const aiScript = await callLLM(prompt);
 const ctx = await runQplan(aiScript);
@@ -34,6 +35,7 @@ Use `buildQplanSuperPrompt(registry)` for long-lived system prompts. It packs QP
 - **Clarify module description/usage**: the AI reads them verbatim, so show real QPlan examples.
 - **Register only needed modules**: keeping the registry lean shortens prompts and prevents misuse.
 - **Template requirements**: clean up user requests before passing them as `requirement` for better context.
+- **Language**: call `setUserLanguage("<language>")` (any string) before `buildAIPlanPrompt()` so AI strings use the desired language.
 - **Reinforce output format**: buildAIPlanPrompt already says “output QPlan only,” but repeating the rule in system/user prompts adds safety.
 
 ## 6. Validate before running

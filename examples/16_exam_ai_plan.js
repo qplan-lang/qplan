@@ -3,7 +3,7 @@
 //       PowerShell  : $env:OPENAI_API_KEY = "sk-..."
 
 import OpenAI from "openai";
-import { buildAIPlanPrompt, runQplan, validateQplanScript } from "../dist/index.js";
+import { buildAIPlanPrompt, runQplan, setUserLanguage, validateQplanScript } from "../dist/index.js";
 
 if (!process.env.OPENAI_API_KEY) {
   throw new Error("Set OPENAI_API_KEY before running this example.");
@@ -15,6 +15,9 @@ const requirement = `
 Read numbers from ./examples/nums.txt, calculate the total and average,
 and print "High score" if the average is >= 5, otherwise print "Needs more study."
 `;
+
+// 0) Set user language (any string, e.g., "en", "ko", "ja")
+setUserLanguage("ko");
 
 // 1) buildAIPlanPrompt builds the LLM request automatically
 const prompt = buildAIPlanPrompt(requirement);

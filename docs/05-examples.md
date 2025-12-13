@@ -123,10 +123,11 @@ step id="summary" desc="Wrap up" {
 
 ## 8. AI-driven usage with module metadata
 ```ts
-import { buildAIPlanPrompt, registry } from "qplan";
+import { buildAIPlanPrompt, registry, setUserLanguage } from "qplan";
 import { httpModule } from "qplan/dist/modules/basic/http.js";
 
 registry.register(httpModule);
+setUserLanguage("en"); // supply any language string (e.g., "fr")
 const prompt = buildAIPlanPrompt("Fetch open API data and summarize it");
 const script = await callLLM(prompt);
 await runQplan(script);

@@ -30,6 +30,7 @@ import type { StepEventEmitter } from "./step/stepEvents.js";
 import { validateSemantics } from "./core/semanticValidator.js";
 import type { SemanticIssue } from "./core/semanticValidator.js";
 import { buildAIPlanPrompt as buildPrompt } from "./core/buildAIPlanPrompt.js";
+import type { PromptLanguage } from "./core/buildAIPlanPrompt.js";
 
 // 🎯 외부에서 모듈 등록 가능하도록 registry export
 export const registry = new ModuleRegistry();
@@ -37,12 +38,22 @@ export const registry = new ModuleRegistry();
 // 기본모듈 등록
 registry.registerAll(basicModules);
 
+let userLanguage: PromptLanguage = "en";
+
+export function setUserLanguage(language: PromptLanguage) {
+  userLanguage = language;
+}
+
+export function getUserLanguage(): PromptLanguage {
+  return userLanguage;
+}
+
 /**
  * 기본 registry(또는 전달된 registry)를 기반으로
  * AI 실행계획 프롬프트를 생성한다.
  */
 export function buildAIPlanPrompt(requirement: string) {
-  return buildPrompt(requirement, registry);
+  return buildPrompt(requirement, registry, userLanguage);
 }
 
 /**
@@ -110,3 +121,4 @@ export function validateQplanScript(script: string): QplanValidationResult {
 export { defaultStepEventEmitter } from "./step/stepEvents.js";
 export type { StepEventEmitter } from "./step/stepEvents.js";
 export type { StepEventInfo } from "./step/stepTypes.js";
+export type { PromptLanguage } from "./core/buildAIPlanPrompt.js";

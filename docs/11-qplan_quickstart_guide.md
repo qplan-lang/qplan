@@ -72,9 +72,10 @@ Clear IDs/descriptions/inputs help the AI understand what’s available.
 QPlan provides helpers to build LLM prompts from requirements.
 
 ```ts
-import { buildAIPlanPrompt } from "qplan";
+import { buildAIPlanPrompt, setUserLanguage } from "qplan";
 
 const requirement = "Mike starts next Monday—prepare everything he needs.";
+setUserLanguage("en"); // use any language string you prefer
 const prompt = buildAIPlanPrompt(requirement);
 // Contains grammar summary, modules from registry.list(), etc.
 ```

@@ -80,14 +80,15 @@ registry.registerAll([htmlModule, stringModule, aiModule]);
 Modules can be functions or objects like `{ execute(inputs, ctx) { ... } }`. When `inputs` metadata is defined, `buildAIPlanPrompt()` automatically injects usage hints into the AI prompt.
 
 ## 🤖 AI integration features
-- **buildAIPlanPrompt(requirement)**—builds a prompt with registered modules, grammar summary, and execution rules, instructing the LLM to “write QPlan code only.” onError, jump, and dot-path rules are all spelled out.
+- **buildAIPlanPrompt(requirement)**—builds a prompt with registered modules, grammar summary, and execution rules, instructing the LLM to “write QPlan code only.” onError, jump, and dot-path rules are all spelled out. Call `setUserLanguage("<language>")` (any string, e.g., `"en"`, `"ko"`) beforehand to control the language of step descriptions and strings.
 - **buildQplanSuperPrompt(registry)**—creates the LLM system prompt: QPlan philosophy, engine structure, grammar summary, and module metadata rolled into a “master guide.”
 - **buildAIGrammarSummary()**—compresses the long grammar doc into AI-friendly prose.
 
 ```ts
-import { buildAIPlanPrompt, registry } from "qplan";
+import { buildAIPlanPrompt, registry, setUserLanguage } from "qplan";
 
 registry.register(customModule);
+setUserLanguage("en"); // any desired language string, e.g., "es"
 const prompt = buildAIPlanPrompt("Create an inventory summary report");
 const aiScript = await callLlm(prompt);
 ```

@@ -86,8 +86,9 @@ registry.registerAll([
 ### 6.4 Generate AI Plan
 
 ```ts
-import { buildAIPlanPrompt } from "qplan";
+import { buildAIPlanPrompt, setUserLanguage } from "qplan";
 
+setUserLanguage("en"); // pass any language string, e.g., "ko", "ja"
 const requirement = "Buy a white T-shirt with a bear on it";
 const prompt = buildAIPlanPrompt(requirement);
 

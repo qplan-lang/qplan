@@ -1,17 +1,19 @@
 import { ModuleRegistry } from "./moduleRegistry.js";
 
-/**
- * buildAIPlanPrompt(requirement: string, registry: ModuleRegistry)
- * ---------------------------------------------------------------
- * 사용자의 요구(requirement)를 기반으로
- * AI에게 QPlan Language 실행계획을 작성하도록 지시하는 프롬프트 생성함수.
- *
- * AI는 QPlan 스펙을 모르므로, QPlan 문법/사용법/모듈목록을 함께 전달해야 함.
- */
-export function buildAIPlanPrompt(requirement: string, registry: ModuleRegistry) {
-  // 현재 등록된 모듈 목록을 동적으로 가져옴
-  const modules = registry.list();
+export type PromptLanguage = string;
 
+/**
+ * buildAIPlanPrompt(requirement: string, registry: ModuleRegistry, language?: PromptLanguage)
+ * ------------------------------------------------------------------------------------------
+ * Generates a Korean-style system prompt for QPlan planning, while dynamically
+ * indicating the language in which the model should write string literals/descriptions.
+ */
+export function buildAIPlanPrompt(
+  requirement: string,
+  registry: ModuleRegistry,
+  language: PromptLanguage = "en"
+) {
+  const modules = registry.list();
   const moduleText = modules
     .map(m => {
       const usageTxt = m.usage ? `\n  예시:\n${indent(m.usage.trim(), 4)}` : "";
@@ -19,6 +21,9 @@ export function buildAIPlanPrompt(requirement: string, registry: ModuleRegistry)
       return `- ${m.id}: ${m.description ?? ""}${inputsTxt}${usageTxt}`;
     })
     .join("\n\n");
+
+  const languageLabel = language || "English";
+  const trimmedRequirement = requirement.trim();
 
   return `
 당신은 사용자의 요구를 분석하여 QPlan Language로 실행 계획을 작성하는 전문가입니다.
@@ -69,7 +74,7 @@ ${moduleText}
 -----------------------------------------
 사용자 요구사항
 -----------------------------------------
-${requirement.trim()}
+${trimmedRequirement}
 
 -----------------------------------------
 생성 규칙
@@ -81,9 +86,10 @@ ${requirement.trim()}
 - 존재하지 않는 모듈을 사용하지 마세요.
 - 제공된 모듈의 usage와 inputs 규칙을 따라야 합니다.
 - 가능한 한 정확하고 간결하게 작성하세요.
-- 자연어, 설명, 주석을 절대로 넣지 마세요.
+- 문자열/desc 등 자연어 텍스트는 ${languageLabel}로 작성하세요.
+- 자연어 설명, 주석을 절대로 넣지 마세요.
 - 코드블록(\`\`\`)을 절대로 넣지 마세요.
-- step 블록 목록을 모두 출력했다면 즉시 종료하고, 뒤에 요약/정리/추가 텍스트(예: "A -> B" 체인)를 붙이지 마세요.
+- step 블록 목록을 모두 출력했다면 즉시 종료하고, 뒤에 요약/정리/추가 텍스트(예: "A -> B")를 붙이지 마세요.
 - 동일한 step 을 반복하거나 빈 step 을 만들지 마세요.
 - Action 결과 변수 이름도 재사용에 주의하고, 필요할 때만 명시적으로 \`return\` 으로 객체를 구성하세요.
 - step의 id로는 결과값에 접근할수 없습니다. \`stepId.value\` 같은 문법은 존재하지 않습니다.

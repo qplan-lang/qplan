@@ -62,7 +62,7 @@ ExecutionContext (variables, futures, step outputs)
 ## 8. Extension & integration points
 1. **Add modules** – Implement an ActionModule and call `registry.register(customModule)`. With metadata filled in, prompt builders automatically include usage info.
 2. **Custom executor hooks** – Use `stepEvents` to capture start/end/error events and feed Gantt charts, progress, or audit logs.
-3. **LLM integration** – Generate prompts via `buildAIPlanPrompt` and execute with `runQplan` to realize “AI thinks, QPlan executes.”
+3. **LLM integration** – Generate prompts via `buildAIPlanPrompt` (optionally calling `setUserLanguage("<language>")` with any string beforehand) and execute with `runQplan` to realize “AI thinks, QPlan executes.”
 4. **Further docs** – See `docs/02-grammar.md`, `docs/06-executor.md`, `docs/10-step-system.md`, etc., for deeper extension strategies.
 
 ## 9. Summary diagram

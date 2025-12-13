@@ -122,8 +122,9 @@ QPlan은 사용자 요구사항을 기반으로
 AI에게 실행 계획을 요청하기 위한 프롬프트를 자동 생성하는 함수를 제공합니다.
 
 ```ts
-import { buildAIPlanPrompt } from "qplan";
+import { buildAIPlanPrompt, setUserLanguage } from "qplan";
 
+setUserLanguage("ko"); // 임의의 문자열(예: "en", "ja") 가능
 const requirement = "곰돌이가 그려진 흰색 티셔츠를 구매해줘";
 const prompt = buildAIPlanPrompt(requirement);
 

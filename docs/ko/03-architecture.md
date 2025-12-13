@@ -62,7 +62,7 @@ ExecutionContext (variables, futures, step outputs)
 ## 8. 확장 & 통합 포인트
 1. **모듈 추가** – ActionModule 작성 후 `registry.register(customModule)` 호출. 메타데이터를 채우면 Prompt Builder가 자동으로 사용법을 포함한다.
 2. **커스텀 Executor hook** – `stepEvents` 로 Step 시작/종료/오류 등의 이벤트를 수신해 Gantt, 진행률, 감사 로그를 구현한다.
-3. **LLM 통합** – `buildAIPlanPrompt` 로 프롬프트를 만들고 `runQplan` 으로 실행하면 “AI thinks, QPlan executes” 패턴을 완성할 수 있다.
+3. **LLM 통합** – `buildAIPlanPrompt` 호출 전에 `setUserLanguage("<언어 문자열>")` 로 언어를 지정하고, 프롬프트를 만든 뒤 `runQplan` 으로 실행하면 “AI thinks, QPlan executes” 패턴을 완성할 수 있다.
 4. **Grammar/Docs** – `docs/02-grammar.md`, `docs/06-executor.md`, `docs/10-step-system.md` 등 세부 문서를 참고해 기능별로 확장 전략을 수립한다.
 
 ## 9. 요약 다이어그램

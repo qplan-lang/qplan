@@ -123,10 +123,11 @@ step id="summary" desc="결과 정리" {
 
 ## 8. AI + 모듈 메타데이터 활용 예시
 ```ts
-import { buildAIPlanPrompt, registry } from "qplan";
+import { buildAIPlanPrompt, registry, setUserLanguage } from "qplan";
 import { httpModule } from "qplan/dist/modules/basic/http.js";
 
 registry.register(httpModule);
+setUserLanguage("ko"); // 임의의 언어 문자열 사용 가능
 const prompt = buildAIPlanPrompt("오픈 API에서 데이터를 가져와 정리해줘");
 const script = await callLLM(prompt);
 await runQplan(script);

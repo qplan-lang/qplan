@@ -80,14 +80,15 @@ registry.registerAll([htmlModule, stringModule, aiModule]);
 모듈은 함수 혹은 `{ execute(inputs, ctx) { ... } }` 형태의 객체로 작성할 수 있으며, `inputs` 메타데이터를 채우면 `buildAIPlanPrompt()` 가 자동으로 AI 프롬프트에 사용 방법을 삽입한다.
 
 ## 🤖 AI 통합 기능
-- **buildAIPlanPrompt(requirement)** — 현재 registry에 등록된 모듈 목록 + 문법 요약 + 실행 규칙을 포함한 프롬프트를 생성해 LLM에게 “QPlan 코드만 작성하라”고 지시한다. onError, jump, dot-path 규칙 등이 모두 명시된다.
+- **buildAIPlanPrompt(requirement)** — 현재 registry에 등록된 모듈 목록 + 문법 요약 + 실행 규칙을 포함한 프롬프트를 생성해 LLM에게 “QPlan 코드만 작성하라”고 지시한다. onError, jump, dot-path 규칙 등이 모두 명시된다. 필요 시 `setUserLanguage("<언어 문자열>")` 을 먼저 호출하여 문자열 언어를 제어할 수 있다.
 - **buildQplanSuperPrompt(registry)** — LLM 시스템 프롬프트 버전. QPlan 철학, 엔진 구조, Grammar 요약, 모듈 메타데이터가 포함된 “최상위 가이드”를 만들어 준다.
 - **buildAIGrammarSummary()** — 긴 grammar 문서를 AI 친화 문장으로 압축한다.
 
 ```ts
-import { buildAIPlanPrompt, registry } from "qplan";
+import { buildAIPlanPrompt, registry, setUserLanguage } from "qplan";
 
 registry.register(customModule);
+setUserLanguage("ko"); // 임의의 언어 문자열 사용 가능
 const prompt = buildAIPlanPrompt("재고 집계 보고서를 만들어줘");
 const aiScript = await callLlm(prompt);
 ```

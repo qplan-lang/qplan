@@ -11,9 +11,10 @@ const modules = registry.list();
 
 ## 3. buildAIPlanPrompt() 워크플로우
 ```ts
-import { buildAIPlanPrompt, runQplan, registry } from "qplan";
+import { buildAIPlanPrompt, runQplan, registry, setUserLanguage } from "qplan";
 
 registry.register(customModule);
+setUserLanguage("ko"); // 임의 문자열 가능
 const prompt = buildAIPlanPrompt("파일을 읽어 평균을 계산해줘");
 const aiScript = await callLLM(prompt);
 const ctx = await runQplan(aiScript);
@@ -34,6 +35,7 @@ LLM은 이 프롬프트를 기반으로 Step 기반 QPlan 스크립트만 출력
 - **모듈 설명/usage 명확히 하기**: AI는 description/usage를 그대로 읽어 명령을 구성한다. 예시를 실제 QPlan 코드로 작성하자.
 - **필요한 모듈만 등록**: 사용하지 않을 모듈은 registry에서 제외하면 AI 프롬프트 길이를 줄이고 오용을 방지할 수 있다.
 - **요구사항 템플릿화**: 사용자 요청을 정제한 문자열을 `requirement` 로 넘겨 AI가 필요한 컨텍스트를 충분히 받도록 한다.
+- **언어 지정**: `buildAIPlanPrompt()` 호출 전에 `setUserLanguage("<언어 문자열>")` 으로 문자열 언어를 지정한다.
 - **출력 형식 강조**: buildAIPlanPrompt는 “QPlan 코드만 출력” 규칙을 포함하지만, 추가로 시스템/사용자 프롬프트에서 동일 규칙을 반복하면 안전하다.
 
 ## 6. 실행 전 검증
