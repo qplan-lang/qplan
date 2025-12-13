@@ -18,13 +18,13 @@ export const jsonModule: ActionModule = {
   id: "json",
   description: "JSON 처리(parse/stringify/get/set/keys/values/entries).",
   usage: `
-json op="parse"      data="{ \\"a\\":1 }" -> out
-json op="stringify"  data=val space=2 -> out
-json op="get"        data=val path="a.b.c" -> out
-json op="set"        data=val path="a.b.c" value=123 -> out
-json op="keys"       data=val -> out
-json op="values"     data=val -> out
-json op="entries"    data=val -> out
+json parse      data="{ \\"a\\":1 }" -> out
+json stringify  data=val space=2 -> out
+json get        data=val path="a.b.c" -> out
+json set        data=val path="a.b.c" value=123 -> out
+json keys       data=val -> out
+json values     data=val -> out
+json entries    data=val -> out
   `.trim(),
   inputs: [
     "op",

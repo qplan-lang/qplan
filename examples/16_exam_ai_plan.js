@@ -24,7 +24,7 @@ console.log(prompt);
 console.log("============= buildAIPlanPrompt PROMPT end ==================");
 
 // 2) OpenAI 호출 → 순수 QPlan 스크립트 획득
-const model = process.env.OPENAI_MODEL ?? "gpt-4.1";
+const model = process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
 
 let aiScript = "";            // LLM이 생성한 qplan스크립트
 const maxRetries = 3;         // 최대 재시도 횟수

@@ -5,8 +5,8 @@ export const httpModule: ActionModule = {
   id: "http",
   description: "HTTP GET/POST 요청 모듈.",
   usage: `
-http op="get" url="https://example.com" -> r
-http op="post" url="https://api" body="{\"a\":1}" -> r
+http get url="https://example.com" -> r
+http post url="https://api" body="{\"a\":1}" -> r
   `,
   inputs: ["op", "url", "body", "headers"],
 

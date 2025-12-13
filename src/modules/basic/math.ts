@@ -92,9 +92,9 @@ arr 입력은 JSON 배열 또는 공백/콤마로 구분된 문자열을 모두 
   sum(arr), avg(arr),
 `,
     usage: `
-math op="add" a=1 b=2 -> x
-math op="avg" arr="[1,2,3]" -> y
-math op="sum" arr="1 2 3 4" -> total
+math add a=1 b=2 -> x
+math avg arr="[1,2,3]" -> y
+math sum arr="1 2 3 4" -> total
 `,
     inputs: ["op", "a", "b", "arr", "period"]
   }

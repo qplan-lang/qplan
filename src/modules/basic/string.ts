@@ -18,16 +18,16 @@ export const stringModule: ActionModule = {
   id: "string",
   description: "문자열 처리(lower/upper/trim/replace/split/join/includes/length/substring).",
   usage: `
-string op="lower"     text="ABC" -> out
-string op="upper"     text="abc" -> out
-string op="trim"      text="  hi  " -> out
+string lower     text="ABC" -> out
+string upper     text="abc" -> out
+string trim      text="  hi  " -> out
 
-string op="replace"   text="a-b-c" search="-" replace=":" -> out
-string op="split"     text="a,b,c" sep="," -> out
-string op="join"      arr="[1,2,3]" sep="-" -> out
+string replace   text="a-b-c" search="-" replace=":" -> out
+string split     text="a,b,c" sep="," -> out
+string join      arr="[1,2,3]" sep="-" -> out
 
-string op="includes"  text="hello" search="ell" -> out
-string op="length"    text="hello" -> out
+string includes  text="hello" search="ell" -> out
+string length    text="hello" -> out
 
 string op="substring" text="abcdef" start=1 end=4 -> out
   `.trim(),
