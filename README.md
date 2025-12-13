@@ -196,6 +196,7 @@ step id="checkout" desc="결제" {
 
 - 실행 중 생성된 변수들이 저장되는 컨텍스트입니다.  
 - 각 Action/Step의 결과가 ctx에 저장되고, 이후 Step에서 재사용할 수 있습니다.
+- ctx 변수는 `stats.total` 처럼 점(.) 표기(dot-path)로 하위 필드를 읽을 수 있으므로, Step 결과나 JSON 객체를 그대로 저장해 두고 필요한 속성만 꺼내 쓸 수 있습니다.
 
 ### 8.5 Flow Control
 
@@ -290,6 +291,8 @@ await runQplan(aiScript, { registry });
 
 - **제어**:  
   `stop`, `skip`, `jump`, `onError` 정책
+- **컨텍스트 접근**:  
+  ctx 변수 및 Step 결과는 `stats.total`, `order.detail.status` 처럼 점(dot) 표기로 하위 필드를 직접 참조할 수 있음
 
 자세한 문법은 별도의 grammar 문서를 참고할 수 있습니다.
 

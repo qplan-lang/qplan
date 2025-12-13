@@ -162,6 +162,7 @@ step id="read" desc="파일 읽기" -> result {
 - block 내 가장 마지막 Action 결과를 자동 반환  
 - 또는 명시적 반환 방식 추가 가능
   - `return key=value ...` 문을 사용하면 Step 결과를 원하는 형태의 객체로 명시적으로 반환 가능
+- Step 결과는 ctx 변수로 저장되며, `result.total`, `result.status.code` 처럼 점(dot) 표기를 통해 하위 필드를 직접 참조할 수 있다.
 
 ---
 

@@ -86,6 +86,10 @@ const TEST_CASES = [
     file: "examples/15_exam_step_error.js",
     fallback: join(SNAPSHOT_DIR, "step_error_input.qplan"),
   },
+  {
+    name: "dot_access",
+    file: "tests/parser/dot_access.qplan",
+  },
 ];
 
 async function runTestCase(test) {

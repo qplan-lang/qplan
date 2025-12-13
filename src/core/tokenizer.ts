@@ -139,8 +139,8 @@ export function tokenize(input: string): Token[] {
       continue;
     }
 
-    // Simple symbols (=, :, ,,) — keep after comparison rule
-    if (c === ":" || c === ",") {
+    // Simple symbols (=, :, ,, .) — keep after comparison rule
+    if (c === ":" || c === "," || c === ".") {
       tokens.push({ type: TokenType.Symbol, value: c, line });
       i++;
       continue;

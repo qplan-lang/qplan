@@ -19,6 +19,7 @@
 ```
 >, <, >=, <=, ==, !=, EXISTS, NOT_EXISTS
 ```
+왼쪽/오른쪽 피연산자는 ctx 변수명이나 `stats.total` 같은 dot-path 모두 사용할 수 있다.
 
 ## Each 규칙
 - `each item in list` 혹은 `each (item, idx) in list`

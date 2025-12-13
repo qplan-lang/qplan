@@ -74,6 +74,16 @@ export class Parser {
     return this.consume(TokenType.Identifier).value;
   }
 
+  private consumeIdentifierPath(): string {
+    let name = this.consumeIdentifier();
+    while (this.check(TokenType.Symbol, ".")) {
+      this.consume(TokenType.Symbol, ".");
+      const next = this.consumeIdentifier();
+      name += `.${next}`;
+    }
+    return name;
+  }
+
   private consumeString(): string {
     return this.consume(TokenType.String).value;
   }
@@ -82,7 +92,7 @@ export class Parser {
     const t = this.peek();
     if (t.type === TokenType.String) return this.consumeString();
     if (t.type === TokenType.Number) return Number(this.consume(TokenType.Number).value);
-    if (t.type === TokenType.Identifier) return this.consumeIdentifier();
+    if (t.type === TokenType.Identifier) return this.consumeIdentifierPath();
     throw new ParserError(`Unexpected value '${t.value}'`, t.line);
   }
 
@@ -476,7 +486,7 @@ export class Parser {
       }
 
       if (token.type === TokenType.Identifier) {
-        entries.push({ kind: "identifier", name: this.consumeIdentifier() });
+        entries.push({ kind: "identifier", name: this.consumeIdentifierPath() });
         continue;
       }
 
@@ -671,7 +681,7 @@ export class Parser {
     if (token.type === TokenType.Identifier) {
       return {
         type: "Identifier",
-        name: this.consumeIdentifier(),
+        name: this.consumeIdentifierPath(),
       };
     }
     if (token.type === TokenType.Symbol && token.value === "(") {
@@ -788,7 +798,7 @@ export class Parser {
       this.consume(TokenType.Keyword, "NOT");
     }
 
-    const left = this.consume(TokenType.Identifier).value;
+    const left = this.consumeIdentifierPath();
 
     const opToken = this.peek();
     let comparator: string;
@@ -820,7 +830,7 @@ export class Parser {
     } else if (rt.type === TokenType.String) {
       right = this.consume(TokenType.String).value;
     } else if (rt.type === TokenType.Identifier) {
-      right = this.consume(TokenType.Identifier).value;
+      right = this.consumeIdentifierPath();
     } else {
       throw new ParserError(`Invalid right operand '${rt.value}'`, rt.line);
     }

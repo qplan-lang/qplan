@@ -114,7 +114,7 @@ echo msg=sum
 ```
 
 ExecutionContext가 모든 값을 자동 저장/전달한다.  
-AI는 변수 스코프를 판단할 필요가 없다.
+AI는 변수 스코프를 판단할 필요가 없다. Step 결과나 JSON 객체를 저장해 두면 `sum.detail.total` 처럼 점(dot) 표기로 바로 참조할 수 있어, 상태 전달이 더욱 단순해진다.
 
 ---
 

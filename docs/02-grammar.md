@@ -52,7 +52,7 @@ sleep ms=500               # 결과 저장 안 함
 - 숫자
 - 문자열 "text"
 - JSON `[1,2,3]`, `{"x":1}`
-- ctx 값 참조 (문자열이 ctx 변수명과 일치하면 자동 대입됨)
+- ctx 값 참조 (문자열이 ctx 변수명 또는 `stats.total` 같은 dot-path와 일치하면 자동 대입됨)
 
 예:
 ```
@@ -87,6 +87,7 @@ if <left> <op> <right> [and/or <left> <op> <right> ...] {
 > < >= <= == != EXISTS NOT_EXISTS
 ```
 `and`, `or`, `not` 으로 조건을 조합할 수 있다. 괄호 `()` 를 사용하면 우선순위를 명확히 지정할 수 있다.
+왼쪽/오른쪽 피연산자는 ctx 변수명뿐 아니라 `stats.average` 처럼 점(dot)으로 이어진 경로도 그대로 사용할 수 있다.
 
 예:
 ```
@@ -313,6 +314,7 @@ JsonArray       = "[" , [ JsonValue , { "," , JsonValue } ] , "]" ;
 
 ## 4.2 ctx 변수 해석 규칙
 - args 값이 문자열이고 동일한 변수가 ctx에 존재하면 ctx 값을 참조  
+- `stats.total`, `user.profile.name` 처럼 점으로 이어진 경로(dot-path)도 허용되며, ctx 에서 해당 객체를 찾아 필드를 순서대로 탐색한다.  
 - JSON 문자열은 자동으로 객체로 변환되지 않음 (모듈 내부에서 처리)
 
 ---

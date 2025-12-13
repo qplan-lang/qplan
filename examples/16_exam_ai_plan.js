@@ -24,7 +24,7 @@ console.log(prompt);
 console.log("============= buildAIPlanPrompt PROMPT end ==================");
 
 // 2) OpenAI 호출 → 순수 QPlan 스크립트 획득
-const model = process.env.OPENAI_MODEL ?? "gpt-4.1";
+const model = process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
 
 const completion = await client.chat.completions.create({
   model,

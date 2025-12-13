@@ -67,6 +67,15 @@ async function main() {
     const script = await extractScript(join(rootDir, example.file));
     await updateSnapshot(example.name, script);
   }
+
+  const extraQplans = [
+    { name: "dot_access", file: "tests/parser/dot_access.qplan" }
+  ];
+
+  for (const extra of extraQplans) {
+    const source = await readFile(join(rootDir, extra.file), "utf8");
+    await updateSnapshot(extra.name, source);
+  }
 }
 
 main().catch(err => {

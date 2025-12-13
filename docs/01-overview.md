@@ -25,7 +25,8 @@ AST를 순서대로 실행.
 Future, join, parallel(concurrency), if 조건, each 반복과 함께 **Step 트리 및 jump/error policy**를 처리.
 
 ### 4) ExecutionContext  
-변수를 key/value 형태로 저장하는 런타임 컨텍스트.
+변수를 key/value 형태로 저장하는 런타임 컨텍스트.  
+Step 결과나 JSON 객체를 저장해 두면 `stats.total`, `order.detail.status` 처럼 점(dot) 기반 경로로 하위 필드를 바로 읽어 재사용할 수 있습니다.
 
 ### 5) ModuleRegistry  
 모듈을 등록/조회하는 중앙 레지스트리.

@@ -1,0 +1,137 @@
+{
+  "type": "Root",
+  "block": {
+    "type": "Block",
+    "statements": [
+      {
+        "type": "Step",
+        "id": "calc",
+        "desc": "collect stats",
+        "output": "stats",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "var",
+              "args": {
+                "value": {
+                  "total": 28,
+                  "average": 4,
+                  "detail": {
+                    "status": "ok"
+                  }
+                }
+              },
+              "output": "info"
+            },
+            {
+              "type": "Return",
+              "entries": [
+                {
+                  "key": "total",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "info.total"
+                  }
+                },
+                {
+                  "key": "average",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "info.average"
+                  }
+                },
+                {
+                  "key": "detail",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "info.detail"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "type": "Step",
+        "id": "use",
+        "desc": "use dot access",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "math",
+              "args": {
+                "op": "add",
+                "a": "stats.total",
+                "b": 2
+              },
+              "output": "adjusted"
+            },
+            {
+              "type": "If",
+              "condition": {
+                "type": "Simple",
+                "left": "stats.average",
+                "comparator": ">=",
+                "right": 4,
+                "negated": false
+              },
+              "thenBlock": {
+                "type": "Block",
+                "statements": [
+                  {
+                    "type": "Action",
+                    "module": "print",
+                    "args": {
+                      "__entries": [
+                        {
+                          "kind": "literal",
+                          "value": "ok"
+                        }
+                      ],
+                      "__suppressStore": true
+                    },
+                    "output": "__print_dummy_0"
+                  }
+                ]
+              },
+              "elseBlock": {
+                "type": "Block",
+                "statements": [
+                  {
+                    "type": "Action",
+                    "module": "print",
+                    "args": {
+                      "__entries": [
+                        {
+                          "kind": "literal",
+                          "value": "low"
+                        }
+                      ],
+                      "__suppressStore": true
+                    },
+                    "output": "__print_dummy_1"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Action",
+              "module": "json",
+              "args": {
+                "op": "get",
+                "data": "stats.detail",
+                "path": "status"
+              },
+              "output": "status"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -19,14 +19,49 @@ export class ExecutionContext {
     this.store.set(name, value);
   }
 
-  // 값 조회
+  // 값 조회 (dot-path 지원)
   get(name: string): any {
-    return this.store.get(name);
+    if (this.store.has(name)) {
+      return this.store.get(name);
+    }
+    const resolved = this.resolvePath(name);
+    if (resolved.found) {
+      return resolved.value;
+    }
+    return undefined;
   }
 
-  // 존재 여부
+  // 존재 여부 (dot-path 지원)
   has(name: string): boolean {
-    return this.store.has(name);
+    if (this.store.has(name)) {
+      return true;
+    }
+    return this.resolvePath(name).found;
+  }
+
+  private resolvePath(name: string): { found: boolean; value: any } {
+    if (!name.includes(".")) {
+      return { found: false, value: undefined };
+    }
+    const segments = name.split(".");
+    const baseKey = segments.shift();
+    if (!baseKey || !this.store.has(baseKey)) {
+      return { found: false, value: undefined };
+    }
+    let current: any = this.store.get(baseKey);
+    for (const segment of segments) {
+      if (current === null || current === undefined) {
+        return { found: false, value: undefined };
+      }
+      if (typeof current !== "object") {
+        return { found: false, value: undefined };
+      }
+      if (!(segment in current)) {
+        return { found: false, value: undefined };
+      }
+      current = current[segment];
+    }
+    return { found: true, value: current };
   }
 
   // 전체 출력

@@ -116,6 +116,8 @@ step id="summary" desc="명시적 반환" -> summary {
 }
 ```
 
+Step 결과는 ctx 변수로 저장되므로 이후 Step에서는 `summary.count`, `result.data` 처럼 점(dot) 표기를 이용해 필요한 필드를 직접 참조할 수 있다.
+
 ---
 
 # 8. 코드 작성 방식
