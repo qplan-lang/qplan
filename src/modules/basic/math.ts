@@ -85,6 +85,8 @@ export const mathModule: ActionModule = Object.assign(
     id: "math",
     description: `
 기본 수학 연산 모듈.
+arr 입력은 JSON 배열 또는 공백/콤마로 구분된 문자열을 모두 허용하므로
+파일에서 읽어온 "1 2 3" 같은 텍스트를 그대로 전달할 수 있습니다.
 지원 op:
   add(a,b), sub(a,b), mul(a,b), div(a,b),
   sum(arr), avg(arr),
@@ -92,6 +94,7 @@ export const mathModule: ActionModule = Object.assign(
     usage: `
 math op="add" a=1 b=2 -> x
 math op="avg" arr="[1,2,3]" -> y
+math op="sum" arr="1 2 3 4" -> total
 `,
     inputs: ["op", "a", "b", "arr", "period"]
   }

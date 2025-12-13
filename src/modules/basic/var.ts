@@ -13,7 +13,8 @@ export const varModule: ActionModule = Object.assign(
   },
   {
     id: "var",
-    description: "리터럴 값을 그대로 ctx 변수로 저장",
+    description:
+      "리터럴(숫자/문자열/JSON) 값을 그대로 ctx 변수로 저장. 기존 ctx 변수를 다른 이름으로 복사하는 용도로는 사용할 수 없습니다.",
     usage: `
 var 0 -> count
 var "hello" -> msg

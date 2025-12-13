@@ -17,21 +17,17 @@ const requirement = `
 `;
 
 // 1) buildAIPlanPrompt 로 AI 요청 프롬프트 자동 생성
-const extraPromptRules = `
-추가 규칙:
-- OUTPUT: step 블록과 액션만 포함된 QPlan 코드만 출력하고, 모든 step을 한 번씩만 작성하면 즉시 종료합니다.
-- SUMMARY: "A -> B" 같은 요약 라인, 자연어 설명, 빈 step, 중복 step, 느슨한 괄호 등을 절대로 만들지 마십시오.
-`.trim();
-
-const prompt = `${buildAIPlanPrompt(requirement)}\n\n${extraPromptRules}`;
+const prompt = buildAIPlanPrompt(requirement);
 
 console.log("============= buildAIPlanPrompt PROMPT ==================");
 console.log(prompt);
 console.log("============= buildAIPlanPrompt PROMPT end ==================");
 
 // 2) OpenAI 호출 → 순수 QPlan 스크립트 획득
+const model = process.env.OPENAI_MODEL ?? "gpt-4.1";
+
 const completion = await client.chat.completions.create({
-  model: "gpt-4o-mini",
+  model,
   temperature: 0.2,
   messages: [
     { role: "system", content: "You are a senior QPlan planner. Return only valid QPlan code." },
@@ -40,8 +36,9 @@ const completion = await client.chat.completions.create({
 });
 
 const raw = completion.choices[0]?.message?.content ?? "";
-// console.log("raw:", JSON.stringify(raw));
-const aiScript = cleanQplanScript(raw);
+console.log("raw:", JSON.stringify(raw));
+
+const aiScript = raw;
 
 if (!aiScript) {
   throw new Error("AI가 빈 스크립트를 반환했습니다.");
@@ -62,21 +59,46 @@ if (!validation.ok) {
   process.exit(1);
 }
 
-// 4) 검증을 통과했으면 실행
-const ctx = await runQplan(aiScript);
+// 4) 검증을 통과했으면 실행 (stepEvents 로 진행 로그 출력)
+const ctx = await runQplan(aiScript, {
+  stepEvents: {
+    async onStepStart(info) {
+      console.log(`[STEP START] ${info.stepId}${info.desc ? ` (${info.desc})` : ""}`);
+    },
+    async onStepEnd(info) {
+      console.log(`[STEP END] ${info.stepId}${info.desc ? ` (${info.desc})` : ""}`);
+    }
+  }
+});
 
 console.log("====== 실행 결과 컨텍스트 ======");
 console.log(ctx.toJSON());
 
-function cleanQplanScript(output) {
-  if (!output) return "";
-  let text = output.trim();
+// function cleanQplanScript(output) {
+//   if (!output) return "";
+//   let text = output.trim();
 
-  // LLM 응답이 코드 블록으로 감싸져 있을 경우 제거
-  if (text.startsWith("```")) {
-    text = text.replace(/^```[a-zA-Z0-9]*\n?/, "");
-    text = text.replace(/```$/, "");
-  }
+//   // LLM 응답이 코드 블록으로 감싸져 있을 경우 제거
+//   if (text.startsWith("```")) {
+//     text = text.replace(/^```[a-zA-Z0-9]*\n?/, "");
+//     text = text.replace(/```$/, "");
+//   }
 
-  return text.trim();
-}
+//   text = text.trim();
+
+//   // Model이 뒤에 요약/중복 코드를 덧붙였을 수 있으므로
+//   // prefix 단위로 validate를 통과한 가장 긴 부분만 취한다.
+//   const lines = text.split(/\r?\n/);
+//   let acc = "";
+//   let bestValid = "";
+
+//   for (const line of lines) {
+//     acc = acc ? `${acc}\n${line}` : line;
+//     const validation = validateQplanScript(acc);
+//     if (validation.ok) {
+//       bestValid = acc;
+//     }
+//   }
+
+//   return (bestValid || text).trim();
+// }
