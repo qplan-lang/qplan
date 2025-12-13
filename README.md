@@ -1,11 +1,11 @@
 # QPlan — AI Planning Language & Execution Engine  
-경량 워크플로우 DSL & 실행 엔진
+경량 AI Planning Language & 실행 엔진
 
 ---
 
 ## 1. Introduction
 
-QPlan은 **AI가 작성하고 시스템이 실행하는** 경량 워크플로우 DSL이다.  
+QPlan은 **AI가 작성하고 시스템이 실행하는** 경량 AI Planning Language이다.  
 데이터 수집, 분석, 자동화, RPA 등 다양한 도메인에서  
 **플랜을 언어로 표현하고 실행**할 수 있도록 설계되었다.
 
@@ -227,7 +227,7 @@ AI가 QPlan 실행 계획을 생성할 수 있도록 돕는 프롬프트 문자�
 
 포함 내용:
 
-- DSL 요약(grammar summary)  
+- Language 요약(grammar summary)  
 - 사용 가능한 모듈 목록(`registry.list()` 기반)  
 - Step 설계 가이드 및 예시
 

@@ -10,7 +10,7 @@ QPlan 프로젝트에 기여해주셔서 감사합니다!
 QPlan은 초기 개발 단계이므로 다음과 같은 기여를 특히 환영합니다:
 
 - 버그 리포트  
-- 문법(DSL) 개선 제안  
+- 문법(Language) 개선 제안  
 - Parser / Lexer / AST 관련 코드  
 - Execution Engine 개선  
 - 새로운 모듈(ActionModule) 추가  
@@ -59,7 +59,7 @@ PR은 다음 절차에 따라 제출해주세요:
 - Java 17+  
 - Class/Method 명은 명확하고 기능 중심으로 작성  
 - 모듈 이름은 대문자(SNAKE_CASE) 사용  
-- DSL 관련 코드는 테스트 중심 개발 권장  
+- Language 관련 코드는 테스트 중심 개발 권장  
 
 ---
 

@@ -5,7 +5,7 @@ import { ExecutionContext } from "../../core/executionContext.js";
  * -----------------------------------------
  * 여러 future 결과를 병렬로 모아 배열로 반환.
  *
- * DSL 예:
+ * QPlan script 예:
  *   join futures="f1,f2,f3" -> out
  */
 export const joinModule: ActionModule = {

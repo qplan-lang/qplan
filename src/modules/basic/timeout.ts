@@ -6,7 +6,7 @@ import { ExecutionContext } from "../../core/executionContext.js";
  * -----------------------------------------
  * 지정한 ms 만큼 대기 후 value 또는 null 반환.
  *
- * DSL 예:
+ * QPlan script 예:
  *   timeout ms=500 value="done" -> out
  */
 export const timeoutModule: ActionModule = {

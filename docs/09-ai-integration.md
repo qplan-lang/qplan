@@ -1,7 +1,7 @@
 # 09-ai-integration.md
 
 ## AI를 이용해 QPlan 스크립트 자동 생성하기
-QPlan 모듈 메타데이터는 LLM이 DSL을 작성할 때 참고하도록 설계됨.
+QPlan 모듈 메타데이터는 LLM이 Language을 작성할 때 참고하도록 설계됨.
 
 ## 제공해야 할 정보
 ```

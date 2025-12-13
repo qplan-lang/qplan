@@ -16,7 +16,7 @@ Your task is to convert user requirements into **Step-based QPlan workflows**.
 
 AI는 반드시 다음을 지켜야 한다:
 
-1. **QPlan DSL만 출력**한다 (설명, 자연어, 코드블록 제외).  
+1. **QPlan Language만 출력**한다 (설명, 자연어, 코드블록 제외).  
 2. 출력은 반드시 **step 기반 구조**여야 한다.  
 3. 모든 action은 **step 내부에서만** 실행된다.  
 4. step에는 최소한 `desc`가 포함되어야 한다.  

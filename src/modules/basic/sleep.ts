@@ -5,7 +5,7 @@ import { ActionModule } from "../../core/actionModule.js";
  * -----------------------------------------
  * 지정된 시간(ms) 동안 대기하는 모듈.
  *
- * DSL 예:
+ * QPlan script 예:
  *   sleep ms=500 -> out
  */
 export const sleepModule: ActionModule = Object.assign(

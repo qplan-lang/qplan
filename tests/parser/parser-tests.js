@@ -14,7 +14,7 @@ const SNAPSHOT_DIR = join(__dirname, "__snapshots__");
 const SCRIPT_LITERAL = /const script = `([\s\S]*?)`;/;
 
 async function loadScript(file, fallback) {
-  // JS example files embed the DSL inside a template literal. Extract it for parsing.
+  // JS example files embed the QPlan script inside a template literal. Extract it for parsing.
   if (extname(file) === ".js") {
     const content = await readFile(file, "utf8");
     const match = content.match(SCRIPT_LITERAL);

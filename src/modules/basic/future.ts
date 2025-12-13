@@ -6,7 +6,7 @@ import { ActionModule } from "../../core/actionModule.js";
  * 비동기 작업을 future로 래핑하는 모듈.
  * delay(ms) 후 value를 resolve하는 Promise를 생성하고, __future로 감싼다.
  *
- * DSL 예:
+ * QPlan script 예:
  *   future task="A" delay=500 -> f1
  */
 export const futureModule: ActionModule = {

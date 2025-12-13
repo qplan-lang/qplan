@@ -1,7 +1,7 @@
 /**
  * ActionModule
  * -----------------------------------------
- * qplan 모듈 타입 정의.
+ * QPlan 모듈 타입 정의.
  *
  * - 함수형/객체형 모두 지원.
  * - id / description / usage / inputs 는 optional.
@@ -14,7 +14,7 @@ import { ExecutionContext } from "./executionContext.js";
 export interface ModuleMeta {
   id?: string;                 // 모듈 이름
   description?: string;        // AI가 사용법 파악할 설명
-  usage?: string;              // DSL 호출 예시
+  usage?: string;              // 호출 예시
   inputs?: string[];           // 파라미터 이름 목록
 }
 

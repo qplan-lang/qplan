@@ -8,7 +8,7 @@
 # 🌱 0.1.x — MVP (Minimum Viable Product)
 
 ### 🎯 목표  
-기본적인 DSL → 파싱 → 실행까지 가능한 **최소 엔진 완성**.
+기본적인 Language → 파싱 → 실행까지 가능한 **최소 엔진 완성**.
 
 ### 📌 포함 기능
 - [ ] Tokenizer (기본 토큰 분리)
@@ -18,7 +18,7 @@
 - [ ] Basic Executor (순차 실행)
 - [ ] FETCH / CALC / AI / CALL 기본 모듈
 - [ ] 최초 end-to-end 실행 성공  
-- [ ] DSL 기본 에러 메시지 체계
+- [ ] Language 기본 에러 메시지 체계
 
 ### 🚫 제외
 - 병렬 안정화  
@@ -132,7 +132,7 @@ QPlan을 안정적이고 성숙한 프로덕션 워크플로우 엔진으로 완
 
 ### QPlan은 장기적으로 아래를 지향합니다:
 
-- **AI Native Workflow Language 표준**  
+- **AI Native Language 표준**  
 - **QPlan Cloud** (SaaS 형태의 실행 플랫폼)  
 - **Marketplace** (모듈 공유/판매 생태계)  
 - **자동화 전용 IDE**  

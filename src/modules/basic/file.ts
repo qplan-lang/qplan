@@ -12,7 +12,7 @@ import path from "path";
  *   - read  : 파일 내용을 문자열로 읽어서 반환
  *   - write : 문자열/객체를 파일로 저장
  *
- * DSL 예:
+ * QPlan script 예:
  *   file read path="./a.txt" -> text
  *   file write path="./b.txt" data="hello" -> ok
  */

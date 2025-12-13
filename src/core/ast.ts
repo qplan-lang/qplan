@@ -1,7 +1,7 @@
 /**
  * AST (Abstract Syntax Tree)
  * ---------------------------
- * AST는 qplan DSL 코드를 "구문 구조대로 해석한 결과"를
+ * AST는 QPlan 코드를 "구문 구조대로 해석한 결과"를
  * 트리(Tree) 형태로 표현한 자료구조이다.
  *
  * 즉, 사용자가 작성한 문자열 스크립트를
@@ -10,10 +10,9 @@
  *   → Executor가 AST를 순서대로 실행한다.
  *
  * AST는 실행 가능한 '프로그램 구조' 그 자체이며,
- * qplan 엔진의 중심 데이터 모델이다.
+ * QPlan 엔진의 중심 데이터 모델이다.
  *
- * 이 파일은 qplan DSL에 등장할 수 있는 모든 노드(Action/If/Parallel/Block)를 정의한다.
- * prefix(FETCH/CALC/CALL/AI)가 없는 새로운 모듈 기반 DSL 구조를 따른다.
+ * 이 파일은 QPlan Language에 등장할 수 있는 모든 노드(Action/If/Parallel/Block)를 정의한다.
  */
 
 export interface BaseNode {
@@ -22,7 +21,7 @@ export interface BaseNode {
 }
 
 /**
- * 하나의 DSL 명령 = 1개의 ActionNode
+ * 하나의 QPlan script 명령 = 1개의 ActionNode
  * 예)
  *   fetchHttp url="https://site.com" -> html
  *   extractHeadline input=html -> heads
@@ -36,7 +35,7 @@ export interface ActionNode extends BaseNode {
 }
 
 /**
- * 여러 DSL 명령의 묶음
+ * 여러 QPlan script 명령의 묶음
  */
 export interface BlockNode extends BaseNode {
   type: "Block";

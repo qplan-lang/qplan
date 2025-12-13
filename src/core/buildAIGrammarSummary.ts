@@ -1,22 +1,22 @@
 /**
  * buildAIGrammarSummary()
  * ---------------------------------------------
- * AI가 qplan DSL을 정확히 작성할 수 있도록
- * 전체 DSL 문법을 "AI-friendly" 형식으로 축약/정리한 문법 문자열을 생성한다.
+ * AI가 QPlan script를 정확히 작성할 수 있도록
+ * 전체 script 문법을 "AI-friendly" 형식으로 축약/정리한 문법 문자열을 생성한다.
  *
  * - grammar.md 전체를 직접 넣는 것은 너무 길고 비효율적이므로
  *   문법의 핵심만 AI에게 필요한 형태로 요약 제공한다.
  * - buildAIPlanPrompt() 에 삽입하면 효과적.
  *
  * 목적:
- *  - AI가 qplan DSL을 완벽히 이해하도록 함
+ *  - AI가 QPlan Language를 완벽히 이해하도록 함
  *  - 문법 오류 없이 Action/If/Parallel/Future/Join 모두 생성 가능
  */
 
 export function buildAIGrammarSummary(): string {
   return `
 -----------------------------------------
-qplan DSL Core Grammar (AI-Friendly Summary)
+QPlan Language Core Grammar (AI-Friendly Summary)
 -----------------------------------------
 
 1) Step & Jump
@@ -86,9 +86,9 @@ value 타입:
 -----------------------------------------
 형식:
 if <left> <OP> <right> [and/or <left> <OP> <right> ...] {
-   ... qplan 명령 ...
+   ... QPlan 명령 ...
 } else {
-   ... qplan 명령 ...
+   ... QPlan 명령 ...
 }
 
 지원 비교 연산자:

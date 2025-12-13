@@ -1,5 +1,5 @@
 /**
- * qplan 엔트리 포인트
+ * QPlan 엔트리 포인트
  * -----------------------------------------
  * 사용 예:
  *
@@ -46,7 +46,7 @@ export function buildAIPlanPrompt(requirement: string) {
 }
 
 /**
- * DSL 스크립트 실행 함수
+ * QPlan 스크립트 실행 함수
  */
 export interface RunQplanOptions {
   stepEvents?: StepEventEmitter;
@@ -75,7 +75,7 @@ export type QplanValidationResult =
   | { ok: false; error: string; line?: number; issues?: ValidationIssue[] };
 
 /**
- * DSL 스크립트 문법만 검증하고 싶을 때 사용.
+ * QPlan 스크립트 문법만 검증하고 싶을 때 사용.
  * 실행하지 않고 Tokenize + Parse 단계에서 오류 여부만 반환한다.
  */
 export function validateQplanScript(script: string): QplanValidationResult {

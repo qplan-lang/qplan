@@ -1,8 +1,8 @@
 # 01-overview.md  
-**QPlan DSL — AI-Driven Workflow Language**
+**QPlan Language — AI Planning Language & Execution Engine**
 
 ## 🚀 QPlan이란?
-QPlan은 **AI와 사람이 함께 사용할 수 있는 경량 DSL(Workflow Language)** 로,  
+QPlan은 **AI와 사람이 함께 사용할 수 있는 경량 AI Planning Language & Execution Engine** 로,  
 작업 흐름(Workflow), 데이터 처리, 비동기 제어(Future/Parallel) 등을  
 **간결한 스크립트 형태로 구성**할 수 있도록 만든 실행 엔진이다.
 

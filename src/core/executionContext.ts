@@ -1,5 +1,5 @@
 /**
- * qplan ExecutionContext
+ * QPlan ExecutionContext
  * -----------------------------------------
  * 워크플로우 실행 중 생성되는 모든 변수(중간 결과)를 저장/조회하는 공간.
  *
@@ -8,7 +8,7 @@
  *  - ctx.get(name)         → 변수 읽기
  *  - ctx.toJSON()          → 전체 상태 출력 (디버깅 편함)
  *
- * 이 컨텍스트가 qplan 실행 엔진의 “메모리” 역할을 한다.
+ * 이 컨텍스트가 QPlan 실행 엔진의 “메모리” 역할을 한다.
  */
 
 export class ExecutionContext {

@@ -18,11 +18,11 @@ async function main() {
   const result = validateQplanScript(script);
 
   if (result.ok) {
-    console.log(`✅ Valid qplan script (${target === "-" ? "stdin" : target})`);
+    console.log(`✅ Valid QPlan Language (${target === "-" ? "stdin" : target})`);
     return;
   }
 
-  console.error(`❌ Invalid qplan script (${target === "-" ? "stdin" : target})`);
+  console.error(`❌ Invalid QPlan Language (${target === "-" ? "stdin" : target})`);
   if (result.line !== undefined) {
     console.error(` line ${result.line}`);
   }

@@ -1,7 +1,7 @@
 /**
- * qplan Tokenizer
+ * QPlan Tokenizer
  * --------------------------------------
- * DSL 문자열을 토큰(Token) 단위로 분해하는 단계.
+ * QPlan script 문자열을 토큰(Token) 단위로 분해하는 단계.
  * Parser는 Tokenizer가 생성한 토큰을 기반으로 AST를 만든다.
  *
  * 지원되는 토큰 종류:

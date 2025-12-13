@@ -5,7 +5,7 @@ import { ActionModule } from "../../core/actionModule.js";
  * -----------------------------------------
  * 입력으로 받은 값을 그대로 반환하는 가장 단순한 디버깅/테스트용 모듈.
  *
- * DSL 예:
+ * QPlan script 예:
  *   echo msg="hello" -> out
  *   echo any="값" num=123 -> result
  */

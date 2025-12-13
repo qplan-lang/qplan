@@ -1,5 +1,5 @@
 /**
- * qplan Parser
+ * QPlan Parser
  * --------------------------------------
  * Tokenizer가 생성한 토큰들을 기반으로
  * AST(Action / If / Parallel / Block)을 생성한다.

@@ -4,9 +4,9 @@ import { ModuleRegistry } from "./moduleRegistry.js";
  * buildAIPlanPrompt(requirement: string, registry: ModuleRegistry)
  * ---------------------------------------------------------------
  * 사용자의 요구(requirement)를 기반으로
- * AI에게 qplan DSL 실행계획을 작성하도록 지시하는 프롬프트 생성함수.
+ * AI에게 QPlan Language 실행계획을 작성하도록 지시하는 프롬프트 생성함수.
  *
- * AI는 qplan 스펙을 모르므로, qplan 문법/사용법/모듈목록을 함께 전달해야 함.
+ * AI는 QPlan 스펙을 모르므로, QPlan 문법/사용법/모듈목록을 함께 전달해야 함.
  */
 export function buildAIPlanPrompt(requirement: string, registry: ModuleRegistry) {
   // 현재 등록된 모듈 목록을 동적으로 가져옴
@@ -21,17 +21,17 @@ export function buildAIPlanPrompt(requirement: string, registry: ModuleRegistry)
     .join("\n\n");
 
   return `
-당신은 사용자의 요구를 분석하여 **qplan DSL 실행계획**을 작성하는 전문가입니다.
+당신은 사용자의 요구를 분석하여 **QPlan Language 실행계획**을 작성하는 전문가입니다.
 
-아래 요구사항을 만족하는 **qplan 스크립트만** 출력하십시오.
+아래 요구사항을 만족하는 **QPlan 스크립트만** 출력하십시오.
 설명, 해설, 자연어 문장 등은 절대로 출력하지 마십시오.
 코드 블록(\`\`\`)도 사용하지 마십시오.
-오직 순수한 qplan 명령들만 출력하십시오.
+오직 순수한 QPlan 명령들만 출력하십시오.
 
 -----------------------------------------
-qplan DSL 개요
+QPlan Language 개요
 -----------------------------------------
-qplan은 Step 기반 워크플로우 언어로, 모든 Action은 반드시 step 블록 내부에서 실행됩니다.
+QPlan은 Step 기반 워크플로우 언어로, 모든 Action은 반드시 step 블록 내부에서 실행됩니다.
 
 기능 요약:
 - Step 정의: step id="..." desc="..." type="..." onError="..." -> output { ... }
@@ -68,7 +68,7 @@ ${requirement.trim()}
 -----------------------------------------
 생성 규칙
 -----------------------------------------
-- 오직 qplan DSL만 출력하세요.
+- 오직 QPlan Language만 출력하세요.
 - 모든 Action은 반드시 step 블록 안에 배치하십시오.
 - 필요 시 여러 step을 사용하여 상위/하위 단계 구조화, jump, onError 정책을 활용하십시오.
 - 존재하지 않는 모듈을 사용하지 마세요.
@@ -80,7 +80,7 @@ ${requirement.trim()}
 -----------------------------------------
 출력 형식
 -----------------------------------------
-qplan 스크립트만 출력:
+QPlan 스크립트만 출력:
 
 예시)
 math op="add" a=1 b=2 -> x

@@ -13,8 +13,8 @@ QPlan의 변경 이력을 기록하는 문서입니다.
 - 초기 문서 구성: README, grammar.md, modules.md, architecture.md, examples.md  
 - CONTRIBUTING.md 추가  
 - CHANGELOG.md 생성  
-- QPlan DSL 기본 문법 설계  
-- EBNF 기반 DSL 스펙 정의  
+- QPlan Language 기본 문법 설계  
+- EBNF 기반 Language 스펙 정의  
 - 기본 모듈 구조(FETCH, CALC, AI, CALL) 개념 정의  
 - Execution Engine 아키텍처 설계 (Tokenizer → Parser → AST → Executor)
 

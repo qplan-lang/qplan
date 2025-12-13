@@ -20,6 +20,6 @@ export const fileModule = {
 ## 메타데이터 작성 규칙
 - id: 필수  
 - description: 기능 설명  
-- usage: DSL 사용 예시  
+- usage: Language 사용 예시  
 - inputs: 받을 수 있는 옵션 목록  
 
