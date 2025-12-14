@@ -109,6 +109,8 @@ const ctx = await runQplan(aiScript, {
 });
 ```
 
+> 🔗 Want to see this flow end-to-end? Check the fully fleshed out example in [`examples/16_exam_ai_plan.js`](examples/16_exam_ai_plan.js) (LLM retries, validation, and step events in one place).
+
 ## 7. AI-Generated Example
 
 ```qplan
