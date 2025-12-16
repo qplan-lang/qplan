@@ -15,12 +15,16 @@ import { buildAIPlanPrompt, runQplan, registry, setUserLanguage } from "qplan";
 
 registry.register(customModule);
 setUserLanguage("en"); // pass any language string, e.g., "ja"
-const prompt = buildAIPlanPrompt("Read a file and compute the average");
+const prompt = buildAIPlanPrompt("Read a file and compute the average", { registry });
 const aiScript = await callLLM(prompt);
-const ctx = await runQplan(aiScript);
+const ctx = await runQplan(aiScript, {
+  registry,
+  env: { tenant: "acme" },
+  metadata: { requestId: "req-42" },
+});
 console.log(ctx.toJSON());
 ```
-`buildAIPlanPrompt(requirement)` embeds:
+`buildAIPlanPrompt(requirement, { registry, language })` embeds:
 1. QPlan overview and key rules (e.g., actions only inside steps).
 2. AI-friendly grammar summary from `buildAIGrammarSummary()`.
 3. Module metadata from `registry.list()` (including `usage`).
@@ -35,7 +39,7 @@ Use `buildQplanSuperPrompt(registry)` for long-lived system prompts. It packs QP
 - **Clarify module description/usage**: the AI reads them verbatim, so show real QPlan examples.
 - **Register only needed modules**: keeping the registry lean shortens prompts and prevents misuse.
 - **Template requirements**: clean up user requests before passing them as `requirement` for better context.
-- **Language**: call `setUserLanguage("<language>")` (any string) before `buildAIPlanPrompt()` so AI strings use the desired language.
+- **Language**: call `setUserLanguage("<language>")` (any string) or pass `{ language: "<lang>" }` when calling `buildAIPlanPrompt()` so AI strings use the desired language.
 - **Reinforce output format**: buildAIPlanPrompt already says “output QPlan only,” but repeating the rule in system/user prompts adds safety.
 
 ## 6. Validate before running
@@ -54,13 +58,18 @@ await runQplan(aiScript);
 - CI pipelines can run `npm run validate -- script.qplan` for automated checks.
 
 ## 7. Step events for monitoring
-`runQplan(script, { stepEvents })` lets you subscribe to start/end/error/retry/jump events. Use them to visualize LLM-generated plans or plan re-runs.
+`runQplan(script, { stepEvents })` lets you subscribe to plan start/end plus step start/end/error/retry/jump events. Each callback receives a `StepEventRunContext` so you can correlate user/session data without extra closures. Use them to visualize LLM-generated plans or plan re-runs.
 
 ```ts
 await runQplan(aiScript, {
+  env: { userId: "user-88" },
   stepEvents: {
-    onStepStart(info) { log(`start ${info.stepId}`); },
+    onPlanStart(plan, context) {
+      log(`plan ${plan.runId} with ${plan.totalSteps} steps`, context?.env);
+    },
+    onStepStart(info, context) { log(`start ${info.stepId}`, info.path, context?.metadata); },
     onStepError(info, err) { alert(`error ${info.stepId}: ${err.message}`); },
+    onPlanEnd(plan) { log(`plan done ${plan.runId}`); }
   }
 });
 ```

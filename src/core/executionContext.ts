@@ -11,8 +11,15 @@
  * 이 컨텍스트가 QPlan 실행 엔진의 “메모리” 역할을 한다.
  */
 
+export interface ExecutionContextOptions {
+  env?: Record<string, any>;
+  metadata?: Record<string, any>;
+}
+
 export class ExecutionContext {
   private store = new Map<string, any>();
+
+  constructor(private readonly options: ExecutionContextOptions = {}) {}
 
   // 값 저장
   set(name: string, value: any): void {
@@ -71,5 +78,13 @@ export class ExecutionContext {
       json[key] = value;
     }
     return json;
+  }
+
+  getEnv<T = Record<string, any>>(): T | undefined {
+    return this.options.env as T | undefined;
+  }
+
+  getMetadata<T = Record<string, any>>(): T | undefined {
+    return this.options.metadata as T | undefined;
   }
 }

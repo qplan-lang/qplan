@@ -1,11 +1,14 @@
 {
   "name": "qplan",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "AI Planning Language & Execution Engine",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "module": "dist/index.js",
+  "browser": {
+    "./dist/modules/basic/file.js": "./dist/modules/basic/file.browser.js"
+  },
   "files": [
     "dist"
   ],
@@ -13,7 +16,7 @@
     "clean": "rimraf dist",
     "build": "npm run clean && tsc",
     "dev": "tsc -w",
-    "test": "npm run build && node tests/parser/parser-tests.js",
+    "test": "npm run build && node tests/parser/parser-tests.js && node tests/runtime/runqplan-tests.js && node tests/runtime/validate-tests.js",
     "validate": "node dist/tools/validateScript.js"
   },
   "keywords": [

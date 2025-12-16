@@ -4,6 +4,7 @@ import { StepResolution } from "./stepTypes.js";
 import { JumpSignal, StepReturnSignal } from "./stepSignals.js";
 import {
   StepEventEmitter,
+  StepEventRunContext,
   createStepEventInfo,
   defaultStepEventEmitter,
 } from "./stepEvents.js";
@@ -11,7 +12,8 @@ import {
 export class StepController {
   constructor(
     private resolution: StepResolution,
-    private events: StepEventEmitter = defaultStepEventEmitter
+    private events: StepEventEmitter = defaultStepEventEmitter,
+    private runContext: StepEventRunContext
   ) {}
 
   hasSteps(): boolean {
@@ -54,7 +56,7 @@ export class StepController {
       return;
     }
 
-    const eventInfo = createStepEventInfo(info);
+    const eventInfo = createStepEventInfo(info, this.runContext);
     let retriesLeft = info.errorPolicy.type === "retry" ? info.errorPolicy.retries : 0;
     let retryAttempt = 0;
 
@@ -63,16 +65,17 @@ export class StepController {
     while (true) {
       const snapshot = beginAttempt();
       if (!started) {
-        await this.events.onStepStart(eventInfo);
+        await this.events.onStepStart?.(eventInfo, this.runContext);
         started = true;
       }
       try {
         await executor();
         const result = getResultSince(snapshot);
+        const resultValue = result.hasResult ? result.value : undefined;
         if (node.output && result.hasResult) {
           ctx.set(node.output, result.value);
         }
-        await this.events.onStepEnd(eventInfo, result.hasResult ? result.value : undefined);
+        await this.events.onStepEnd?.(eventInfo, resultValue, this.runContext);
         return;
       } catch (err) {
         if (err instanceof StepReturnSignal) {
@@ -80,7 +83,7 @@ export class StepController {
           if (node.output) {
             ctx.set(node.output, result);
           }
-          await this.events.onStepEnd(eventInfo, result);
+          await this.events.onStepEnd?.(eventInfo, result, this.runContext);
           return;
         }
         if (err instanceof JumpSignal) {
@@ -89,15 +92,15 @@ export class StepController {
             err.target.node.id ??
             err.target.node.desc ??
             String(err.target.order);
-          await this.events.onStepJump(eventInfo, jumpTargetId);
+          await this.events.onStepJump?.(eventInfo, jumpTargetId, this.runContext);
           throw err;
         }
 
         const error = err instanceof Error ? err : new Error(String(err));
-        await this.events.onStepError(eventInfo, error);
+        await this.events.onStepError?.(eventInfo, error, this.runContext);
 
         if (info.errorPolicy.type === "continue") {
-          await this.events.onStepEnd(eventInfo);
+          await this.events.onStepEnd?.(eventInfo, undefined, this.runContext);
           return;
         }
 
@@ -107,7 +110,7 @@ export class StepController {
           }
           retryAttempt++;
           retriesLeft--;
-          await this.events.onStepRetry(eventInfo, retryAttempt, error);
+          await this.events.onStepRetry?.(eventInfo, retryAttempt, error, this.runContext);
           started = false;
           continue;
         }
@@ -117,7 +120,7 @@ export class StepController {
           if (!targetInfo) {
             throw new Error(`jump target '${info.errorPolicy.targetStepId}' not found`);
           }
-          await this.events.onStepJump(eventInfo, info.errorPolicy.targetStepId);
+          await this.events.onStepJump?.(eventInfo, info.errorPolicy.targetStepId, this.runContext);
           throw new JumpSignal(targetInfo);
         }
 

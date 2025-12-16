@@ -10,9 +10,29 @@
  */
 
 import { ActionModule, ModuleMeta } from "./actionModule.js";
+import { basicModules } from "../modules/index.js";
+
+export interface ModuleRegistryOptions {
+  seedBasicModules?: boolean;
+  seedModules?: ActionModule[];
+}
 
 export class ModuleRegistry {
   private modules = new Map<string, ActionModule>();
+
+  constructor(options: ModuleRegistryOptions = {}) {
+    const shouldSeedBasic = options.seedBasicModules ?? true;
+    const seeds: ActionModule[] = [];
+    if (shouldSeedBasic) {
+      seeds.push(...basicModules);
+    }
+    if (options.seedModules?.length) {
+      seeds.push(...options.seedModules);
+    }
+    if (seeds.length > 0) {
+      this.registerAll(seeds);
+    }
+  }
 
   register(module: ActionModule) {
     const id = (module as any).id;

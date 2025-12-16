@@ -6,7 +6,7 @@
       {
         "type": "Step",
         "id": "pipeline",
-        "desc": "루트 파이프라인",
+        "desc": "Root pipeline",
         "output": "pipelineResult",
         "block": {
           "type": "Block",
@@ -62,7 +62,7 @@
             {
               "type": "Step",
               "id": "prepare",
-              "desc": "데이터 준비",
+              "desc": "Prepare data",
               "output": "prepareResult",
               "block": {
                 "type": "Block",
@@ -104,7 +104,7 @@
             {
               "type": "Step",
               "id": "aggregate",
-              "desc": "합계 계산",
+              "desc": "Sum aggregation",
               "output": "aggregateResult",
               "block": {
                 "type": "Block",
@@ -190,7 +190,7 @@
             {
               "type": "Step",
               "id": "validate",
-              "desc": "검증/재시도",
+              "desc": "Validation / retry",
               "onError": "continue",
               "block": {
                 "type": "Block",
@@ -214,7 +214,7 @@
                             "__entries": [
                               {
                                 "kind": "literal",
-                                "value": "합계가 작아서 재시작"
+                                "value": "Total too small, restarting"
                               }
                             ],
                             "__suppressStore": true
@@ -263,7 +263,7 @@
             {
               "type": "Step",
               "id": "report",
-              "desc": "리포트 작성",
+              "desc": "Write report",
               "output": "reportResult",
               "block": {
                 "type": "Block",
@@ -275,7 +275,7 @@
                       "__entries": [
                         {
                           "kind": "literal",
-                          "value": "총합:"
+                          "value": "Total sum:"
                         },
                         {
                           "kind": "identifier",
@@ -293,7 +293,7 @@
                         "key": "message",
                         "expression": {
                           "type": "Literal",
-                          "value": "완료"
+                          "value": "done"
                         }
                       }
                     ]
@@ -304,7 +304,7 @@
             {
               "type": "Step",
               "id": "finalize",
-              "desc": "최종 저장",
+              "desc": "Finalize",
               "output": "finalizeResult",
               "block": {
                 "type": "Block",
@@ -316,7 +316,7 @@
                       "__entries": [
                         {
                           "kind": "literal",
-                          "value": "최종 합계:"
+                          "value": "Final total:"
                         },
                         {
                           "kind": "identifier",
@@ -401,7 +401,7 @@
       {
         "type": "Step",
         "id": "final",
-        "desc": "결과 출력",
+        "desc": "Print results",
         "block": {
           "type": "Block",
           "statements": [
@@ -412,7 +412,7 @@
                 "__entries": [
                   {
                     "kind": "literal",
-                    "value": "파이프라인:"
+                    "value": "pipeline:"
                   },
                   {
                     "kind": "identifier",
@@ -430,7 +430,7 @@
                 "__entries": [
                   {
                     "kind": "literal",
-                    "value": "준비:"
+                    "value": "prepare:"
                   },
                   {
                     "kind": "identifier",
@@ -448,7 +448,7 @@
                 "__entries": [
                   {
                     "kind": "literal",
-                    "value": "합계:"
+                    "value": "aggregate:"
                   },
                   {
                     "kind": "identifier",
@@ -466,7 +466,7 @@
                 "__entries": [
                   {
                     "kind": "literal",
-                    "value": "리포트:"
+                    "value": "report:"
                   },
                   {
                     "kind": "identifier",

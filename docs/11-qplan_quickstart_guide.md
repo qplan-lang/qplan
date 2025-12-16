@@ -116,10 +116,15 @@ Run the AI-generated script directly:
 ```ts
 const qplanScript = "..."; // Script from the AI
 const ctx = await runQplan(qplanScript, {
+  registry, // optional custom ModuleRegistry
+  env: { userId: session.userId },
+  metadata: { requestId: trace.id },
   stepEvents: {
-    onStepStart(info) { ui.showStepStart(info); },
+    onPlanStart(plan) { ui.showPlanStart(plan); },
+    onStepStart(info, context) { ui.showStepStart(info, context?.env); },
     onStepEnd(info, result) { ui.showStepEnd(info, result); },
-    onStepError(info, error) { ui.showStepError(info, error); }
+    onStepError(info, error) { ui.showStepError(info, error); },
+    onPlanEnd(plan) { ui.showPlanEnd(plan); },
   }
 });
 ```

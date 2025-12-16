@@ -125,10 +125,15 @@ AI가 작성한 QPlan 스크립트를 그대로 실행합니다.
 ```ts
 const qplanScript = "..."; // AI에 요청해 생성된 QPlan script
 const ctx = await runQplan(qplanScript, {
+  registry, // 필요 시 커스텀 registry 전달
+  env: { userId: session.userId },
+  metadata: { requestId: trace.id },
   stepEvents: {
-    onStepStart(info) { ui.showStepStart(info); },
+    onPlanStart(plan) { ui.showPlanStart(plan); },
+    onStepStart(info, context) { ui.showStepStart(info, context?.env); },
     onStepEnd(info, result) { ui.showStepEnd(info, result); },
-    onStepError(info, error) { ui.showStepError(info, error); }
+    onStepError(info, error) { ui.showStepError(info, error); },
+    onPlanEnd(plan) { ui.showPlanEnd(plan); },
   }
 });
 ```

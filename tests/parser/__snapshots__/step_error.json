@@ -6,7 +6,7 @@
       {
         "type": "Step",
         "id": "init",
-        "desc": "초기화",
+        "desc": "Init",
         "block": {
           "type": "Block",
           "statements": [
@@ -25,7 +25,7 @@
                 "__entries": [
                   {
                     "kind": "literal",
-                    "value": "초기화 완료"
+                    "value": "Init complete"
                   }
                 ],
                 "__suppressStore": true
@@ -38,7 +38,7 @@
       {
         "type": "Step",
         "id": "failExample",
-        "desc": "기본 fail (데모용)",
+        "desc": "Basic fail (demo)",
         "onError": "continue",
         "block": {
           "type": "Block",
@@ -50,7 +50,7 @@
                 "__entries": [
                   {
                     "kind": "literal",
-                    "value": "fail 예제 시작"
+                    "value": "Fail example start"
                   }
                 ],
                 "__suppressStore": true
@@ -77,7 +77,7 @@
                 "__entries": [
                   {
                     "kind": "literal",
-                    "value": "이 코드는 실행되지 않습니다"
+                    "value": "This line never runs"
                   }
                 ],
                 "__suppressStore": true
@@ -90,7 +90,7 @@
       {
         "type": "Step",
         "id": "continueExample",
-        "desc": "continue 정책",
+        "desc": "Continue policy",
         "onError": "continue",
         "block": {
           "type": "Block",
@@ -102,7 +102,7 @@
                 "__entries": [
                   {
                     "kind": "literal",
-                    "value": "continue 예제 시작"
+                    "value": "Continue example start"
                   }
                 ],
                 "__suppressStore": true
@@ -129,7 +129,7 @@
                 "__entries": [
                   {
                     "kind": "literal",
-                    "value": "continue 예제 끝"
+                    "value": "Continue example end"
                   }
                 ],
                 "__suppressStore": true
@@ -142,7 +142,7 @@
       {
         "type": "Step",
         "id": "retryExample",
-        "desc": "retry 정책",
+        "desc": "Retry policy",
         "onError": "retry=2",
         "output": "retryResult",
         "block": {
@@ -155,7 +155,7 @@
                 "__entries": [
                   {
                     "kind": "literal",
-                    "value": "retry 예제, 현재 카운터 ="
+                    "value": "Retry example, current counter ="
                   },
                   {
                     "kind": "identifier",
@@ -248,7 +248,7 @@
       {
         "type": "Step",
         "id": "jumpExample",
-        "desc": "jump 정책",
+        "desc": "Jump policy",
         "onError": "jump='recovery'",
         "block": {
           "type": "Block",
@@ -260,7 +260,7 @@
                 "__entries": [
                   {
                     "kind": "literal",
-                    "value": "jump 예제 시작"
+                    "value": "Jump example start"
                   }
                 ],
                 "__suppressStore": true
@@ -286,7 +286,7 @@
       {
         "type": "Step",
         "id": "recovery",
-        "desc": "점프 대상",
+        "desc": "Jump target",
         "output": "recoveryResult",
         "block": {
           "type": "Block",
@@ -298,7 +298,7 @@
                 "__entries": [
                   {
                     "kind": "literal",
-                    "value": "recovery step 실행"
+                    "value": "Running recovery step"
                   }
                 ],
                 "__suppressStore": true
@@ -312,7 +312,7 @@
                   "key": "message",
                   "expression": {
                     "type": "Literal",
-                    "value": "jump 처리 완료"
+                    "value": "Jump handled"
                   }
                 }
               ]
@@ -323,7 +323,7 @@
       {
         "type": "Step",
         "id": "summary",
-        "desc": "결과 요약",
+        "desc": "Summary",
         "block": {
           "type": "Block",
           "statements": [
@@ -334,7 +334,7 @@
                 "__entries": [
                   {
                     "kind": "literal",
-                    "value": "retry 결과:"
+                    "value": "retry result:"
                   },
                   {
                     "kind": "identifier",
@@ -352,7 +352,7 @@
                 "__entries": [
                   {
                     "kind": "literal",
-                    "value": "recovery 결과:"
+                    "value": "recovery result:"
                   },
                   {
                     "kind": "identifier",

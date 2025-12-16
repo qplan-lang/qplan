@@ -6,7 +6,7 @@
       {
         "type": "Step",
         "id": "prepare",
-        "desc": "데이터 준비",
+        "desc": "Prepare data",
         "block": {
           "type": "Block",
           "statements": [
@@ -36,7 +36,7 @@
       {
         "type": "Step",
         "id": "sum",
-        "desc": "합산",
+        "desc": "Sum",
         "output": "sumResult",
         "block": {
           "type": "Block",
@@ -70,7 +70,7 @@
       {
         "type": "Step",
         "id": "branch",
-        "desc": "분기",
+        "desc": "Branch",
         "block": {
           "type": "Block",
           "statements": [
@@ -113,7 +113,7 @@
       {
         "type": "Step",
         "id": "final",
-        "desc": "마무리",
+        "desc": "Finalize",
         "block": {
           "type": "Block",
           "statements": [

@@ -26,6 +26,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.1.6] - 2025-12-15
+
+### Added
+- `runQplan` now accepts `registry`, `env`, `metadata`, and richer `stepEvents` (plan start/end plus context-aware step payloads).
+- `ExecutionContext` exposes `getEnv()` / `getMetadata()` so modules can inspect user/session data.
+- `buildAIPlanPrompt(requirement, { registry, language })` and `listRegisteredModules()` APIs for prompt builders/UI integrations.
+- Browser-safe `file.browser.ts` stub (wired via `package.json` `"browser"` map) to keep web bundles free of Node I/O deps.
+- Runtime tests for env/metadata propagation and `validateQplanScript` coverage.
+
+### Changed
+- `ModuleRegistry` instances now auto-register `basicModules` (opt-out via `{ seedBasicModules: false }`), and docs/README were updated accordingly.
+- `examples/16_exam_ai_plan.js` feeds validation/execution errors back to the LLM so retries learn from failures.
+- README/Quickstart docs now highlight using the global registry first, with custom registry guidance afterward.
+
+### Fixed
+- Bundlers no longer warn about `fs/promises`/`path` when importing `qplan` in browser builds.
+
+---
+
 ## [0.1.5] - 2025-12-14
 
 ### Added

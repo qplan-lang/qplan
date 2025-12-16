@@ -34,6 +34,9 @@ import { StepController } from "../step/stepController.js";
 import { JumpSignal, StepReturnSignal } from "../step/stepSignals.js";
 import {
   StepEventEmitter,
+  StepEventRunContext,
+  PlanEventInfo,
+  createStepEventInfo,
   defaultStepEventEmitter,
 } from "../step/stepEvents.js";
 import { StepInfo } from "../step/stepTypes.js";
@@ -61,28 +64,48 @@ export class Executor {
       : defaultStepEventEmitter;
   }
 
-  async run(root: ASTRoot, ctx: ExecutionContext): Promise<ExecutionContext> {
+  async run(
+    root: ASTRoot,
+    ctx: ExecutionContext,
+    runContext: StepEventRunContext
+  ): Promise<ExecutionContext> {
     const resolution = resolveSteps(root.block);
+    const planInfo: PlanEventInfo = {
+      runId: runContext.runId,
+      totalSteps: resolution.infoByNode.size,
+      rootSteps: resolution.rootSteps.map(info =>
+        createStepEventInfo(info, runContext)
+      ),
+    };
+    await this.stepEvents.onPlanStart?.(planInfo, runContext);
     if (resolution.rootSteps.length > 0) {
-      this.stepController = new StepController(resolution, this.stepEvents);
+      this.stepController = new StepController(
+        resolution,
+        this.stepEvents,
+        runContext
+      );
     } else {
       this.stepController = undefined;
     }
     this.blockJumpOverrides.clear();
-    while (true) {
-      try {
-        await this.executeBlock(root.block, ctx);
-        break;
-      } catch (err) {
-        if (err instanceof JumpSignal) {
-          this.prepareJump(err.target);
-          continue;
+    try {
+      while (true) {
+        try {
+          await this.executeBlock(root.block, ctx);
+          break;
+        } catch (err) {
+          if (err instanceof JumpSignal) {
+            this.prepareJump(err.target);
+            continue;
+          }
+          throw err;
         }
-        throw err;
       }
+      return ctx;
+    } finally {
+      this.stepController = undefined;
+      await this.stepEvents.onPlanEnd?.(planInfo, runContext);
     }
-    this.stepController = undefined;
-    return ctx;
   }
 
   private async executeBlock(block: BlockNode, ctx: ExecutionContext) {

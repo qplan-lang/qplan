@@ -18,7 +18,7 @@ Core goals:
 1. **Tokenizer & Parser**—`src/core/tokenizer.ts` and `parser.ts` tokenize the script and convert it into an AST (Action/If/Parallel/Each/Step/Jump, etc.). The parser enforces that actions and control structures only appear inside steps.
 2. **Semantic Validator & Step Resolver**—`semanticValidator.ts` verifies jump/onError targets and returns warning lists. `stepResolver.ts` analyzes the step tree to compute order/path/parent relationships.
 3. **Executor & StepController**—`executor.ts` runs the AST sequentially or in parallel and handles Future/Join/Parallel/Each/While/Jump/Return/Set. `stepController.ts` manages onError policies (fail/continue/retry/jump), retry loops, and step event emission.
-4. **ExecutionContext (ctx)**—`executionContext.ts` provides `set/get/has/toJSON` for runtime state storage. It supports dot-path access (e.g., `stats.total`) so sub-fields of step results are immediately reusable.
+4. **ExecutionContext (ctx)**—`executionContext.ts` provides `set/get/has/toJSON` for runtime state storage. It supports dot-path access (e.g., `stats.total`) and now keeps per-run `env`/`metadata` accessible via `ctx.getEnv()` and `ctx.getMetadata()`, so modules can read request/session/user info.
 5. **ModuleRegistry & ActionModule**—`moduleRegistry.ts` manages registration, lookup, and metadata extraction. ActionModules can be functions or objects with an `execute()` method, optionally including `id/description/usage/inputs`. `src/index.ts` exports `registry` and auto-registers `basicModules`.
 6. **Prompt Builders**—`buildAIPlanPrompt`, `buildQplanSuperPrompt`, and `buildAIGrammarSummary` combine registry metadata and grammar summaries to dynamically craft system/user prompts for LLMs.
 
@@ -28,18 +28,21 @@ Core goals:
 - Use `return key=value ...` inside a step to build an explicit result; otherwise, the last action result becomes the step result.
 - `jump to="stepId"` moves between steps. Targets must be step IDs, and the semantic validator ensures they exist.
 - Steps can nest (sub-steps). The resolver auto-assigns `order` (execution sequence) and `path` (e.g., `1.2.3`).
-- When calling `runQplan`, `stepEvents` hooks let you observe step execution in real time.
+- When calling `runQplan`, you can inject a `registry`, `env`, `metadata`, and `stepEvents` hooks to observe plan/step execution in real time.
 
 ```ts
-import { runQplan } from "qplan";
+import { runQplan, registry } from "qplan";
 
 await runQplan(script, {
+  registry,                        // optional custom ModuleRegistry
+  env: { userId: "u-123" },       // forwarded to ctx.getEnv()
+  metadata: { sessionId: "s-456" },
   stepEvents: {
-    onStepStart(info) { console.log("▶", info.order, info.stepId, info.desc); },
+    onPlanStart(plan) { console.log("plan start", plan.runId, plan.totalSteps); },
+    onStepStart(info, context) { console.log("▶", info.order, info.stepId, context?.env); },
     onStepEnd(info, result) { console.log("✓", info.stepId, result); },
     onStepError(info, err) { console.error("✗", info.stepId, err.message); },
-    onStepRetry(info, attempt) { console.warn("retry", info.stepId, attempt); },
-    onStepJump(info, target) { console.log("jump", info.stepId, "→", target); }
+    onPlanEnd(plan) { console.log("plan done", plan.runId); }
   }
 });
 ```
@@ -51,7 +54,7 @@ await runQplan(script, {
 - **Future & Join**—the `future` module stores a Promise in ctx under a `__future` wrapper, and `join futures="f1,f2" -> list` combines multiple futures.
 - **Set & Return**—`set total = (total + delta) * 0.5` applies arithmetic expressions to existing variables, and `return key=value ...` shapes step outputs manually.
 - **Stop / Skip**—control exit/continue in Each or While loops.
-- **ExecutionContext**—`ctx.get("order.summary.status")` reads nested values via dot paths, and `ctx.toJSON()` dumps the entire state.
+- **ExecutionContext**—`ctx.get("order.summary.status")` reads nested values via dot paths, `ctx.getEnv()` / `ctx.getMetadata()` expose per-run context, and `ctx.toJSON()` dumps the entire state.
 - **Full grammar** lives in `docs/02-grammar.md`; `buildAIGrammarSummary()` auto-generates a condensed, LLM-friendly version.
 
 ## 📦 Built-in modules (basicModules)
@@ -80,7 +83,7 @@ registry.registerAll([htmlModule, stringModule, aiModule]);
 Modules can be functions or objects like `{ execute(inputs, ctx) { ... } }`. When `inputs` metadata is defined, `buildAIPlanPrompt()` automatically injects usage hints into the AI prompt.
 
 ## 🤖 AI integration features
-- **buildAIPlanPrompt(requirement)**—builds a prompt with registered modules, grammar summary, and execution rules, instructing the LLM to “write QPlan code only.” onError, jump, and dot-path rules are all spelled out. Call `setUserLanguage("<language>")` (any string, e.g., `"en"`, `"ko"`) beforehand to control the language of step descriptions and strings.
+- **buildAIPlanPrompt(requirement, { registry, language })**—builds a prompt with your chosen registry, grammar summary, and execution rules, instructing the LLM to “write QPlan code only.” onError, jump, and dot-path rules are all spelled out. Call `setUserLanguage("<language>")` or pass `language` to override the string locale.
 - **buildQplanSuperPrompt(registry)**—creates the LLM system prompt: QPlan philosophy, engine structure, grammar summary, and module metadata rolled into a “master guide.”
 - **buildAIGrammarSummary()**—compresses the long grammar doc into AI-friendly prose.
 
@@ -89,7 +92,7 @@ import { buildAIPlanPrompt, registry, setUserLanguage } from "qplan";
 
 registry.register(customModule);
 setUserLanguage("en"); // any desired language string, e.g., "es"
-const prompt = buildAIPlanPrompt("Create an inventory summary report");
+const prompt = buildAIPlanPrompt("Create an inventory summary report", { registry });
 const aiScript = await callLlm(prompt);
 ```
 
@@ -100,7 +103,7 @@ Scripts generated this way can run immediately via `runQplan` or be pre-validate
 - **CLI validator**—`src/tools/validateScript.ts` powers `npm run validate -- examples/12_exam_step.qplan`, inspecting files or stdin (`-`).
 - **Semantic Validator**—catches structural errors like missing jump targets or invalid onError="jump" references early.
 - **ExecutionContext debugging**—`ctx.toJSON()` dumps the full variable state for UI/log inspection.
-- **Step Events**—UI/monitoring systems can subscribe to start/end/error/retry/jump events to build Gantt views, progress meters, or audit logs.
+- **Step Events**—UI/monitoring systems can subscribe to plan start/end plus step start/end/error/retry/jump events (each receives the `StepEventRunContext`) to build Gantt views, progress meters, or audit logs.
 
 ## 🧪 Example run
 Below is a simple step-based pipeline that uses only the basic modules.

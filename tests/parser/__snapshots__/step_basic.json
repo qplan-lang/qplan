@@ -6,7 +6,7 @@
       {
         "type": "Step",
         "id": "init",
-        "desc": "변수 초기화",
+        "desc": "Initialize variables",
         "output": "initResult",
         "block": {
           "type": "Block",
@@ -70,7 +70,7 @@
       {
         "type": "Step",
         "id": "loop",
-        "desc": "합산 루프",
+        "desc": "Sum loop",
         "onError": "retry=2",
         "output": "loopResult",
         "block": {
@@ -151,7 +151,7 @@
       {
         "type": "Step",
         "id": "branch",
-        "desc": "조건 분기",
+        "desc": "Conditional branch",
         "block": {
           "type": "Block",
           "statements": [
@@ -181,7 +181,7 @@
                 "__entries": [
                   {
                     "kind": "literal",
-                    "value": "계속 진행"
+                    "value": "continue"
                   }
                 ],
                 "__suppressStore": true
@@ -194,7 +194,7 @@
       {
         "type": "Step",
         "id": "cleanup",
-        "desc": "마무리",
+        "desc": "Finalize",
         "output": "finalResult",
         "block": {
           "type": "Block",
@@ -206,7 +206,7 @@
                 "__entries": [
                   {
                     "kind": "literal",
-                    "value": "=== 마무리 ==="
+                    "value": "=== finalize ==="
                   }
                 ],
                 "__suppressStore": true

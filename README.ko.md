@@ -105,13 +105,20 @@ export const searchModule = {
 ### 6.3 Register Modules
 
 ```ts
-const registry = new ModuleRegistry();
-registry.registerAll([
+// 가장 간단한 방법: 내장 전역 registry 활용
+import { registry } from "qplan";
+registry.register(searchModule);
+registry.registerAll([filterModule, askUserModule, paymentModule]);
+
+// 커스텀 registry를 쓰고 싶다면
+const customRegistry = new ModuleRegistry(); // 기본 모듈 자동 포함
+customRegistry.registerAll([
   searchModule,
   filterModule,
   askUserModule,
   paymentModule
 ]);
+// 완전히 비어 있는 registry가 필요하면 new ModuleRegistry({ seedBasicModules: false }) 를 사용하세요.
 ```
 
 ---
@@ -122,11 +129,11 @@ QPlan은 사용자 요구사항을 기반으로
 AI에게 실행 계획을 요청하기 위한 프롬프트를 자동 생성하는 함수를 제공합니다.
 
 ```ts
-import { buildAIPlanPrompt, setUserLanguage } from "qplan";
+import { buildAIPlanPrompt, registry, setUserLanguage } from "qplan";
 
 setUserLanguage("ko"); // 임의의 문자열(예: "en", "ja") 가능
 const requirement = "곰돌이가 그려진 흰색 티셔츠를 구매해줘";
-const prompt = buildAIPlanPrompt(requirement);
+const prompt = buildAIPlanPrompt(requirement, { registry });
 
 const aiScript = await callLLM(prompt);   // LLM을 호출하는 귀하의 코드
 ```
@@ -137,16 +144,29 @@ const aiScript = await callLLM(prompt);   // LLM을 호출하는 귀하의 코�
 
 ```ts
 const ctx = await runQplan(aiScript, {
+  registry,                       // 필요 시 커스텀 registry 주입
+  env: { userId: "u-123" },      // 실행 컨텍스트 (ctx.getEnv() 로 접근)
+  metadata: { sessionId: "s-456" },
   stepEvents: {
-    async onStepStart(info) { console.log("start:", info.stepId); },// step의 시작시
-    async onStepEnd(info, result) { console.log("done:", info.stepId, result); },// step의 종료시
-    async onStepError(info, error) { console.error("error:", info.stepId, error); }// 에러시
-    async onStepRetry(info, attempt, error) {}, // 재시도
-    async onStepJump(info, targetStepId) {},  // 다른 스텝으로 이동시
+    async onPlanStart(plan, context) {
+      console.log("plan start", plan.runId, plan.totalSteps, context?.env);
+    },
+    async onStepStart(info, context) {
+      console.log("start:", info.stepId, info.path, context?.metadata);
+    },
+    async onStepEnd(info, result) { console.log("done:", info.stepId, result); },
+    async onStepError(info, error) { console.error("error:", info.stepId, error); },
+    async onStepRetry(info, attempt, error) {
+      console.warn("retry:", info.stepId, "attempt", attempt, error.message);
+    },
+    async onStepJump(info, targetStepId) {
+      console.log("jump:", info.stepId, "→", targetStepId);
+    },
+    async onPlanEnd(plan) { console.log("plan end", plan.runId); },
   }
 });
 ```
-stepEvents를 이용해 UI/CLI/로그와 연동해 진행률을 표시하거나, jump/retry/error 이벤트를 받을 수 있습니다.
+stepEvents를 이용해 UI/CLI/로그와 연동해 진행률을 표시하거나, jump/retry/error 이벤트를 받을 수 있습니다. 각 이벤트는 실행 컨텍스트(`env`, `metadata`, `ctx`, `registry`)를 함께 전달하므로 별도 WeakMap 없이 사용자/세션 정보를 연결할 수 있습니다. `onStepRetry`, `onStepJump` 등의 기존 훅도 그대로 제공되며 동일한 `(info, ...args, context)` 형태로 호출됩니다.
 
 ---
 
@@ -185,7 +205,9 @@ step id="checkout" desc="결제" {
 ### 8.2 ModuleRegistry
 
 - 등록된 모듈 목록을 관리합니다.  
-- `registry.list()` 를 통해 AI에게 제공할 메타데이터를 얻습니다.
+- `registry.list()` 를 통해 AI에게 제공할 메타데이터를 얻으며, `buildAIPlanPrompt(requirement, { registry })`, `runQplan(script, { registry })` 로 원하는 모듈 세트를 즉시 주입할 수 있습니다.  
+- 기본적으로 `new ModuleRegistry()` 는 기본 모듈(basicModules)을 자동 등록합니다. 완전히 비어 있는 레지스트리가 필요하면 `new ModuleRegistry({ seedBasicModules: false })` 를 사용하거나, `seedModules` 옵션으로 초기 모듈 집합을 지정할 수 있습니다.
+- `listRegisteredModules()` API로 UI/프롬프트에서 활용할 전체 메타데이터를 추출할 수 있습니다.
 
 ### 8.3 Step System
 
@@ -197,6 +219,7 @@ step id="checkout" desc="결제" {
 
 - 실행 중 생성된 변수들이 저장되는 컨텍스트입니다.  
 - 각 Action/Step의 결과가 ctx에 저장되고, 이후 Step에서 재사용할 수 있습니다.
+- `ctx.getEnv()`, `ctx.getMetadata()` 로 runQplan 옵션에 전달한 사용자/세션 정보를 모듈에서 활용할 수 있습니다.
 - ctx 변수는 `stats.total` 처럼 점(.) 표기(dot-path)로 하위 필드를 읽을 수 있으므로, Step 결과나 JSON 객체를 그대로 저장해 두고 필요한 속성만 꺼내 쓸 수 있습니다.
 
 ### 8.5 Flow Control
@@ -216,16 +239,22 @@ step id="checkout" desc="결제" {
 QPlan 스크립트를 실행하는 메인 함수입니다.
 
 - `script`: QPlan 코드 문자열  
-- `options.stepEvents`: Step 단위 이벤트 핸들러
+- `options.registry`: 사용할 ModuleRegistry (기본값은 내장 registry)
+- `options.env / options.metadata`: 실행 컨텍스트 정보. `ctx.getEnv()`, `ctx.getMetadata()` 로 액션 모듈에서 접근 가능
+- `options.stepEvents`: Plan/Step 이벤트 핸들러 (onPlanStart/End + onStepStart/End/Error/Retry/Jump)
+- `options.runId`: 기본값은 자동 생성. 자체 추적 ID를 써야 하면 지정 가능
 
 반환값: `ExecutionContext` (ctx)
 
 ---
 
-### 9.2 `buildAIPlanPrompt(requirement: string)`
+### 9.2 `buildAIPlanPrompt(requirement: string, options?)`
 
 사용자 요구사항을 입력하면,  
 AI가 QPlan 실행 계획을 생성할 수 있도록 돕는 프롬프트 문자열을 반환합니다.
+
+- `options.registry`: 사용할 ModuleRegistry (기본값은 내장 registry)
+- `options.language`: 프롬프트에서 사용할 문자열 언어(미지정 시 `setUserLanguage()` 로 설정한 값)
 
 포함 내용:
 
@@ -242,6 +271,7 @@ ModuleRegistry는 ActionModule 메타데이터를 보관하고, AI 및 실행기
 - `register(module)` : 단일 모듈 등록
 - `registerAll([m1, m2])` : 여러 모듈을 한 번에 등록
 - `list()` : 등록된 모듈 목록을 AI-friendly 형태로 반환
+- `listRegisteredModules(registry?)` 유틸을 통해 현재 registry의 메타데이터를 UI/프롬프트에 재사용할 수 있음
 
 ```ts
 registry.register(searchModule);
@@ -309,3 +339,6 @@ MIT
 
 Issue 및 PR는 언제든지 환영합니다.  
 QPlan을 활용한 사례, 추가 모듈, 개선 제안 등을 공유해 주세요.
+
+## 13. Browser 번들
+Vite/Rollup/Webpack 등 번들러는 `package.json` 의 `"browser"` 필드를 따라가므로, 브라우저 환경에서는 자동으로 `dist/modules/basic/file.browser.js` (Node 전용 `fs/promises`, `path` 의존성이 없는 스텁)으로 대체된다. 서버/CLI에서는 기존 `file` 모듈이 그대로 제공된다.

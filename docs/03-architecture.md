@@ -21,10 +21,10 @@ ExecutionContext (variables, futures, step outputs)
 | Tokenizer | Breaks scripts into tokens; recognizes strings, numbers, JSON, identifiers, keywords. | `src/core/tokenizer.ts` |
 | Parser | Converts tokens into AST nodes (Action, If, While, Each, Parallel, Step, Jump, etc.), verifying all actions/control statements are inside steps and handling var/print syntax. | `src/core/parser.ts`, `src/core/ast.ts` |
 | Semantic Validator | Pre-checks duplicate step IDs, ensures onError="jump" targets and `jump to` targets exist, and returns issues. | `src/core/semanticValidator.ts` |
-| Step Resolver / Controller | Computes order/path/parent relationships for the step tree and, during execution, manages onError policies (fail/continue/retry/jump) plus step events (onStepStart/End/Error/Retry/Jump). | `src/step/stepResolver.ts`, `src/step/stepController.ts`, `src/step/stepEvents.ts` |
+| Step Resolver / Controller | Computes order/path/parent relationships for the step tree and, during execution, manages onError policies (fail/continue/retry/jump) plus plan/step events (`onPlanStart/End`, `onStepStart/End/Error/Retry/Jump`). | `src/step/stepResolver.ts`, `src/step/stepController.ts`, `src/step/stepEvents.ts` |
 | Executor | Runs the AST sequentially/parallel, handling If/While/Each/Parallel/Jump/Set/Return/Future/Join/Stop/Skip and updating the ExecutionContext. | `src/core/executor.ts` |
-| ExecutionContext | Runtime store offering ctx.set/get/has/toJSON. Supports dot-path access (`stats.total`) so sub-fields of step outputs can be reused. | `src/core/executionContext.ts` |
-| ModuleRegistry | Manages ActionModule registration/lookup/metadata exposure. The exported `registry` auto-registers basic modules. | `src/core/moduleRegistry.ts`, `src/index.ts` |
+| ExecutionContext | Runtime store offering ctx.set/get/has/toJSON plus `ctx.getEnv()` / `ctx.getMetadata()` for per-run context. Supports dot-path access (`stats.total`) so sub-fields of step outputs can be reused. | `src/core/executionContext.ts` |
+| ModuleRegistry | Manages ActionModule registration/lookup/metadata exposure. Each `ModuleRegistry` seeds the default basic modules (unless `{ seedBasicModules: false }` is passed). | `src/core/moduleRegistry.ts`, `src/index.ts` |
 | ActionModule | Function-style or `{ execute(inputs, ctx) {} }` modules. Metadata `id/description/usage/inputs` powers docs and LLM prompts. | `src/core/actionModule.ts` |
 | Prompt Builders | `buildAIPlanPrompt`, `buildQplanSuperPrompt`, `buildAIGrammarSummary` combine registered modules and grammar summaries into LLM prompts. | `src/core/buildAIPlanPrompt.ts`, `src/core/buildQplanSuperPrompt.ts`, `src/core/buildAIGrammarSummary.ts` |
 
@@ -45,7 +45,7 @@ ExecutionContext (variables, futures, step outputs)
 - **ActionModule execution** – The executor fetches a module, calls it directly if it’s a function or `mod.execute()` if it’s an object. When a future module returns `{ __future: Promise }`, only the promise is stored in ctx so join can consume it.
 
 ## 5. Prompt / AI integration
-1. **buildAIPlanPrompt(requirement)** – Bundles registered module metadata, AI-friendly grammar summary, execution rules, and user requirements into a prompt telling the LLM to “output QPlan only.”
+1. **buildAIPlanPrompt(requirement, { registry, language })** – Bundles registered module metadata, AI-friendly grammar summary, execution rules, and user requirements into a prompt telling the LLM to “output QPlan only,” using whichever registry/language you provide.
 2. **buildQplanSuperPrompt(registry)** – System-level prompt describing QPlan philosophy, architecture, modules, and grammar summary.
 3. **buildAIGrammarSummary()** – Produces a lightweight grammar synopsis versus the full `docs/02-grammar.md`, reducing LLM input size.
 
@@ -57,11 +57,11 @@ ExecutionContext (variables, futures, step outputs)
 ## 7. Tooling & validation
 - **validateQplanScript(script)** – Returns tokenize/parse/semantic-validation results; `{ ok: true, ast }` on success, `{ ok: false, error, line, issues? }` on failure.
 - **CLI** – `npm run validate -- <file>` (backed by `src/tools/validateScript.ts`) checks files or stdin for CI/editor integrations.
-- **Step events** – `runQplan(script, { stepEvents })` lets observers mirror step progress into UIs/logs/monitoring.
+- **Step events** – `runQplan(script, { env, metadata, stepEvents })` lets observers mirror plan start/end plus step progress into UIs/logs/monitoring while sharing run context with callbacks.
 
 ## 8. Extension & integration points
 1. **Add modules** – Implement an ActionModule and call `registry.register(customModule)`. With metadata filled in, prompt builders automatically include usage info.
-2. **Custom executor hooks** – Use `stepEvents` to capture start/end/error events and feed Gantt charts, progress, or audit logs.
+2. **Custom executor hooks** – Use `stepEvents` to capture plan+step start/end/error/retry/jump events (receiving `StepEventRunContext`) and feed Gantt charts, progress, or audit logs.
 3. **LLM integration** – Generate prompts via `buildAIPlanPrompt` (optionally calling `setUserLanguage("<language>")` with any string beforehand) and execute with `runQplan` to realize “AI thinks, QPlan executes.”
 4. **Further docs** – See `docs/02-grammar.md`, `docs/06-executor.md`, `docs/10-step-system.md`, etc., for deeper extension strategies.
 

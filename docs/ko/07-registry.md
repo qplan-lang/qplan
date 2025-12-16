@@ -10,7 +10,7 @@
 | `get(id)` | 실행 시 Executor가 모듈을 조회할 때 사용. 없으면 `undefined`. |
 | `list()` | AI 프롬프트/문서화를 위한 메타데이터 배열을 반환. `{ id, description, usage, inputs }` 구조. |
 
-기본적으로 `src/index.ts` 에서 `export const registry = new ModuleRegistry();` 로 생성한 뒤 `registry.registerAll(basicModules)` 를 호출해 기본 모듈을 등록한다.
+`new ModuleRegistry()` 를 호출하면 기본 모듈(basicModules)이 자동으로 등록되므로, 커스텀 인스턴스를 만들어도 동일한 기본 기능을 바로 사용할 수 있다. 완전히 비어 있는 registry가 필요하면 `new ModuleRegistry({ seedBasicModules: false })` 를 사용하거나, `seedModules` 옵션에 초기 모듈 배열을 전달하면 된다.
 
 ## 2. 등록 예시
 ```ts
@@ -25,7 +25,7 @@ registry.registerAll([htmlModule, aiModule]);
 - id가 없는 모듈을 등록하면 경고(`AI cannot refer to this module`)가 출력되고 registry에는 포함되지 않는다. 실행 목적이라도 id를 부여하는 것이 안전하다.
 
 ## 3. 메타데이터와 AI 프롬프트
-`registry.list()` 는 현재 등록된 모듈 정보를 반환하며 `buildAIPlanPrompt()` / `buildQplanSuperPrompt()` 가 이 데이터를 사용해 LLM에게 모듈 사용법을 전달한다.
+`registry.list()` 는 현재 등록된 모듈 정보를 반환하며 `buildAIPlanPrompt(requirement, { registry })`, `buildQplanSuperPrompt(customRegistry)`, `listRegisteredModules(registry)` 등이 그대로 활용해 LLM에게 모듈 사용법을 전달한다.
 
 ```ts
 const modules = registry.list();
@@ -40,7 +40,7 @@ const modules = registry.list();
 메타데이터를 잘 작성할수록 AI가 올바른 QPlan 명령을 생성할 확률이 높아진다. 특히 `description` 과 `usage` 는 Prompt Builder가 그대로 프롬프트에 삽입한다.
 
 ## 4. 실행 시 ModuleRegistry 활용 흐름
-1. `runQplan(script)` 를 호출하면 Parser가 AST를 만든 뒤 Executor가 Step을 실행한다.
+1. `runQplan(script, { registry })` 를 호출하면 Parser가 AST를 만든 뒤 Executor가 전달된 registry(없으면 기본 registry)로 Step을 실행한다.
 2. Action을 만날 때마다 Executor는 `registry.get(moduleId)` 로 모듈을 찾는다.
 3. 모듈이 없으면 즉시 오류를 던져 Step onError 정책에 따라 처리된다.
 4. 모듈이 반환한 결과는 ExecutionContext에 저장되고, 이후 Action에서 동일 변수명을 참조하면 ctx 값을 자동으로 사용한다.
@@ -48,7 +48,7 @@ const modules = registry.list();
 ## 5. 레지스트리 확장 가이드
 - **커스텀 모듈 추가**: ActionModule을 작성한 뒤 `registry.register(customModule)` 을 호출한다.
 - **테스트 / 샌드박스용 모듈**: 임시 모듈을 넣을 때도 id를 부여해 두면 AI/문서화에 노출시킬 수 있다. id가 없으면 registry에 등록되지 않는다.
-- **모듈 해제**: 현재 Registry는 제거 기능을 제공하지 않는다. 필요하면 새로운 ModuleRegistry 인스턴스를 생성해 원하는 모듈만 등록한 뒤 `runQplan(script, { registry: customRegistry })` 패턴을 구현할 수 있다 (커스텀 엔트리 포인트 필요).
+- **복수 registry 사용**: 새로운 `ModuleRegistry` 인스턴스를 만들면 기본 모듈이 자동 포함되며, 추가 모듈만 등록해서 `runQplan(script, { registry: customRegistry })`, `buildAIPlanPrompt(requirement, { registry: customRegistry })` 에 넘기면 된다. 완전히 빈 registry가 필요하면 `new ModuleRegistry({ seedBasicModules: false })` 를 사용한다.
 - **metadata 업데이트**: Module 객체의 `description/usage/inputs` 를 수정하면 `registry.list()` 반환값에도 즉시 반영된다.
 
 ## 6. 모듈 관리 베스트 프랙티스
@@ -57,4 +57,4 @@ const modules = registry.list();
 - `usage` 예시는 실제 QPlan 코드를 그대로 적어 두면 Prompt Builder가 유용한 힌트를 제공할 수 있다.
 - registry 상태를 로그로 확인하고 싶다면 `console.log(registry.list())` 를 활용한다.
 
-이 문서를 통해 ModuleRegistry가 QPlan 모듈 생태계의 관문이며, LLM 통합/실행 시 어떤 방식으로 사용되는지 이해할 수 있다.
+이 문서를 통해 ModuleRegistry가 QPlan 모듈 생태계의 관문이며, 이제는 런타임에서 registry 주입을 공식 지원해 LLM 통합/실행 양쪽에서 더 쉽게 재사용할 수 있음을 이해할 수 있다.

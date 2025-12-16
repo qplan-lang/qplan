@@ -36,10 +36,14 @@ export interface StepResolution {
 }
 
 export interface StepEventInfo {
+  runId?: string;
   stepId?: string;
   desc?: string;
   type?: string;
   order: number;
   path: string[];
+  depth: number;
   parentStepId?: string;
+  errorPolicy: StepErrorPolicy;
+  outputVar?: string;
 }

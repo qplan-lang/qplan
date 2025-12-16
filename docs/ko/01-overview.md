@@ -18,7 +18,7 @@ QPlan은 **AI가 설계하고 사람이 검증할 수 있는 Step 기반 워크�
 1. **Tokenizer & Parser** — `src/core/tokenizer.ts`, `parser.ts` 구성. 스크립트를 토큰화 후 AST(Action/If/Parallel/Each/Step/JUMP 등)로 변환한다. Parser가 Step 내부 여부를 엄격히 검사하므로 Action/제어문은 Step 밖에서 사용할 수 없다.
 2. **Semantic Validator & Step Resolver** — `semanticValidator.ts` 는 jump/onError 대상 Step을 검증하고 경고 리스트를 반환한다. `stepResolver.ts` 는 Step 트리를 분석해 order/path/parent 관계를 만든다.
 3. **Executor & StepController** — `executor.ts` 는 AST를 순차/병렬 실행하고, Future/Join/Parallel/Each/While/Jump/Return/Set 을 모두 다룬다. `stepController.ts` 는 Step의 onError(fail/continue/retry/jump) 정책, retry 루프, Step 이벤트 방출을 담당한다.
-4. **ExecutionContext(ctx)** — `executionContext.ts` 는 `set/get/has/toJSON` 을 제공하는 런타임 저장소다. `stats.total` 처럼 dot-path 접근을 지원해 Step 결과 객체의 하위 필드를 즉시 재사용할 수 있다.
+4. **ExecutionContext(ctx)** — `executionContext.ts` 는 `set/get/has/toJSON` 을 제공하는 런타임 저장소다. `stats.total` 처럼 dot-path 접근을 지원하며, 실행 옵션으로 전달한 `env`, `metadata` 를 `ctx.getEnv()`, `ctx.getMetadata()` 로 읽어 모듈에서 사용자/세션 정보를 활용할 수 있다.
 5. **ModuleRegistry & ActionModule** — `moduleRegistry.ts` 는 모듈 등록/조회/메타데이터 추출을 관리한다. ActionModule 은 함수형이나 `execute()` 메서드를 가진 객체형 모두 지원하며 `id/description/usage/inputs` 메타데이터를 포함할 수 있다. `src/index.ts` 에서 `registry` 를 export 하며 `basicModules` 를 자동 등록한다.
 6. **Prompt Builders** — `buildAIPlanPrompt`, `buildQplanSuperPrompt`, `buildAIGrammarSummary` 가 registry에 등록된 모듈과 문법 요약을 묶어 LLM에 전달할 시스템/사용자 프롬프트를 동적으로 만들어 준다.
 
@@ -28,18 +28,21 @@ QPlan은 **AI가 설계하고 사람이 검증할 수 있는 Step 기반 워크�
 - Step 내부에서 `return key=value ...` 를 사용하면 Step 결과를 명시적으로 구성하고, 없으면 마지막 Action 결과가 Step 결과가 된다.
 - `jump to="stepId"` 문으로 Step 간 이동이 가능하다. Jump 대상은 Step ID여야 하며, semantic validator가 존재 여부를 검사한다.
 - Step 은 중첩(Sub-step) 가능하며, Step 트리는 `order`(실행 순번)와 `path`(예: `1.2.3`)가 자동 부여된다.
-- `runQplan` 호출 시 `stepEvents` 훅으로 Step 실행 상태를 관찰할 수 있다.
+- `runQplan(script, { registry, env, metadata, stepEvents })` 형태로 registry 주입 및 실행 컨텍스트를 전달하고, Step/Plan 이벤트를 관찰할 수 있다.
 
 ```ts
-import { runQplan } from "qplan";
+import { runQplan, registry } from "qplan";
 
 await runQplan(script, {
+  registry,
+  env: { userId: "u-123" },
+  metadata: { sessionId: "s-456" },
   stepEvents: {
-    onStepStart(info) { console.log("▶", info.order, info.stepId, info.desc); },
+    onPlanStart(plan) { console.log("플랜 시작", plan.runId, plan.totalSteps); },
+    onStepStart(info, context) { console.log("▶", info.order, info.stepId, context?.env); },
     onStepEnd(info, result) { console.log("✓", info.stepId, result); },
     onStepError(info, err) { console.error("✗", info.stepId, err.message); },
-    onStepRetry(info, attempt) { console.warn("retry", info.stepId, attempt); },
-    onStepJump(info, target) { console.log("jump", info.stepId, "→", target); }
+    onPlanEnd(plan) { console.log("플랜 종료", plan.runId); }
   }
 });
 ```
@@ -51,7 +54,7 @@ await runQplan(script, {
 - **Future & Join** — `future` 모듈은 Promise를 `__future` 래퍼에 담아 ctx에 저장하고, `join futures="f1,f2" -> list` 가 여러 Future를 합친다.
 - **Set & Return** — `set total = (total + delta) * 0.5` 처럼 산술 표현식을 기존 변수에 적용하고, `return key=value ...` 로 Step 출력 객체를 직접 구성한다.
 - **Stop / Skip** — Each, While 루프 안에서 탈출/건너뛰기를 제어한다.
-- **ExecutionContext** — `ctx.get("order.summary.status")` 처럼 dot-path로 하위 값을 읽을 수 있고, `ctx.toJSON()` 으로 전체 상태를 덤프할 수 있다.
+- **ExecutionContext** — `ctx.get("order.summary.status")` 처럼 dot-path로 하위 값을 읽을 수 있고, `ctx.getEnv()`, `ctx.getMetadata()` 로 실행 시 전달한 컨텍스트에 접근할 수 있으며, `ctx.toJSON()` 으로 전체 상태를 덤프할 수 있다.
 - **문법 전체**는 `docs/02-grammar.md` 를 참고하면 된다. `buildAIGrammarSummary()` 는 해당 문법을 LLM용으로 요약한 버전을 자동 생성한다.
 
 ## 📦 기본 제공 모듈 (basicModules)
@@ -80,7 +83,7 @@ registry.registerAll([htmlModule, stringModule, aiModule]);
 모듈은 함수 혹은 `{ execute(inputs, ctx) { ... } }` 형태의 객체로 작성할 수 있으며, `inputs` 메타데이터를 채우면 `buildAIPlanPrompt()` 가 자동으로 AI 프롬프트에 사용 방법을 삽입한다.
 
 ## 🤖 AI 통합 기능
-- **buildAIPlanPrompt(requirement)** — 현재 registry에 등록된 모듈 목록 + 문법 요약 + 실행 규칙을 포함한 프롬프트를 생성해 LLM에게 “QPlan 코드만 작성하라”고 지시한다. onError, jump, dot-path 규칙 등이 모두 명시된다. 필요 시 `setUserLanguage("<언어 문자열>")` 을 먼저 호출하여 문자열 언어를 제어할 수 있다.
+- **buildAIPlanPrompt(requirement, { registry, language })** — 선택한 registry의 모듈 + 문법 요약 + 실행 규칙을 포함한 프롬프트를 생성해 LLM에게 “QPlan 코드만 작성하라”고 지시한다. onError, jump, dot-path 규칙 등이 모두 명시된다. `setUserLanguage("<언어>")` 또는 `language` 옵션으로 문자열 언어를 제어할 수 있다.
 - **buildQplanSuperPrompt(registry)** — LLM 시스템 프롬프트 버전. QPlan 철학, 엔진 구조, Grammar 요약, 모듈 메타데이터가 포함된 “최상위 가이드”를 만들어 준다.
 - **buildAIGrammarSummary()** — 긴 grammar 문서를 AI 친화 문장으로 압축한다.
 
@@ -89,7 +92,7 @@ import { buildAIPlanPrompt, registry, setUserLanguage } from "qplan";
 
 registry.register(customModule);
 setUserLanguage("ko"); // 임의의 언어 문자열 사용 가능
-const prompt = buildAIPlanPrompt("재고 집계 보고서를 만들어줘");
+const prompt = buildAIPlanPrompt("재고 집계 보고서를 만들어줘", { registry });
 const aiScript = await callLlm(prompt);
 ```
 
@@ -100,7 +103,7 @@ const aiScript = await callLlm(prompt);
 - **CLI 검증기** — `src/tools/validateScript.ts` 를 통해 `npm run validate -- examples/12_exam_step.qplan` 처럼 파일 또는 stdin(`-`)을 검사할 수 있다.
 - **Semantic Validator** — jump to 대상 Step 누락, onError="jump" 대상 검증 등 구조적 오류를 미리 탐지한다.
 - **ExecutionContext 디버깅** — `ctx.toJSON()` 으로 현재 변수 상태를 전부 출력해 UI/로그에서 쉽게 확인할 수 있다.
-- **Step Events** — UI/모니터링 시스템이 Step 시작/종료/오류/재시도/점프 이벤트를 구독해 Gantt, 진행률, 감사 로그 등을 구성할 수 있다.
+- **Step Events** — UI/모니터링 시스템이 플랜 시작/종료 + Step 시작/종료/오류/재시도/점프 이벤트를 구독할 수 있으며, 각 이벤트는 `StepEventRunContext` 를 함께 받아 env/metadata 를 활용한 대시보드를 구성할 수 있다.
 
 ## 🧪 실행 예시
 아래는 기본 모듈만으로 구성한 간단한 Step 기반 파이프라인이다.
