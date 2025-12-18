@@ -65,11 +65,13 @@ export const searchModule = {
   id: "search",
   description: "Search products",
   inputs: ["keyword"],
-  async execute({ keyword }) {
-    return await searchDB(keyword);
+  async execute({ keyword }, ctx) {
+    const locale = ctx.get("userLocale"); // ctx/env metadata passed via runQplan options
+    return await searchDB(keyword, { locale });
   }
 };
 ```
+String arguments that match a ctx variable name (e.g., `keyword=queryResult.value`) are automatically resolved to the stored value, and every module receives the same `ctx` instance so it can call `ctx.has/ctx.get`. See [`docs/08-writing-modules.md`](docs/08-writing-modules.md) for the full module guide.
 
 ### 6.3 Register Modules
 

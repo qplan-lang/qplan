@@ -94,11 +94,14 @@ export const searchModule = {
   id: "search",
   description: "상품 검색",
   inputs: ["keyword"],
-  async execute({ keyword }) {
-    return await searchDB(keyword);
+  async execute({ keyword }, ctx) {
+    const locale = ctx.get("userLocale"); // runQplan 옵션으로 전달된 ctx/env 메타데이터
+    return await searchDB(keyword, { locale });
   }
 };
 ```
+
+문자열 인자가 ctx 변수 이름과 일치하면(`keyword=queryResult.value` 등) 실행기가 자동으로 해당 값을 주입하며, 모든 모듈은 동일한 `ctx` 인스턴스를 받아 `ctx.has/ctx.get` 로 값을 조회할 수 있습니다. 자세한 모듈 작성 가이드는 [`docs/ko/08-writing-modules.md`](docs/ko/08-writing-modules.md)를 참고하세요.
 
 ---
 
