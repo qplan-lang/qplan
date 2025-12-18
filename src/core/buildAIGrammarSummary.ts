@@ -29,7 +29,7 @@ QPlan Language Core Grammar (AI-Friendly Summary)
   }
 
 확장 형태:
-  step id="fetch" desc="API 호출" type="task" onError="retry=3" -> result {
+  step id="fetch" desc="API 호출" type="task" onError="retry=3" [-> resultVar] {
      ... action ...
   }
 
@@ -38,8 +38,11 @@ QPlan Language Core Grammar (AI-Friendly Summary)
   - desc: 사람이 이해하기 위한 설명
   - type: 임의 태그(task/group/loop 등)
   - onError: fail(기본) / continue / retry=<N> / jump="<stepId>"
-  - -> outputVar : Step 전체 결과를 ctx 변수에 저장 (기본은 마지막 action 결과)
+  - Step 결과는 자동으로 step ID 에 저장되며, 기본값은 마지막 action 결과
+  - (선택) -> resultVar : Step 결과 namespace를 step ID 대신 다른 이름으로 저장
+  - namespace를 변경해도 동일 객체가 원래 Step ID에도 저장되므로 두 이름으로 모두 참조 가능
   - (선택) return key=value ... : Step 결과를 명시적으로 구성하여 반환
+  - Identifiers (모듈/변수/Action output/return key 등)는 유니코드 문자/숫자/언더스코어를 사용할 수 있으며, 첫 글자는 문자 또는 언더스코어여야 한다
   - step 내부에 다시 step 을 중첩(Sub-step)할 수 있으며, 각 sub-step도 자체 onError/jump 정책을 가진다
 
 Jump 문법:

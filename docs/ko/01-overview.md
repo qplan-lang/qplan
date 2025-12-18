@@ -24,7 +24,7 @@ QPlan은 **AI가 설계하고 사람이 검증할 수 있는 Step 기반 워크�
 
 ## 🪜 Step System & 실행 규칙
 - **Action은 항상 Step 내부**에서만 실행된다. 최상위 루트에는 Step 블록만 존재하며, Step 안에서 Action/If/While/Each/Parallel/Jump 등을 사용할 수 있다.
-- `step id="..." desc="..." type="..." onError="..." -> result { ... }` 형태를 갖는다. `type` 필드는 UI 태깅, `onError` 는 fail(기본)/continue/retry=N/jump="stepId" 를 지원한다.
+- `step id="..." desc="..." type="..." onError="..." { ... }` 형태를 갖는다. `type` 필드는 UI 태깅, `onError` 는 fail(기본)/continue/retry=N/jump="stepId" 를 지원하며 Step 결과는 항상 Step ID에 저장된다.
 - Step 내부에서 `return key=value ...` 를 사용하면 Step 결과를 명시적으로 구성하고, 없으면 마지막 Action 결과가 Step 결과가 된다.
 - `jump to="stepId"` 문으로 Step 간 이동이 가능하다. Jump 대상은 Step ID여야 하며, semantic validator가 존재 여부를 검사한다.
 - Step 은 중첩(Sub-step) 가능하며, Step 트리는 `order`(실행 순번)와 `path`(예: `1.2.3`)가 자동 부여된다.
@@ -109,24 +109,24 @@ const aiScript = await callLlm(prompt);
 아래는 기본 모듈만으로 구성한 간단한 Step 기반 파이프라인이다.
 
 ```
-step id="load" desc="데이터 로드" -> dataset {
+step id="load" desc="데이터 로드" {
   file read path="./data/raw.json" -> rawTxt
   json parse data=rawTxt -> parsed
   return list=parsed
 }
 
-step id="aggregate" desc="누적/평균 계산" -> stats {
+step id="aggregate" desc="누적/평균 계산" {
   var 0 -> total
-  each value in dataset.list {
+  each value in load.list {
     set total = total + value
   }
-  math avg arr=dataset.list -> average
+  math avg arr=load.list -> average
   return total=total average=average
 }
 
 step id="report" desc="결과 출력" onError="continue" {
-  print message="평균" value=stats.average
-  echo summary="done" total=stats.total avg=stats.average -> final
+  print message="평균" value=aggregate.average
+  echo summary="done" total=aggregate.total avg=aggregate.average -> final
   return result=final
 }
 ```

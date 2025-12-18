@@ -47,7 +47,7 @@ step id="prepare" desc="데이터 준비" {
 - desc: 사람/AI가 이해하기 위한 설명  
 - type: (선택) task, group, loop 등  
 - onError: error policy  
-- -> variable: step 전체의 결과 저장 (선택, 기본은 마지막 Action 결과)
+- -> variable: step 결과 namespace를 step ID 대신 지정 (선택, 기본은 step ID)
 - `return key=value ...` 문으로 Step 결과를 명시적으로 구성할 수 있음
 
 ---
@@ -102,21 +102,26 @@ step id="fetch" desc="API 호출" onError="retry=3" {
 
 # 7. Step Output / Return 규칙
 
-Step 전체의 결과를 변수로 반환하려면 `-> result` 를 사용하고, 필요하면 `return` 으로 원하는 값을 구성한다:
+Step 전체의 결과는 기본적으로 Step ID 로 저장되며, 필요하면 `-> namespace` 로 다른 이름을 지정하거나 `return` 으로 원하는 값을 구성한다:
 
 ```
-step id="load" desc="데이터 로드" -> result {
+step id="load" desc="데이터 로드" {
     file op="read" path="./a.txt" -> raw
     # return 생략 시 마지막 Action 결과(raw)가 저장됨
 }
 
-step id="summary" desc="명시적 반환" -> summary {
+step id="summary" desc="명시적 반환" {
     ...
     return data=raw count=rawCount
 }
+
+step id="enrich" -> enrichedCtx {
+    http url="https://..." -> body
+    return payload=body
+}
 ```
 
-Step 결과는 ctx 변수로 저장되므로 이후 Step에서는 `summary.count`, `result.data` 처럼 점(dot) 표기를 이용해 필요한 필드를 직접 참조할 수 있다.
+Step 결과는 `ctx[runId][namespace]` 로 저장되므로 이후 Step에서는 `summary.count`, `load.data`, `enrichedCtx.payload` 처럼 namespace 기반 dot-path 로 필요한 필드를 참조한다.
 
 ---
 

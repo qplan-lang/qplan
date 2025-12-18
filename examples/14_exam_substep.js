@@ -4,20 +4,20 @@ import { runQplan } from "../dist/index.js";
  * Example: nesting sub-steps inside a parent step
  */
 const script = `
-step id="pipeline" desc="Root pipeline" -> pipelineResult {
+step id="pipeline" desc="Root pipeline" {
   var {"numbers": []} -> prepareResult
   var {"sum": 0} -> aggregateResult
   var {"message": "pending"} -> reportResult
   var {"status": "pending"} -> finalizeResult
   var 0 -> total
 
-  step id="prepare" desc="Prepare data" -> prepareResult {
+  step id="prepare" desc="Prepare data" {
     var [1,2] -> numbers
     set total = 0
     return numbers=numbers
   }
 
-  step id="aggregate" desc="Sum aggregation" -> aggregateResult {
+  step id="aggregate" desc="Sum aggregation" {
     each n in numbers {
       math add a=total b=n -> total
       if total > 6 {
@@ -38,25 +38,25 @@ step id="pipeline" desc="Root pipeline" -> pipelineResult {
     }
   }
 
-  step id="report" desc="Write report" -> reportResult {
+  step id="report" desc="Write report" {
     print "Total sum:" total
     return message="done"
   }
 
-  step id="finalize" desc="Finalize" -> finalizeResult {
+  step id="finalize" desc="Finalize" {
     print "Final total:" total
     math add a=total b=0 -> finalTotal
     return status="ok" value=finalTotal
   }
 
-  return prepared=prepareResult aggregate=aggregateResult report=reportResult finalize=finalizeResult
+  return prepared=prepare aggregate=aggregate report=report finalize=finalize
 }
 
 step id="final" desc="Print results" {
-  print "pipeline:" pipelineResult
-  print "prepare:" prepareResult
-  print "aggregate:" aggregateResult
-  print "report:" reportResult
+  print "pipeline:" pipeline
+  print "prepare:" pipeline.prepared
+  print "aggregate:" pipeline.aggregate
+  print "report:" pipeline.report
 }
 `;
 

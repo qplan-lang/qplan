@@ -87,14 +87,13 @@ export async function runQplan(script: string, options: RunQplanOptions = {}) {
   const parser = new Parser(tokens);
   const ast = parser.parse();
 
-  // 3) Execute
+  const runId = options.runId ?? `run-${Date.now()}-${++runCounter}`;
   const execRegistry = options.registry ?? registry;
   const ctx = new ExecutionContext({
     env: options.env,
     metadata: options.metadata,
+    runId,
   });
-
-  const runId = options.runId ?? `run-${Date.now()}-${++runCounter}`;
   const executor = new Executor(execRegistry, options.stepEvents);
   const runContext: StepEventRunContext = {
     runId,

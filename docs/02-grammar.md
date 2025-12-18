@@ -13,7 +13,7 @@ Scripts flow through Tokenizer → Parser → AST → Executor, and values store
 
 Minimal example:
 ```
-step id="demo" desc="Simple sum" -> result {
+step id="demo" desc="Simple sum" {
   var [1,2,3] -> items
   math op="sum" arr=items -> total
   return total=total
@@ -28,7 +28,7 @@ step id="demo" desc="Simple sum" -> result {
 - A root script may list **step statements only**. Actions/If/Set outside a step cause a parser error.
 - Step form:
   ```
-  step ["desc"] [id="stepId"] [desc="Description"] [type="task"] [onError="retry=3"] -> output {
+  step ["desc"] id="stepId" [desc="Description"] [type="task"] [onError="retry=3"] {
     ... (Action / If / While / Each / Parallel / Set / Return / Jump / Step ...)
   }
   ```
@@ -38,16 +38,24 @@ step id="demo" desc="Simple sum" -> result {
   - `desc`: human-readable description; if omitted, raw text after `step` may be used.
   - `type`: arbitrary tag (task/group/loop, etc.).
   - `onError`: `fail` (default) / `continue` / `retry=<N>` / `jump="<stepId>"`.
-- Adding `-> output` stores the step result in the ctx; otherwise, the last action result becomes the step result.
+- Step IDs must contain Unicode letters or ASCII underscores, start with a letter/underscore, and may include digits after the first character.
+- Step results are automatically stored under `ctx[runId][namespace]`, where `namespace` defaults to the step ID (override with `-> resultVar`). Other steps reuse them via `namespace.field`, and the engine also mirrors the same object under the original step ID so both names stay valid.
 - Steps can contain nested steps to form a sub-step tree.
+- Identifiers (module names, action outputs, variables, return keys, `set` targets, etc.) may include any Unicode letter/digit plus `_`, but they must start with a letter or underscore.
 
 ## 2.2 Return statement
 - Written inside a step block as `return key=expression ...`.
-- Requires at least one `key=value` pair; multiple pairs are combined into an object result.
-- If omitted, the **final action result** in the step becomes the step result.
+- `=` is optional: `return gear accounts total=sum` (or `return gear, accounts, total=sum`) expands to
+  `return gear=gear accounts=accounts total=sum`. Mixed forms are allowed.
+- Entries may be separated by spaces or commas.
+- Requires at least one value; multiple entries are combined into an object result.
+- If omitted, the runtime still produces an object exposing every action output in the step, so
+  later steps can reference `namespace.outputName`. The final action result is also stored internally.
+- Whatever value is produced becomes the payload stored at `ctx[runId][namespace]` (namespace = step ID unless overridden via `-> resultVar`). When overridden, the same payload is also placed under the step ID for convenience.
 
 ```
 return total=total average=avg
+return gear, accounts, total=sum   # shorthand
 ```
 
 ## 2.3 Action syntax
@@ -269,14 +277,14 @@ JsonArray       = "[" , [ JsonValue , { "," , JsonValue } ] , "]" ;
 # 5. Example (grammar in practice)
 
 ```
-step id="load" desc="Read file" -> dataset {
+step id="load" desc="Read file" {
   file read path="./nums.txt" -> raw
   json parse data=raw -> parsed
   return list=parsed
 }
 
-step id="stats" desc="Compute average" -> avgInfo {
-  math op="avg" arr=dataset.list -> avg
+step id="stats" desc="Compute average" {
+  math op="avg" arr=load.list -> avg
   if avg > 50 {
     echo msg="high" -> note
   } else {

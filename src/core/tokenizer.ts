@@ -53,9 +53,11 @@ export function tokenize(input: string): Token[] {
   let i = 0;
   let line = 1;
 
-  const isAlpha = (c: string) => /[a-zA-Z_]/.test(c);
+  const RE_ALPHA = /[\p{L}_]/u;
+  const RE_ALPHA_NUM = /[\p{L}\p{N}_]/u;
+  const isAlpha = (c: string) => RE_ALPHA.test(c);
   const isNum = (c: string) => /[0-9]/.test(c);
-  const isAlphaNum = (c: string) => /[a-zA-Z0-9_]/.test(c);
+  const isAlphaNum = (c: string) => RE_ALPHA_NUM.test(c);
 
   while (i < input.length) {
     let c = input[i];

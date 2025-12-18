@@ -7,7 +7,6 @@
         "type": "Step",
         "id": "init",
         "desc": "Initialize variables",
-        "output": "initResult",
         "block": {
           "type": "Block",
           "statements": [
@@ -72,7 +71,6 @@
         "id": "loop",
         "desc": "Sum loop",
         "onError": "retry=2",
-        "output": "loopResult",
         "block": {
           "type": "Block",
           "statements": [
@@ -162,6 +160,7 @@
                 "left": "total",
                 "comparator": "<=",
                 "right": 6,
+                "rightType": "number",
                 "negated": false
               },
               "thenBlock": {
@@ -195,7 +194,6 @@
         "type": "Step",
         "id": "cleanup",
         "desc": "Finalize",
-        "output": "finalResult",
         "block": {
           "type": "Block",
           "statements": [
@@ -242,7 +240,7 @@
                   },
                   {
                     "kind": "identifier",
-                    "name": "initResult"
+                    "name": "init"
                   }
                 ],
                 "__suppressStore": true
@@ -260,7 +258,7 @@
                   },
                   {
                     "kind": "identifier",
-                    "name": "loopResult"
+                    "name": "loop"
                   }
                 ],
                 "__suppressStore": true
@@ -281,14 +279,14 @@
                   "key": "init",
                   "expression": {
                     "type": "Identifier",
-                    "name": "initResult"
+                    "name": "init"
                   }
                 },
                 {
                   "key": "loop",
                   "expression": {
                     "type": "Identifier",
-                    "name": "loopResult"
+                    "name": "loop"
                   }
                 }
               ]

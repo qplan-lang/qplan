@@ -37,7 +37,6 @@
         "type": "Step",
         "id": "sum",
         "desc": "Sum",
-        "output": "sumResult",
         "block": {
           "type": "Block",
           "statements": [
@@ -81,6 +80,7 @@
                 "left": "total",
                 "comparator": ">=",
                 "right": 3,
+                "rightType": "number",
                 "negated": false
               },
               "thenBlock": {
@@ -138,7 +138,7 @@
                 "__entries": [
                   {
                     "kind": "identifier",
-                    "name": "sumResult"
+                    "name": "sum"
                   }
                 ],
                 "__suppressStore": true
@@ -152,7 +152,7 @@
                   "key": "summary",
                   "expression": {
                     "type": "Identifier",
-                    "name": "sumResult"
+                    "name": "sum"
                   }
                 }
               ]

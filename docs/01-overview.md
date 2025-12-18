@@ -24,7 +24,7 @@ Core goals:
 
 ## 🪜 Step system & execution rules
 - **Actions always run inside steps**. The root level contains only `step` blocks, and actions/control statements (If/While/Each/Parallel/Jump, etc.) appear inside them.
-- Steps follow `step id="..." desc="..." type="..." onError="..." -> result { ... }`. `type` tags the UI, and `onError` supports fail (default), continue, retry=N, or jump="stepId".
+- Steps follow `step id="..." desc="..." type="..." onError="..." { ... }`. `type` tags the UI, `onError` supports fail (default), continue, retry=N, or jump="stepId", and results are always stored under the step ID.
 - Use `return key=value ...` inside a step to build an explicit result; otherwise, the last action result becomes the step result.
 - `jump to="stepId"` moves between steps. Targets must be step IDs, and the semantic validator ensures they exist.
 - Steps can nest (sub-steps). The resolver auto-assigns `order` (execution sequence) and `path` (e.g., `1.2.3`).
@@ -109,24 +109,24 @@ Scripts generated this way can run immediately via `runQplan` or be pre-validate
 Below is a simple step-based pipeline that uses only the basic modules.
 
 ```
-step id="load" desc="Load data" -> dataset {
+step id="load" desc="Load data" {
   file read path="./data/raw.json" -> rawTxt
   json parse data=rawTxt -> parsed
   return list=parsed
 }
 
-step id="aggregate" desc="Sum & average" -> stats {
+step id="aggregate" desc="Sum & average" {
   var 0 -> total
-  each value in dataset.list {
+  each value in load.list {
     set total = total + value
   }
-  math avg arr=dataset.list -> average
+  math avg arr=load.list -> average
   return total=total average=average
 }
 
 step id="report" desc="Print result" onError="continue" {
-  print message="Average" value=stats.average
-  echo summary="done" total=stats.total avg=stats.average -> final
+  print message="Average" value=aggregate.average
+  echo summary="done" total=aggregate.total avg=aggregate.average -> final
   return result=final
 }
 ```

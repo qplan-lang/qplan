@@ -49,11 +49,10 @@ step id="calc" type="task" desc="계산 단계" {
 
 ```
 StepNode {
-    id?: string
+    id: string
     desc?: string
     type?: string                // optional (task, group, loop 등)
     errorPolicy?: ErrorPolicy    // fail | continue | retry | jump
-    outputVar?: string           // step 전체 결과를 받을 변수
     order: number                // 자동 증가
     path: string[]               // 계층 경로 (자동 생성)
     parent?: StepNode
@@ -99,19 +98,19 @@ root
 
 예시:
 ```
-step id="pipeline" desc="루트 단계" -> pipelineResult {
-    step id="prepare" desc="데이터 준비" -> prepareResult {
+step id="pipeline" desc="루트 단계" {
+    step id="prepare" desc="데이터 준비" {
         file read path="./input.txt" -> raw
         return data=raw
     }
 
-    step id="aggregate" desc="집계" onError="retry=2" -> aggResult {
+    step id="aggregate" desc="집계" onError="retry=2" {
         math add a=total b=unknown -> total   # 에러 → retry 정책 적용
         return sum=total
     }
 
-    step id="report" desc="리포트 작성" -> reportResult {
-        if aggResult.sum > 100 {
+    step id="report" desc="리포트 작성" {
+        if aggregate.sum > 100 {
             jump to="review"
         }
         return summary="done"
@@ -125,7 +124,7 @@ step id="pipeline" desc="루트 단계" -> pipelineResult {
         ...
     }
 
-    return prepare=prepareResult aggregate=aggResult report=reportResult
+    return prepare=prepare aggregate=aggregate report=report
 }
 ```
 
@@ -152,17 +151,18 @@ Jump는 **Step ID** 로만 이동 가능
 스텝 전체를 함수처럼 반환:
 
 ```
-step id="read" desc="파일 읽기" -> result {
+step id="read" desc="파일 읽기" {
     file op="read" path="./a.txt" -> raw
     return data=raw count=rawCount
 }
 ```
 
 동작 방식:
-- block 내 가장 마지막 Action 결과를 자동 반환  
-- 또는 명시적 반환 방식 추가 가능
-  - `return key=value ...` 문을 사용하면 Step 결과를 원하는 형태의 객체로 명시적으로 반환 가능
-- Step 결과는 ctx 변수로 저장되며, `result.total`, `result.status.code` 처럼 점(dot) 표기를 통해 하위 필드를 직접 참조할 수 있다.
+- Return을 생략하면 Step 내부에서 정의한 모든 Action output 을 모아 객체로 만들기 때문에
+  `namespace.outputName` 으로 즉시 참조할 수 있다. 마지막 Action 결과도 내부적으로 보존된다.
+- `return key=value ...` (또는 `return key value` 축약형) 으로 필요한 필드만 명시적으로 구성할 수 있다.
+- Step 결과는 실행 중 `ctx[runId][namespace]` 로 저장되며 namespace 는 기본적으로 Step ID 이다(`step ... -> resultVar` 로 변경 가능). 같은 run 안에서는 `read.data`, `analysis.report` 또는 직접 지정한 namespace 로 접근한다. namespace 를 바꿔도 엔진이 동일 객체를 Step ID 아래에도 복제하므로 `resultVar.field`, `stepId.field` 모두 사용할 수 있다.
+- 별도의 `-> output` 바인딩은 필수가 아니지만, 필요하면 namespace 변경 용도로 사용할 수 있고 Step ID 참조는 계속 유지된다.
 
 ---
 
@@ -195,7 +195,7 @@ step id="prepare" desc="초기화" {
     ...
 }
 
-step id="fetch" desc="데이터 수집" onError="retry=2" -> fetched {
+step id="fetch" desc="데이터 수집" onError="retry=2" {
     http url="..." -> raw
     math add a=raw b=unknown -> broken    # 실패 → retry
     return data=raw

@@ -81,3 +81,15 @@ await runQplan(aiScript, {
 4. Surface step events and ctx results in the UI/backend to show progress and success.
 
 Following this flow delivers the “AI thinks, QPlan executes” pattern quickly.
+
+## 9. Validation-aware retry loop
+LLM plans occasionally violate grammar or reference missing variables. Keep the agent aligned by inserting a validator gate:
+
+1. **Generate** – Call your model with `buildAIPlanPrompt`.
+2. **Validate** – Run `const result = validateQplanScript(script)`.
+   - `result.ok === true`: execute with `runQplan`.
+   - `result.ok === false`: read `result.error` and `result.issues`. Each issue now includes a `line` and a `hint` explaining what to fix (“Create 'total' before using it”, “jump target 'cleanup' not found”, etc.).
+3. **Retry prompt** – Feed the hint back to the LLM as feedback (“Previous plan invalid: jump target 'cleanup' not found. Please add that step or change the jump.”) and ask for a corrected script.
+4. **Limit & log** – Impose a retry cap, store failing scripts plus hints for debugging/audit, and surface them to users if manual intervention is needed.
+
+This loop lets the LLM quickly converge on a valid plan without risking runtime errors.

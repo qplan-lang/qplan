@@ -25,7 +25,7 @@ registry.registerAll([htmlModule, aiModule]);
 - Modules without IDs print a warning (`AI cannot refer to this module`) and remain unregistered, so even temporary modules should have IDs.
 
 ## 3. Metadata & AI prompts
-`registry.list()` returns the current module info. `buildAIPlanPrompt(requirement, { registry })`, `buildQplanSuperPrompt(customRegistry)`, or `listRegisteredModules(registry)` all consume this data directly.
+`registry.list()` returns the current module info. `buildAIPlanPrompt(requirement, { registry })`, `buildQplanSuperPrompt(customRegistry)`, or `listRegisteredModules(registry)` all consume this data directly. Module IDs may include any Unicode letter/digit plus underscores (e.g., `foo`, `foo_bar`, `분석작업`), but they must start with a letter or underscore; otherwise `registry.register()` throws an error.
 
 ```ts
 const modules = registry.list();

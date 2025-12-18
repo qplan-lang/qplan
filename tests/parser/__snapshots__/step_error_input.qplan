@@ -15,7 +15,7 @@ step id="continueExample" desc="continue 정책" onError="continue" {
   print "continue 예제 끝"
 }
 
-step id="retryExample" desc="retry 정책" onError="retry=2" -> retryResult {
+step id="retryExample" desc="retry 정책" onError="retry=2" {
   print "retry 예제, 현재 카운터 =" retryCounter
   if retryCounter < 1 {
     set retryCounter = retryCounter + 1
@@ -30,12 +30,12 @@ step id="jumpExample" desc="jump 정책" onError="jump='recovery'" {
   math add a=missingVar b=1 -> broken
 }
 
-step id="recovery" desc="점프 대상" -> recoveryResult {
+step id="recovery" desc="점프 대상" {
   print "recovery step 실행"
   return message="jump 처리 완료"
 }
 
 step id="summary" desc="결과 요약" {
-  print "retry 결과:" retryResult
-  print "recovery 결과:" recoveryResult
+  print "retry 결과:" retryExample
+  print "recovery 결과:" recovery
 }

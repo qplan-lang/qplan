@@ -1,0 +1,65 @@
+{
+  "type": "Root",
+  "block": {
+    "type": "Block",
+    "statements": [
+      {
+        "type": "Step",
+        "id": "유니코드",
+        "desc": "한글 식별자",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "var",
+              "args": {
+                "value": 1
+              },
+              "output": "초기값"
+            },
+            {
+              "type": "Action",
+              "module": "math",
+              "args": {
+                "__options": [
+                  "add"
+                ],
+                "op": "add",
+                "a": "초기값",
+                "b": 2
+              },
+              "output": "합계"
+            },
+            {
+              "type": "Return",
+              "entries": [
+                {
+                  "key": "초기값",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "초기값"
+                  }
+                },
+                {
+                  "key": "합계",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "합계"
+                  }
+                },
+                {
+                  "key": "최종",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "합계"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

@@ -79,7 +79,7 @@ step id="done" desc="Finish" {
   }
 
   assert.strictEqual(stepEndResults.length, 2);
-  assert.deepStrictEqual(stepEndResults[0].result, {
+  assert.deepStrictEqual(stepEndResults[0].result.envResult, {
     envUser: env.userId,
     metaRequest: metadata.requestId,
   });
@@ -90,10 +90,66 @@ step id="done" desc="Finish" {
     envUser: env.userId,
     metaRequest: metadata.requestId,
   });
+  assert.deepStrictEqual(ctx.get("capture").envResult, {
+    envUser: env.userId,
+    metaRequest: metadata.requestId,
+  });
+  assert.deepStrictEqual(snapshot[runId].capture, {
+    envResult: {
+      envUser: env.userId,
+      metaRequest: metadata.requestId,
+    },
+  });
 
   // Ensure all callbacks shared the same context object.
   assert.strictEqual(contexts.size, 1, "all events should share one run context");
 }
 
+async function testReturnShorthandAndStepNamespace() {
+  const script = `
+step id="collect" desc="Return shorthand" {
+  var 1 -> gear
+  var 2 -> accounts
+  var 5 -> sum
+  return gear accounts total=sum
+}
+
+step id="analysis" desc="Auto namespace" {
+  var "report-ready" -> report
+  var {"score": 91} -> timing
+}
+
+step id="custom" desc="Alias namespace" -> 결과네임스페이스 {
+  var "alias-value" -> 값
+  return 최종=값
+}
+`;
+
+  const runId = "test-run-namespace";
+  const ctx = await runQplan(script, { runId });
+
+  assert.strictEqual(ctx.get("collect.total"), 5);
+  assert.strictEqual(ctx.get("collect.gear"), 1);
+  assert.strictEqual(ctx.get("collect.accounts"), 2);
+  assert.strictEqual(ctx.get("analysis.report"), "report-ready");
+  assert.deepStrictEqual(ctx.get("analysis.timing"), { score: 91 });
+  assert.deepStrictEqual(ctx.get("analysis"), {
+    report: "report-ready",
+    timing: { score: 91 },
+  });
+  assert.strictEqual(ctx.get("결과네임스페이스.최종"), "alias-value");
+  assert.strictEqual(ctx.get("custom.최종"), "alias-value");
+  assert.deepStrictEqual(ctx.get("custom"), { 최종: "alias-value" });
+  assert.deepStrictEqual(ctx.get("결과네임스페이스"), { 최종: "alias-value" });
+
+  const snapshot = ctx.toJSON();
+  assert.ok(snapshot[runId]);
+  assert.deepStrictEqual(snapshot[runId].collect.gear, 1);
+  assert.deepStrictEqual(snapshot[runId].analysis.timing, { score: 91 });
+  assert.deepStrictEqual(snapshot[runId].custom, { 최종: "alias-value" });
+  assert.deepStrictEqual(snapshot[runId].결과네임스페이스, { 최종: "alias-value" });
+}
+
 await testEnvHooksAndPlanEvents();
+await testReturnShorthandAndStepNamespace();
 console.log("runtime runQplan-tests passed");

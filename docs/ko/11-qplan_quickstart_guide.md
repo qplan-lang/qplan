@@ -94,25 +94,25 @@ AI는 요구사항에 맞는 **step 기반 QPlan 스크립트**를 생성하게 
 예시(개념적 예):
 
 ```qplan
-step id="fetch_profile" desc="마이크 정보 조회" -> profile {
+step id="fetch_profile" desc="마이크 정보 조회" {
   getEmployee name="Mike" start_date="2025-12-15" -> data
   return employee=data
 }
 
-step id="prepare_assets" desc="장비 및 계정 준비" -> assets {
-  allocateDevices employee=profile.employee devices="laptop,monitor" -> gear
-  provisionAccounts employee=profile.employee systems="email,slack,vpn" -> accounts
-  return gear=gear accounts=accounts
+step id="prepare_assets" desc="장비 및 계정 준비" {
+  allocateDevices employee=fetch_profile.employee devices="laptop,monitor" -> gear
+  provisionAccounts employee=fetch_profile.employee systems="email,slack,vpn" -> accounts
+  return gear accounts
 }
 
-step id="schedule" desc="온보딩 일정 생성" -> plan {
-  scheduleMeeting title="마이크 온보딩" attendees=profile.employee.manager,date="다음 주 월요일 오전 10시" -> mtg
-  assignMentor employee=profile.employee -> mentor
-  return meeting=mtg mentor=mentor
+step id="schedule" desc="온보딩 일정 생성" {
+  scheduleMeeting title="마이크 온보딩" attendees=fetch_profile.employee.manager,date="다음 주 월요일 오전 10시" -> mtg
+  assignMentor employee=fetch_profile.employee -> mentor
+  return meeting mentor
 }
 
 step id="notify" desc="HR에게 준비 완료 보고" {
-  notifyHR employee=profile.employee gear=assets.gear meeting=plan.meeting mentor=plan.mentor
+  notifyHR employee=fetch_profile.employee gear=prepare_assets.gear meeting=schedule.meeting mentor=schedule.mentor
 }
 ```
 

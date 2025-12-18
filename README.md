@@ -157,23 +157,23 @@ export const auditModule = {
 ## 7. AI-Generated Example
 
 ```qplan
-step id="search" desc="Search white T-shirts" -> items {
+step id="search" desc="Search white T-shirts" {
   search keyword="white T-shirt" -> result
   return list=result
 }
 
-step id="filter" desc="Filter for bear print" -> filtered {
-  filter list=items.list pattern="bear" -> out
+step id="filter" desc="Filter for bear print" {
+  filter list=search.list pattern="bear" -> out
   return list=out
 }
 
-step id="select" desc="User selection" -> chosen {
-  askUser list=filtered.list -> sel
+step id="select" desc="User selection" {
+  askUser list=filter.list -> sel
   return item=sel
 }
 
 step id="checkout" desc="Payment" {
-  payment item=chosen.item
+  payment item=select.item
 }
 ```
 
@@ -183,10 +183,10 @@ step id="checkout" desc="Payment" {
 Functional or object-based modules used by AI to generate valid plans.
 
 ### ModuleRegistry
-Central place where modules are registered and exposed to AI/runtime. You can pass a custom registry to `runQplan` or `buildAIPlanPrompt`, and call `listRegisteredModules(registry)` to expose metadata to UIs or prompt builders. Every `new ModuleRegistry()` automatically seeds the default `basicModules`; pass `new ModuleRegistry({ seedBasicModules: false })` if you need an empty registry, or use `seedModules` to preload a custom set.
+Central place where modules are registered and exposed to AI/runtime. Module IDs may include any Unicode letter/digit plus underscores (e.g., `my_module`, `분석작업`), but must start with a letter/underscore. You can pass a custom registry to `runQplan` or `buildAIPlanPrompt`, and call `listRegisteredModules(registry)` to expose metadata to UIs or prompt builders. Every `new ModuleRegistry()` automatically seeds the default `basicModules`; pass `new ModuleRegistry({ seedBasicModules: false })` if you need an empty registry, or use `seedModules` to preload a custom set.
 
 ### Step System
-Structured workflow with sub-steps, jump policies, retry logic, and error handling.
+Structured workflow with sub-steps, jump policies, retry logic, and error handling. Return statements are optional: `return gear accounts total=sum` (or `return gear, accounts, total=sum`) automatically expands to `return gear=gear accounts=accounts total=sum`. If you omit `return`, every action output inside the step is exposed under the step’s result namespace (`stepId.outputName` by default, or a custom name when you add `-> resultVar` to the step header). Even when you override the namespace, the engine mirrors the same object under the original step ID, so both `resultVar.field` and `stepId.field` keep working. Identifiers (module names, variables, return keys, etc.) may include any Unicode letter/digit plus `_` so long as they start with a letter or underscore, meaning `return 결과=값` works alongside ASCII names.
 
 ### ExecutionContext
 Stores runtime variables, supports dot-path access (`stats.total`), and keeps per-run `env`/`metadata` values retrievable via `ctx.getEnv()` / `ctx.getMetadata()`.
@@ -205,7 +205,7 @@ Includes `if`, `while`, `each`, `parallel`, `future`, `join`, `jump`, `skip`, `s
 ## 10. Grammar Summary
 
 - `action key=value -> var`
-- `step id="..." desc="..." { ... }`
+- `step id="..." desc="..." [type="..."] [onError="..."] [-> resultVar] { ... }` (results auto-bind to the step id unless you override it with `-> resultVar`)
 - Conditionals, loops, async, parallel
 - Dot-path referencing
 

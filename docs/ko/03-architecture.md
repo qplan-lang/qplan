@@ -29,7 +29,7 @@ ExecutionContext (variables, futures, step outputs)
 | Prompt Builders | `buildAIPlanPrompt`, `buildQplanSuperPrompt`, `buildAIGrammarSummary` 는 현재 registry에 등록된 모듈과 문법 요약을 묶어 LLM 프롬프트를 생성한다. | `src/core/buildAIPlanPrompt.ts`, `src/core/buildQplanSuperPrompt.ts`, `src/core/buildAIGrammarSummary.ts` |
 
 ## 3. Step 시스템 아키텍처
-1. **Step 정의** – `step id="..." desc="..." type="..." onError="..." -> result { ... }` 형태. Parser가 Step 헤더를 읽고 StepNode를 만든다.
+1. **Step 정의** – `step id="..." desc="..." type="..." onError="..." { ... }` 형태. Parser가 Step 헤더를 읽고 Step ID 유효성을 검사한 뒤 StepNode를 만든다.
 2. **Step Resolution** – 실행 전 `resolveSteps()` 가 Step 트리를 순회해 `order`, `path`, `parent`, `errorPolicy` 메타데이터를 생성하고, Step ID → StepNode 매핑을 만든다.
 3. **StepController** – Executor가 Step을 실행할 때 StepController가 다음 로직을 담당한다:
    - onStepStart/End/Error/Retry/Jump 이벤트 발생 (`stepEvents` 옵션으로 핸들러 전달 가능)
@@ -37,7 +37,7 @@ ExecutionContext (variables, futures, step outputs)
    - `onError="retry=N"` : 실패 시 최대 N회 재시도(각 시도마다 onStepRetry 이벤트 호출)
    - `onError="jump='cleanup'"` : JumpSignal을 발생시켜 지정한 Step으로 이동
 4. **Jump 처리** – `jump to="stepId"` 문이나 onError jump 정책이 발생하면 StepController가 JumpSignal을 던지고, Executor는 block override 테이블을 업데이트해 루프/블록을 재시작한다.
-5. **Step 결과** – Step 블록 내 `return` 이 있으면 해당 객체를, 없으면 마지막 Action 결과를 ctx에 저장한다. Step 헤더의 `-> output` 에 지정한 변수명으로 저장된다.
+5. **Step 결과** – Step 블록 내 `return` 이 있으면 해당 객체를, 없으면 마지막 Action 결과를 Step 결과로 삼는다. 어떤 경우든 실행 중 `ctx[runId][namespace]` 에 저장되며, namespace 기본값은 Step ID 이고 `step ... -> resultVar` 로 오버라이드할 수 있다. namespace 를 바꿔도 동일 객체가 Step ID 아래에도 복제되므로 이후 Step에서는 `namespace.field` 와 `stepId.field` 를 모두 사용할 수 있다.
 
 ## 4. 모듈 구조
 - **기본 번들** – `src/modules/index.ts` 에서 `var/print/echo/sleep/file/math/future/join/json` 9개 모듈을 기본 registry에 등록한다.

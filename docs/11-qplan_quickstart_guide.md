@@ -85,25 +85,25 @@ Send the prompt to the LLM and it will output a **step-based QPlan script**.
 Conceptual example:
 
 ```qplan
-step id="fetch_profile" desc="Fetch Mike's info" -> profile {
+step id="fetch_profile" desc="Fetch Mike's info" {
   getEmployee name="Mike" start_date="2025-12-15" -> data
   return employee=data
 }
 
-step id="prepare_assets" desc="Prepare equipment & accounts" -> assets {
-  allocateDevices employee=profile.employee devices="laptop,monitor" -> gear
-  provisionAccounts employee=profile.employee systems="email,slack,vpn" -> accounts
-  return gear=gear accounts=accounts
+step id="prepare_assets" desc="Prepare equipment & accounts" {
+  allocateDevices employee=fetch_profile.employee devices="laptop,monitor" -> gear
+  provisionAccounts employee=fetch_profile.employee systems="email,slack,vpn" -> accounts
+  return gear accounts
 }
 
-step id="schedule" desc="Create onboarding schedule" -> plan {
-  scheduleMeeting title="Mike onboarding" attendees=profile.employee.manager date="Next Monday 10am" -> mtg
-  assignMentor employee=profile.employee -> mentor
-  return meeting=mtg mentor=mentor
+step id="schedule" desc="Create onboarding schedule" {
+  scheduleMeeting title="Mike onboarding" attendees=fetch_profile.employee.manager date="Next Monday 10am" -> mtg
+  assignMentor employee=fetch_profile.employee -> mentor
+  return meeting mentor
 }
 
 step id="notify" desc="Notify HR" {
-  notifyHR employee=profile.employee gear=assets.gear meeting=plan.meeting mentor=plan.mentor
+  notifyHR employee=fetch_profile.employee gear=prepare_assets.gear meeting=schedule.meeting mentor=schedule.mentor
 }
 ```
 

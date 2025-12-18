@@ -1,4 +1,13 @@
-import { BlockNode, StepNode } from "../core/ast.js";
+import {
+  BlockNode,
+  StepNode,
+  ASTNode,
+  ActionNode,
+  IfNode,
+  WhileNode,
+  ParallelNode,
+  EachNode,
+} from "../core/ast.js";
 import { parseStepTree } from "./stepParser.js";
 import {
   StepErrorPolicy,
@@ -15,9 +24,12 @@ export function resolveSteps(block: BlockNode): StepResolution {
 
   const build = (treeNode: StepTreeNode, parent?: StepInfo): StepInfo => {
     const label = treeNode.node.desc || treeNode.node.id || `step_${order}`;
+    const resultKey = treeNode.node.output ?? treeNode.node.id;
+
     const info: StepInfo = {
       node: treeNode.node,
       id: treeNode.node.id,
+      resultKey,
       desc: treeNode.node.desc,
       stepType: treeNode.node.stepType,
       order: order++,
@@ -28,18 +40,17 @@ export function resolveSteps(block: BlockNode): StepResolution {
       children: [],
       block: treeNode.block,
       statementIndex: treeNode.index,
+      actionOutputs: collectStepOutputs(treeNode.node.block),
     };
 
     infoByNode.set(treeNode.node, info);
-    if (info.id) {
-      if (infoById.has(info.id)) {
-        const existing = infoById.get(info.id)!;
-        throw new Error(
-          `Duplicate step id '${info.id}' (lines ${existing.node.line} and ${treeNode.node.line})`
-        );
-      }
-      infoById.set(info.id, info);
+    if (infoById.has(info.id)) {
+      const existing = infoById.get(info.id)!;
+      throw new Error(
+        `Duplicate step id '${info.id}' (lines ${existing.node.line} and ${treeNode.node.line})`
+      );
     }
+    infoById.set(info.id, info);
     if (parent) {
       parent.children.push(info);
     }
@@ -55,6 +66,54 @@ export function resolveSteps(block: BlockNode): StepResolution {
     infoByNode,
     infoById,
   };
+}
+
+function collectStepOutputs(block: BlockNode): string[] {
+  const outputs = new Set<string>();
+
+  const visitBlock = (current: BlockNode) => {
+    current.statements.forEach(stmt => visitNode(stmt));
+  };
+
+  const visitNode = (node: ASTNode) => {
+    switch (node.type) {
+      case "Action": {
+        const action = node as ActionNode;
+        if (action.output) {
+          outputs.add(action.output);
+        }
+        break;
+      }
+      case "If": {
+        const ifNode = node as IfNode;
+        visitBlock(ifNode.thenBlock);
+        if (ifNode.elseBlock) {
+          visitBlock(ifNode.elseBlock);
+        }
+        break;
+      }
+      case "While":
+        visitBlock((node as WhileNode).block);
+        break;
+      case "Parallel":
+        visitBlock((node as ParallelNode).block);
+        break;
+      case "Each":
+        visitBlock((node as EachNode).block);
+        break;
+      case "Block":
+        visitBlock(node as BlockNode);
+        break;
+      case "Step":
+        // nested step: skip to avoid capturing child outputs
+        break;
+      default:
+        break;
+    }
+  };
+
+  visitBlock(block);
+  return Array.from(outputs);
 }
 
 function parseErrorPolicy(raw?: string): StepErrorPolicy {

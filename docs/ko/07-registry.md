@@ -25,7 +25,7 @@ registry.registerAll([htmlModule, aiModule]);
 - id가 없는 모듈을 등록하면 경고(`AI cannot refer to this module`)가 출력되고 registry에는 포함되지 않는다. 실행 목적이라도 id를 부여하는 것이 안전하다.
 
 ## 3. 메타데이터와 AI 프롬프트
-`registry.list()` 는 현재 등록된 모듈 정보를 반환하며 `buildAIPlanPrompt(requirement, { registry })`, `buildQplanSuperPrompt(customRegistry)`, `listRegisteredModules(registry)` 등이 그대로 활용해 LLM에게 모듈 사용법을 전달한다.
+`registry.list()` 는 현재 등록된 모듈 정보를 반환하며 `buildAIPlanPrompt(requirement, { registry })`, `buildQplanSuperPrompt(customRegistry)`, `listRegisteredModules(registry)` 등이 그대로 활용해 LLM에게 모듈 사용법을 전달한다. 모듈 id는 유니코드 문자/숫자/밑줄 조합을 사용할 수 있지만(예: `foo`, `foo_bar`, `분석작업`), 첫 글자는 문자 또는 `_` 여야 하며 규칙을 위반하면 `registry.register()` 가 오류를 던진다.
 
 ```ts
 const modules = registry.list();

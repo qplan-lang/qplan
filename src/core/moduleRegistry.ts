@@ -12,6 +12,8 @@
 import { ActionModule, ModuleMeta } from "./actionModule.js";
 import { basicModules } from "../modules/index.js";
 
+const MODULE_ID_PATTERN = /^[\p{L}_][\p{L}\p{N}_]*$/u;
+
 export interface ModuleRegistryOptions {
   seedBasicModules?: boolean;
   seedModules?: ActionModule[];
@@ -42,6 +44,12 @@ export class ModuleRegistry {
         "[WARN] Module registered without id. AI cannot refer to this module."
       );
       return; // 등록하지 않고 그냥 무시하는 게 더 안전함 (원하면 set할 수도 있음)
+    }
+
+    if (!MODULE_ID_PATTERN.test(id)) {
+      throw new Error(
+        `Invalid module id '${id}'. Use Unicode letters/digits/underscores and start with a letter or underscore.`
+      );
     }
 
     if (this.modules.has(id)) {

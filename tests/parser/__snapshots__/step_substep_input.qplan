@@ -1,17 +1,17 @@
-step id="pipeline" desc="루트 파이프라인" -> pipelineResult {
+step id="pipeline" desc="루트 파이프라인" {
   var {"numbers": []} -> prepareResult
   var {"sum": 0} -> aggregateResult
   var {"message": "pending"} -> reportResult
   var {"status": "pending"} -> finalizeResult
   var 0 -> total
 
-  step id="prepare" desc="데이터 준비" -> prepareResult {
+  step id="prepare" desc="데이터 준비" {
     var [1,2] -> numbers
     set total = 0
     return numbers=numbers
   }
 
-  step id="aggregate" desc="합계 계산" -> aggregateResult {
+  step id="aggregate" desc="합계 계산" {
     each n in numbers {
       math add a=total b=n -> total
       if total > 6 {
@@ -32,23 +32,23 @@ step id="pipeline" desc="루트 파이프라인" -> pipelineResult {
     }
   }
 
-  step id="report" desc="리포트 작성" -> reportResult {
+  step id="report" desc="리포트 작성" {
     print "총합:" total
     return message="완료"
   }
 
-  step id="finalize" desc="최종 저장" -> finalizeResult {
+  step id="finalize" desc="최종 저장" {
     print "최종 합계:" total
     math add a=total b=0 -> finalTotal
     return status="ok" value=finalTotal
   }
 
-  return prepared=prepareResult aggregate=aggregateResult report=reportResult finalize=finalizeResult
+  return prepared=prepare aggregate=aggregate report=report finalize=finalize
 }
 
 step id="final" desc="결과 출력" {
-  print "파이프라인:" pipelineResult
-  print "준비:" prepareResult
-  print "합계:" aggregateResult
-  print "리포트:" reportResult
+  print "파이프라인:" pipeline
+  print "준비:" pipeline.prepared
+  print "합계:" pipeline.aggregate
+  print "리포트:" pipeline.report
 }

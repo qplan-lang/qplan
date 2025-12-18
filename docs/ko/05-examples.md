@@ -14,35 +14,35 @@ step id="hello" desc="첫 출력" {
 
 ## 2. 파일 읽기 + 평균 계산
 ```qplan
-step id="load" desc="파일 읽기" -> dataset {
+step id="load" desc="파일 읽기" {
   file read path="./nums.txt" -> raw
   json parse data=raw -> parsed
   return list=parsed
 }
 
-step id="avg" desc="평균 계산" -> stats {
-  math op="avg" arr=dataset.list -> avg
-  math op="sum" arr=dataset.list -> total
+step id="avg" desc="평균 계산" {
+  math op="avg" arr=load.list -> avg
+  math op="sum" arr=load.list -> total
   return average=avg total=total
 }
 
 step id="report" desc="출력" {
-  print label="total" value=stats.total
-  print label="avg" value=stats.average
+  print label="total" value=avg.total
+  print label="avg" value=avg.average
 }
 ```
 - 파일에서 읽은 JSON 배열을 파싱하고, 평균/합계를 계산한다.
-- Step `load` 의 결과를 `dataset.list` 로 dot-path 참조한다.
+- Step `load` 의 결과를 `load.list` 로 dot-path 참조한다.
 
 ## 3. Future + Join 기반 비동기 작업
 ```qplan
-step id="async" desc="Future 생성" -> futures {
+step id="async" desc="Future 생성" {
   future task="A" delay=300 value="doneA" -> f1
   future task="B" delay=500 value="doneB" -> f2
   return list=[f1,f2]
 }
 
-step id="join" desc="Future 합치기" -> results {
+step id="join" desc="Future 합치기" {
   join futures="f1,f2" -> values
   return values=values
 }
@@ -69,7 +69,7 @@ step id="skip" desc="다음 작업" {
 
 ## 5. Each 반복 + stop/skip
 ```qplan
-step id="loop" desc="반복 예제" -> summary {
+step id="loop" desc="반복 예제" {
   var 0 -> total
   json parse data="[1,2,3,4]" -> nums
   each (n, idx) in nums {
@@ -89,7 +89,7 @@ step id="loop" desc="반복 예제" -> summary {
 
 ## 6. While + Set 으로 카운터 조작
 ```qplan
-step id="counter" desc="while 루프" -> result {
+step id="counter" desc="while 루프" {
   var 0 -> count
   while count < 5 {
     set count = count + 1
@@ -105,7 +105,7 @@ step id="prepare" desc="초기화" {
   var 0 -> retryCount
 }
 
-step id="mayFail" desc="실패 예제" onError="retry=2" -> payload {
+step id="mayFail" desc="실패 예제" onError="retry=2" {
   math op="div" a=1 b=retryCount -> fail   # 첫 실행에서 0 나누기 → 에러 → retry
   return value=fail
 }
@@ -115,7 +115,7 @@ step id="cleanup" desc="에러 처리" onError="continue" {
 }
 
 step id="summary" desc="결과 정리" {
-  print final=payload.value
+  print final=mayFail.value
 }
 ```
 - `onError="retry=2"` 가 Step 전체를 재시도하고, 실패하면 마지막 에러를 던진다.

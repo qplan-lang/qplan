@@ -168,12 +168,19 @@ export class Executor {
 
     let result;
 
-    if (typeof mod === "function") {
-      result = await mod(node.args, ctx);
-    } else if (typeof mod.execute === "function") {
-      result = await mod.execute(node.args, ctx);
-    } else {
-      throw new Error(`Invalid module type: ${node.module}`);
+    try {
+      if (typeof mod === "function") {
+        result = await mod(node.args, ctx);
+      } else if (typeof mod.execute === "function") {
+        result = await mod.execute(node.args, ctx);
+      } else {
+        throw new Error(`Invalid module type: ${node.module}`);
+      }
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      (error as any).moduleId = node.module;
+      error.message = `Module '${node.module}' failed: ${error.message}`;
+      throw error;
     }
 
     // future 처리
@@ -222,7 +229,9 @@ export class Executor {
   private evaluateClause(clause: ConditionClause, ctx: ExecutionContext): boolean {
     const left = ctx.get(clause.left);
     let right = clause.right;
-    if (typeof right === "string" && ctx.has(right)) {
+    if (clause.rightType === "identifier" && typeof right === "string") {
+      right = ctx.get(right);
+    } else if (typeof right === "string" && ctx.has(right)) {
       right = ctx.get(right);
     }
 
@@ -366,17 +375,13 @@ export class Executor {
       const snapshot = beginAttempt();
       try {
         await this.executeBlock(node.block, ctx);
-        if (node.output) {
-          const result = getResultSince(snapshot);
-          if (result.hasResult) {
-            ctx.set(node.output, result.value);
-          }
+        const result = getResultSince(snapshot);
+        if (result.hasResult) {
+          ctx.setStepResult(node.id, result.value);
         }
       } catch (err) {
         if (err instanceof StepReturnSignal) {
-          if (node.output) {
-            ctx.set(node.output, err.value);
-          }
+          ctx.setStepResult(node.id, err.value);
           this.lastActionResult = err.value;
           this.actionSequence++;
           return;

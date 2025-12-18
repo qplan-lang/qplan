@@ -7,7 +7,6 @@
         "type": "Step",
         "id": "pipeline",
         "desc": "Root pipeline",
-        "output": "pipelineResult",
         "block": {
           "type": "Block",
           "statements": [
@@ -63,7 +62,6 @@
               "type": "Step",
               "id": "prepare",
               "desc": "Prepare data",
-              "output": "prepareResult",
               "block": {
                 "type": "Block",
                 "statements": [
@@ -105,7 +103,6 @@
               "type": "Step",
               "id": "aggregate",
               "desc": "Sum aggregation",
-              "output": "aggregateResult",
               "block": {
                 "type": "Block",
                 "statements": [
@@ -136,6 +133,7 @@
                             "left": "total",
                             "comparator": ">",
                             "right": 6,
+                            "rightType": "number",
                             "negated": false
                           },
                           "thenBlock": {
@@ -202,6 +200,7 @@
                       "left": "total",
                       "comparator": "<",
                       "right": 6,
+                      "rightType": "number",
                       "negated": false
                     },
                     "thenBlock": {
@@ -264,7 +263,6 @@
               "type": "Step",
               "id": "report",
               "desc": "Write report",
-              "output": "reportResult",
               "block": {
                 "type": "Block",
                 "statements": [
@@ -305,7 +303,6 @@
               "type": "Step",
               "id": "finalize",
               "desc": "Finalize",
-              "output": "finalizeResult",
               "block": {
                 "type": "Block",
                 "statements": [
@@ -369,28 +366,28 @@
                   "key": "prepared",
                   "expression": {
                     "type": "Identifier",
-                    "name": "prepareResult"
+                    "name": "prepare"
                   }
                 },
                 {
                   "key": "aggregate",
                   "expression": {
                     "type": "Identifier",
-                    "name": "aggregateResult"
+                    "name": "aggregate"
                   }
                 },
                 {
                   "key": "report",
                   "expression": {
                     "type": "Identifier",
-                    "name": "reportResult"
+                    "name": "report"
                   }
                 },
                 {
                   "key": "finalize",
                   "expression": {
                     "type": "Identifier",
-                    "name": "finalizeResult"
+                    "name": "finalize"
                   }
                 }
               ]
@@ -416,7 +413,7 @@
                   },
                   {
                     "kind": "identifier",
-                    "name": "pipelineResult"
+                    "name": "pipeline"
                   }
                 ],
                 "__suppressStore": true
@@ -434,7 +431,7 @@
                   },
                   {
                     "kind": "identifier",
-                    "name": "prepareResult"
+                    "name": "pipeline.prepared"
                   }
                 ],
                 "__suppressStore": true
@@ -452,7 +449,7 @@
                   },
                   {
                     "kind": "identifier",
-                    "name": "aggregateResult"
+                    "name": "pipeline.aggregate"
                   }
                 ],
                 "__suppressStore": true
@@ -470,7 +467,7 @@
                   },
                   {
                     "kind": "identifier",
-                    "name": "reportResult"
+                    "name": "pipeline.report"
                   }
                 ],
                 "__suppressStore": true

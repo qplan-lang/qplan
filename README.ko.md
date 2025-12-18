@@ -173,23 +173,23 @@ stepEvents를 이용해 UI/CLI/로그와 연동해 진행률을 표시하거나,
 ## 7. Example Plan (AI Generated)
 
 ```qplan
-step id="search" desc="흰색 티셔츠 검색" -> items {
+step id="search" desc="흰색 티셔츠 검색" {
   search keyword="흰색 티셔츠" -> result
   return list=result
 }
 
-step id="filter" desc="곰돌이 프린트 필터링" -> filtered {
-  filter list=items.list pattern="곰돌이" -> out
+step id="filter" desc="곰돌이 프린트 필터링" {
+  filter list=search.list pattern="곰돌이" -> out
   return list=out
 }
 
-step id="select" desc="사용자 선택" -> chosen {
-  askUser list=filtered.list -> sel
+step id="select" desc="사용자 선택" {
+  askUser list=filter.list -> sel
   return item=sel
 }
 
 step id="checkout" desc="결제" {
-  payment item=chosen.item
+  payment item=select.item
 }
 ```
 
@@ -205,6 +205,7 @@ step id="checkout" desc="결제" {
 ### 8.2 ModuleRegistry
 
 - 등록된 모듈 목록을 관리합니다.  
+- 모듈 id는 유니코드 문자/숫자/밑줄(`my_module`, `분석작업`)을 포함할 수 있으며, 첫 글자는 문자 또는 `_` 여야 합니다.
 - `registry.list()` 를 통해 AI에게 제공할 메타데이터를 얻으며, `buildAIPlanPrompt(requirement, { registry })`, `runQplan(script, { registry })` 로 원하는 모듈 세트를 즉시 주입할 수 있습니다.  
 - 기본적으로 `new ModuleRegistry()` 는 기본 모듈(basicModules)을 자동 등록합니다. 완전히 비어 있는 레지스트리가 필요하면 `new ModuleRegistry({ seedBasicModules: false })` 를 사용하거나, `seedModules` 옵션으로 초기 모듈 집합을 지정할 수 있습니다.
 - `listRegisteredModules()` API로 UI/프롬프트에서 활용할 전체 메타데이터를 추출할 수 있습니다.
@@ -213,7 +214,10 @@ step id="checkout" desc="결제" {
 
 - Step / Sub-step 구조로 복잡한 플로우를 나눌 수 있습니다.  
 - Error Policy(retry, continue, jump)를 통해 실패 상황을 제어합니다.  
-- Step Events(onStepStart/onStepEnd/onStepError 등) 로 UI/로그를 연동할 수 있습니다.
+- Step Events(onStepStart/onStepEnd/onStepError 등) 로 UI/로그를 연동할 수 있습니다.  
+- `return gear accounts total=sum` (또는 `return gear, accounts, total=sum`) 처럼 `=` 없이도 자동으로 `return gear=gear accounts=accounts total=sum` 으로 확장되며, `return` 을 생략하면 Step 내 Action output 들이 기본적으로 `stepId.outputName` 형태로 노출됩니다(필요하면 Step 헤더에 `-> resultVar` 를 붙여 namespace 를 변경할 수 있습니다).
+- Step 헤더에서 `-> resultVar` 로 namespace 를 바꿔도 엔진이 같은 객체를 Step ID 아래에도 복제하므로 `resultVar.field`, `stepId.field` 둘 다 동작합니다.
+- 모듈/변수/Action output/`return` key 등 대부분의 식별자는 유니코드 문자·숫자·`_` 를 포함할 수 있으며, 첫 글자는 문자 또는 `_` 이어야 하므로 `return 결과=값` 같은 한글 식별자도 허용됩니다.
 
 ### 8.4 ExecutionContext
 
@@ -312,7 +316,7 @@ await runQplan(aiScript, { registry });
   `moduleName key1=value1 key2=value2 -> outVar`
 
 - **Step**:  
-  `step id="stepId" desc="설명" { ... }`
+  `step id="stepId" desc="설명" [-> resultVar] { ... }`
 
 - **조건 / 반복**:  
   `if`, `while`, `each`

@@ -38,7 +38,35 @@ step id="start" {
   assert.ok(result.issues && result.issues.length > 0, "Should report missing jump target");
 }
 
+function testUndefinedVariableUsage() {
+  const script = `
+step id="broken" {
+  math add a=missingVar b=1 -> result
+}
+`;
+  const result = validateQplanScript(script);
+  assert.strictEqual(result.ok, false, "Referencing undefined ctx variables should fail validation");
+  const message = result.issues?.[0]?.message ?? "";
+  assert.ok(message.includes("missingVar"), "Error message should mention the missing variable");
+}
+
+function testStepIdReference() {
+  const script = `
+step id="prepare" {
+  var 1 -> value
+}
+
+step id="calc" {
+  math add a=prepare.value b=1 -> total
+}
+`;
+  const result = validateQplanScript(script);
+  assert.strictEqual(result.ok, true, "Referencing previous step output should be valid");
+}
+
 testValidScript();
 testDuplicateStepId();
 testMissingJumpTarget();
+testUndefinedVariableUsage();
+testStepIdReference();
 console.log("runtime validate-tests passed");

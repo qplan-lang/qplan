@@ -13,7 +13,7 @@ QPlan Language는 **모든 Action을 Step 블록 안에서만 실행**하는 Ste
 
 최소 예제:
 ```
-step id="demo" desc="간단 합계" -> result {
+step id="demo" desc="간단 합계" {
   var [1,2,3] -> items
   math op="sum" arr=items -> total
   return total=total
@@ -28,7 +28,7 @@ step id="demo" desc="간단 합계" -> result {
 - 루트 스크립트는 **Step 문만** 나열할 수 있다. Step 밖에서 Action/If/Set 등을 작성하면 파서가 오류를 낸다.
 - Step 형태:
   ```
-  step ["desc"] [id="stepId"] [desc="설명"] [type="task"] [onError="retry=3"] -> output {
+  step ["desc"] id="stepId" [desc="설명"] [type="task"] [onError="retry=3"] {
     ... (Action / If / While / Each / Parallel / Set / Return / Jump / Step 등)
   }
   ```
@@ -38,16 +38,24 @@ step id="demo" desc="간단 합계" -> result {
   - `desc`: 사람이 읽을 설명. 생략 시 step 문자열이 그대로 사용될 수 있다.
   - `type`: 임의 태그(task/group/loop 등)
   - `onError`: `fail`(기본) / `continue` / `retry=<N>` / `jump="<stepId>"`
-- `-> output` 을 작성하면 Step 전체 결과를 ctx 변수에 저장한다. 생략 시 마지막 Action 결과가 Step 결과가 된다.
+- Step ID 는 유니코드 Letter 또는 `_` 로 시작해야 하며, 이후에는 숫자를 포함한 Letter/Number/`_` 를 사용할 수 있다.
+- Step 결과는 항상 `ctx[runId][namespace]` 에 저장되며 namespace 기본값은 Step ID(`step ... -> resultVar` 로 재정의 가능) 이다. 같은 실행(run) 안에서는 `namespace.xxx` 로 접근하며, namespace 를 바꿔도 엔진이 동일 객체를 Step ID 아래에도 복제한다.
 - Step 내부에서는 추가 Step을 중첩해 Sub-step 트리를 만들 수 있다.
+- 모듈 이름, 변수, Action output, `return` key, `set` 대상 등 모든 식별자는 유니코드 문자/숫자/`_` 를 포함할 수 있으며, 첫 글자는 문자 또는 `_` 이어야 한다.
 
 ## 2.2 Return 문
 - Step 블록 내에서 `return key=expression ...` 형태로 작성한다.
-- 최소 1개의 `key=value` 쌍이 필요하며, 여러 개를 나열하면 객체 형태로 Step 결과가 구성된다.
-- Return을 생략하면 Step 내부 **마지막 Action 결과**가 그대로 Step 결과로 사용된다.
+- `=` 는 생략 가능하다. `return gear accounts total=sum` (또는 `return gear, accounts, total=sum`) 은
+  `return gear=gear accounts=accounts total=sum` 으로 확장된다. 혼합 형태도 허용된다.
+- 항목 구분은 공백 또는 콤마 모두 허용된다.
+- 최소 1개의 값이 필요하며, 여러 항목을 나열하면 객체 형태로 Step 결과가 구성된다.
+- Return을 생략하면 Step 내부에서 생성한 모든 Action output 이 자동으로 객체로 묶여
+  `namespace.outputName` 으로 참조할 수 있다. 마지막 Action 결과도 내부적으로 보존된다.
+- Return/마지막 Action 결과는 `ctx[runId][namespace]` 에 저장되며, namespace 는 Step ID 가 기본이고 필요 시 Step 헤더 `-> resultVar` 로 바꿀 수 있다. namespace 를 바꿔도 Step ID 이름으로 동일 객체가 자동 생성된다.
 
 ```
 return total=total average=avg
+return gear, accounts, total=sum   # 축약 형태
 ```
 
 ## 2.3 Action 문법
@@ -269,14 +277,14 @@ JsonArray       = "[" , [ JsonValue , { "," , JsonValue } ] , "]" ;
 # 5. 예제 (문법 종합)
 
 ```
-step id="load" desc="파일 읽기" -> dataset {
+step id="load" desc="파일 읽기" {
   file read path="./nums.txt" -> raw
   json parse data=raw -> parsed
   return list=parsed
 }
 
-step id="stats" desc="평균 계산" -> avgInfo {
-  math op="avg" arr=dataset.list -> avg
+step id="stats" desc="평균 계산" {
+  math op="avg" arr=load.list -> avg
   if avg > 50 {
     echo msg="high" -> note
   } else {

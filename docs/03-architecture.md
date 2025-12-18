@@ -29,7 +29,7 @@ ExecutionContext (variables, futures, step outputs)
 | Prompt Builders | `buildAIPlanPrompt`, `buildQplanSuperPrompt`, `buildAIGrammarSummary` combine registered modules and grammar summaries into LLM prompts. | `src/core/buildAIPlanPrompt.ts`, `src/core/buildQplanSuperPrompt.ts`, `src/core/buildAIGrammarSummary.ts` |
 
 ## 3. Step system architecture
-1. **Step definition** – `step id="..." desc="..." type="..." onError="..." -> result { ... }`. The parser reads the header and builds a StepNode.
+1. **Step definition** – `step id="..." desc="..." type="..." onError="..." { ... }`. The parser reads the header, validates the ID, and builds a StepNode.
 2. **Step resolution** – Before execution, `resolveSteps()` walks the tree to compute `order`, `path`, `parent`, and `errorPolicy` metadata, plus a StepID → StepNode map.
 3. **StepController** – When the executor runs a step, the controller handles:
    - Emitting onStepStart/End/Error/Retry/Jump events (supplied via `stepEvents`).
@@ -37,7 +37,7 @@ ExecutionContext (variables, futures, step outputs)
    - `onError="retry=N"`: retry up to N times, calling onStepRetry each attempt.
    - `onError="jump='cleanup'"`: raise a JumpSignal to another step.
 4. **Jump handling** – `jump to="stepId"` statements or onError jumps throw JumpSignals; the executor updates block overrides to restart loops/blocks accordingly.
-5. **Step result** – If the step block contains `return`, that object becomes the result; otherwise, the final action result is stored under the header’s `-> output`.
+5. **Step result** – If the step block contains `return`, that object becomes the result; otherwise, the final action result becomes the step result. Either way, the executor stores it under `ctx[runId][namespace]`, where `namespace` defaults to the step ID (override with `step ... -> resultVar`), and mirrors the same object under the original step ID so later steps can reference either `namespace.field` or `stepId.field`.
 
 ## 4. Module structure
 - **Default bundle** – `src/modules/index.ts` registers nine modules (`var/print/echo/sleep/file/math/future/join/json`) into the default registry.

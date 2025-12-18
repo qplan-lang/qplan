@@ -32,6 +32,7 @@ export interface ActionNode extends BaseNode {
   module: string;
   args: Record<string, any>;
   output: string;
+  argRefs?: string[];
 }
 
 /**
@@ -47,7 +48,7 @@ export interface BlockNode extends BaseNode {
  */
 export interface StepNode extends BaseNode {
   type: "Step";
-  id?: string;
+  id: string;
   desc?: string;
   stepType?: string;
   onError?: string;
@@ -91,6 +92,8 @@ export interface ConditionClause {
   negated?: boolean;
   comparator: string;
   right: any;
+  rightType?: "identifier" | "string" | "number";
+  line: number;
 }
 
 export interface ConditionBinary {

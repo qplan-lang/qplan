@@ -14,12 +14,41 @@
 export interface ExecutionContextOptions {
   env?: Record<string, any>;
   metadata?: Record<string, any>;
+  runId?: string;
 }
 
 export class ExecutionContext {
   private store = new Map<string, any>();
+  private runScopes = new Map<string, Record<string, any>>();
 
-  constructor(private readonly options: ExecutionContextOptions = {}) {}
+  constructor(private readonly options: ExecutionContextOptions = {}) {
+    if (options.runId) {
+      this.ensureRunScope(options.runId);
+    }
+  }
+
+  private ensureRunScope(runId: string): Record<string, any> {
+    if (!this.runScopes.has(runId)) {
+      const scope: Record<string, any> = {};
+      this.runScopes.set(runId, scope);
+      this.store.set(runId, scope);
+    }
+    return this.runScopes.get(runId)!;
+  }
+
+  private getActiveRunScope(): Record<string, any> | undefined {
+    if (!this.options.runId) return undefined;
+    return this.runScopes.get(this.options.runId);
+  }
+
+  setStepResult(stepId: string, value: any): void {
+    if (!this.options.runId) {
+      this.set(stepId, value);
+      return;
+    }
+    const scope = this.ensureRunScope(this.options.runId);
+    scope[stepId] = value;
+  }
 
   // 값 저장
   set(name: string, value: any): void {
@@ -31,7 +60,11 @@ export class ExecutionContext {
     if (this.store.has(name)) {
       return this.store.get(name);
     }
-    const resolved = this.resolvePath(name);
+    const fromRun = this.resolveFromRunScope(name);
+    if (fromRun.found) {
+      return fromRun.value;
+    }
+    const resolved = this.resolvePath(name, this.store);
     if (resolved.found) {
       return resolved.value;
     }
@@ -43,19 +76,33 @@ export class ExecutionContext {
     if (this.store.has(name)) {
       return true;
     }
-    return this.resolvePath(name).found;
+    if (this.resolveFromRunScope(name).found) {
+      return true;
+    }
+    return this.resolvePath(name, this.store).found;
   }
 
-  private resolvePath(name: string): { found: boolean; value: any } {
+  private resolvePath(
+    name: string,
+    source: Map<string, any> | Record<string, any>
+  ): { found: boolean; value: any } {
     if (!name.includes(".")) {
       return { found: false, value: undefined };
     }
     const segments = name.split(".");
     const baseKey = segments.shift();
-    if (!baseKey || !this.store.has(baseKey)) {
+    if (!baseKey) {
       return { found: false, value: undefined };
     }
-    let current: any = this.store.get(baseKey);
+    const hasBase =
+      source instanceof Map
+        ? source.has(baseKey)
+        : Object.prototype.hasOwnProperty.call(source, baseKey);
+    if (!hasBase) {
+      return { found: false, value: undefined };
+    }
+    let current: any =
+      source instanceof Map ? source.get(baseKey) : (source as Record<string, any>)[baseKey];
     for (const segment of segments) {
       if (current === null || current === undefined) {
         return { found: false, value: undefined };
@@ -69,6 +116,20 @@ export class ExecutionContext {
       current = current[segment];
     }
     return { found: true, value: current };
+  }
+
+  private resolveFromRunScope(name: string): { found: boolean; value: any } {
+    const scope = this.getActiveRunScope();
+    if (!scope) {
+      return { found: false, value: undefined };
+    }
+    if (!name.includes(".")) {
+      if (Object.prototype.hasOwnProperty.call(scope, name)) {
+        return { found: true, value: scope[name] };
+      }
+      return { found: false, value: undefined };
+    }
+    return this.resolvePath(name, scope);
   }
 
   // 전체 출력

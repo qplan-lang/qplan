@@ -4,7 +4,7 @@ import { ExecutionContext } from "../../core/executionContext.js";
 type PrintEntry =
   | { kind: "literal"; value: any }
   | { kind: "identifier"; name: string }
-  | { kind: "kv"; key: string; value: any };
+  | { kind: "kv"; key: string; value: any; refName?: string };
 
 const resolveInput = (value: any, ctx: ExecutionContext) => {
   if (typeof value === "string" && ctx.has(value)) {

@@ -1,0 +1,5 @@
+step id="유니코드" desc="한글 식별자" {
+  var 1 -> 초기값
+  math add a=초기값 b=2 -> 합계
+  return 초기값, 합계, 최종=합계
+}

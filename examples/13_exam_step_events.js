@@ -9,7 +9,7 @@ step id="prepare" desc="Prepare data" {
   var [1,2,3] -> nums
 }
 
-step id="sum" desc="Sum" -> sumResult {
+step id="sum" desc="Sum" {
   each n in nums {
     math add a=total b=n -> total
   }
@@ -24,8 +24,8 @@ step id="branch" desc="Branch" {
 
 step id="final" desc="Finalize" {
   print total
-  print sumResult
-  return summary=sumResult
+  print sum
+  return summary=sum
 }
 `;
 

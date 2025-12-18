@@ -16,7 +16,8 @@ export interface StepTreeNode {
 
 export interface StepInfo {
   node: StepNode;
-  id?: string;
+  id: string;
+  resultKey: string;
   desc?: string;
   stepType?: string;
   order: number;
@@ -27,6 +28,7 @@ export interface StepInfo {
   children: StepInfo[];
   block: BlockNode;
   statementIndex: number;
+  actionOutputs: string[];
 }
 
 export interface StepResolution {
@@ -37,7 +39,7 @@ export interface StepResolution {
 
 export interface StepEventInfo {
   runId?: string;
-  stepId?: string;
+  stepId: string;
   desc?: string;
   type?: string;
   order: number;
@@ -45,5 +47,4 @@ export interface StepEventInfo {
   depth: number;
   parentStepId?: string;
   errorPolicy: StepErrorPolicy;
-  outputVar?: string;
 }

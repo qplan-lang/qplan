@@ -48,11 +48,10 @@ step id="calc" type="task" desc="Calculation phase" {
 
 ```
 StepNode {
-    id?: string
+    id: string
     desc?: string
     type?: string                // optional (task, group, loop, etc.)
     errorPolicy?: ErrorPolicy    // fail | continue | retry | jump
-    outputVar?: string           // variable receiving the step result
     order: number                // auto-increment
     path: string[]               // hierarchical path (auto-generated)
     parent?: StepNode
@@ -98,19 +97,19 @@ root
 
 Example:
 ```
-step id="pipeline" desc="Root stage" -> pipelineResult {
-    step id="prepare" desc="Data prep" -> prepareResult {
+step id="pipeline" desc="Root stage" {
+    step id="prepare" desc="Data prep" {
         file read path="./input.txt" -> raw
         return data=raw
     }
 
-    step id="aggregate" desc="Aggregate" onError="retry=2" -> aggResult {
+    step id="aggregate" desc="Aggregate" onError="retry=2" {
         math add a=total b=unknown -> total   # triggers retry policy
         return sum=total
     }
 
-    step id="report" desc="Report" -> reportResult {
-        if aggResult.sum > 100 {
+    step id="report" desc="Report" {
+        if aggregate.sum > 100 {
             jump to="review"
         }
         return summary="done"
@@ -124,7 +123,7 @@ step id="pipeline" desc="Root stage" -> pipelineResult {
         ...
     }
 
-    return prepare=prepareResult aggregate=aggResult report=reportResult
+    return prepare=prepare aggregate=aggregate report=report
 }
 ```
 
@@ -145,21 +144,22 @@ A jump targets **step IDs only** (no per-action jumps).
 
 ---
 
-# 6. Step output (optional)
+# 6. Step output
 
-Treat a step like a function:
+Treat a step like a function whose name doubles as the namespace:
 
 ```
-step id="read" desc="Read file" -> result {
+step id="read" desc="Read file" {
     file op="read" path="./a.txt" -> raw
     return data=raw count=rawCount
 }
 ```
 
 Behavior:
-- By default the final action result becomes the step result.  
-- Use `return key=value ...` to shape explicit outputs.
-- Step outputs store in ctx, allowing dot-path access such as `result.total` or `result.status.code`.
+- By default the runtime builds an object that exposes every action output defined inside the step, so
+  `namespace.outputName` works even if you skip `return`. The last action result is also preserved internally.
+- Use `return key=value ...` (or the shorthand `return key value`) to shape explicit outputs when needed.
+- The executor stores the payload under `ctx[runId][namespace]`, where `namespace` defaults to the step ID (override with `step ... -> resultVar`). Later steps access values as `read.data`, `analysis.report`, or any custom namespace you defined. Even when you override the namespace, the engine mirrors the same object under the original step ID so both `resultVar.field` and `stepId.field` work.
 
 ---
 
@@ -192,7 +192,7 @@ step id="prepare" desc="Init" {
     ...
 }
 
-step id="fetch" desc="Collect data" onError="retry=2" -> fetched {
+step id="fetch" desc="Collect data" onError="retry=2" {
     http url="..." -> raw
     math add a=raw b=unknown -> broken    # triggers retry
     return data=raw

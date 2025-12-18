@@ -51,6 +51,5 @@ export function createStepEventInfo(
     depth: info.path.length - 1,
     parentStepId: info.parentId,
     errorPolicy: info.errorPolicy,
-    outputVar: info.node.output,
   };
 }

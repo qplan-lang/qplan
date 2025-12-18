@@ -81,3 +81,15 @@ await runQplan(aiScript, {
 4. Step 이벤트 로그와 ctx 결과를 UI/백엔드에서 활용해 진행률과 성공 여부를 사용자에게 보여준다.
 
 이 흐름을 따르면 “AI thinks, QPlan executes” 패턴을 빠르게 구현할 수 있다.
+
+## 9. 문법 검증 + 재시도 루프
+LLM이 생성한 스크립트가 항상 완벽하진 않다. `validateQplanScript()` 를 이용해 자동 검증/재시도 루프를 구성하면 안정적이다.
+
+1. **생성** – `buildAIPlanPrompt` 로 생성한 프롬프트를 LLM에 전달해 스크립트를 받는다.
+2. **검증** – `const result = validateQplanScript(script)` 실행.
+   - `result.ok === true` 면 `runQplan` 으로 실행.
+   - `result.ok === false` 면 `result.error` 와 `result.issues` 를 확인한다. 각 issue 에는 `line` 과 `hint`(예: “Create 'total' before using it”) 가 포함되어 수정 방향을 명확히 알려 준다.
+3. **재시도** – hint 내용을 LLM에게 피드백으로 전달해 “이 변수부터 만들어 달라”, “jump 대상 step 을 추가해 달라” 처럼 정확히 요청하고 다시 생성한다.
+4. **제한/로깅** – 최대 재시도 횟수를 정하고, 실패한 스크립트 + hint 를 함께 저장/노출해 디버깅이나 사용자 알림에 활용한다.
+
+이 과정을 두면 LLM이 스스로 오류를 교정하며 유효한 QPlan 을 만들 때까지 빠르게 수렴시킬 수 있다.

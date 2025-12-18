@@ -39,13 +39,13 @@ QPlan Language 개요
 QPlan은 Step 기반 워크플로우 언어로, 모든 Action은 반드시 step 블록 내부에서 실행됩니다.
 
 기능 요약:
-- Step 정의: step id="..." desc="..." type="..." onError="..." -> output { ... }
+- Step 정의: step id="..." desc="..." type="..." onError="..." [-> resultVar] { ... }
   - onError: fail(기본), continue, retry=N, jump="stepId"
   - jump to="stepId" 로 다른 Step으로 이동 (블록 간 이동 가능)
   - step 내부에 다른 step 을 중첩(Sub-step)하여 계층 구조를 만들 수 있음
   - 각 step 은 onError 정책으로 fail / continue / retry / jump 흐름을 제어
-  - step 헤더의 \`-> resultVar\` 에 step 결과를 저장하며, 생략하면 마지막 Action 결과가 기본으로 활용됨
-  - \`return key=value ...\` 로 step 결과 객체를 명시적으로 구성할 수 있음
+  - Step 결과는 기본적으로 Step ID에 저장되고(\`ctx[runId][stepId]\`), \`-> resultVar\` 를 지정하면 해당 namespace를 사용한다. Step 내부에서 생성한 action output 들이 객체 형태로 노출되며, 필요 시 \`return key=value ...\` 또는 \`return key value\` 축약형으로 명시적 구조를 지정할 수 있다.
+- 식별자 규칙: 모듈 이름, 변수/Action output, \`return\` key, \`set\` 대상 등은 유니코드 문자/숫자/언더스코어로 구성할 수 있으며, 첫 글자는 문자 또는 언더스코어여야 한다.
 - Action 실행: moduleName key=value ... -> outVar 형태
   - 문자열은 "..." 로 감싸고, ctx 변수를 참조할 때는 해당 변수명을 그대로 value 로 적되 따옴표를 쓰지 않습니다.
   - 모든 Action은 반드시 step 블록 내부에 위치해야 하며, 독립 실행은 허용되지 않습니다.
@@ -58,7 +58,7 @@ QPlan은 Step 기반 워크플로우 언어로, 모든 Action은 반드시 step 
 - Join(Promise.all)
 - ctx 변수 참조 (문자열 값이 ctx key와 동일하면 변수로 취급)
 - Set 문: \`set target = expression\` 으로 ctx 변수에 연산 결과를 저장 (+, -, *, /, 괄호, 리터럴/ctx 조합 지원)
-- Return 문: \`return key=expression ...\` 으로 Step 결과 객체를 명시적으로 구성
+- Return 문: \`return key=expression ...\` 또는 \`return key value ...\` (축약형, 항목 구분은 공백/콤마 모두 허용)으로 Step 결과를 구성. 생략하면 step 내부 action output 들이 자동으로 객체화되어 \`resultNamespace.outputName\`(기본 namespace 는 step ID) 으로 접근 가능.
 
 값 타입:
 - 숫자
@@ -92,10 +92,10 @@ ${trimmedRequirement}
 - step 블록 목록을 모두 출력했다면 즉시 종료하고, 뒤에 요약/정리/추가 텍스트(예: "A -> B")를 붙이지 마세요.
 - 동일한 step 을 반복하거나 빈 step 을 만들지 마세요.
 - Action 결과 변수 이름도 재사용에 주의하고, 필요할 때만 명시적으로 \`return\` 으로 객체를 구성하세요.
-- step의 id로는 결과값에 접근할수 없습니다. \`stepId.value\` 같은 문법은 존재하지 않습니다.
-- ctx 변수나 Step 결과의 하위 필드는 \`stats.average\` 처럼 점(.) 표기로 접근할 수 있습니다. 필요한 필드는 해당 step 내에서 \`return average=...\` 형태로 노출하거나, JSON 모듈을 통해 구성해 두세요.
+- ctx 변수나 Step 결과의 하위 필드는 \`stats.average\`, \`resultNamespace.value\` 처럼 점(.) 표기로 접근할 수 있습니다. Step 내부에서 생성한 action output 은 자동으로 \`resultNamespace.outputName\` 형태로 노출되며(기본 namespace 는 step ID), 추가 필드가 필요하면 \`return gear, accounts total=sum\` 처럼 명시적으로 반환하세요.
 - 의미 없는 wrapper step 을 만들지 말고, 요구사항을 해결하는 데 필요한 단계만 작성하세요.
-- 각 step 헤더의 출력 변수(\`-> resultVar\`)는 고유한 이름을 사용하세요. 같은 이름을 반복하면 이전 결과가 ctx 에서 덮어써집니다.
+- Step ID는 실행 전체에서 유일해야 하며, 다른 step에서 해당 ID를 이용해 결과를 참조합니다. 의미 없는 이름을 사용하지 마세요.
+- Step 결과를 외부에서 사용할 때는 \`resultNamespace.outputName\` 형태를 사용하세요. \`return\` 구문 없이도 Step 내 Action output 이 자동으로 객체화되며, 필요 시 \`return gear, accounts total=sum\` 처럼 축약/명시적 형태를 사용해 필드를 노출하세요. 다른 namespace 가 필요하면 Step 헤더에 \`-> customName\` 을 선언하세요. namespace 를 바꿔도 Step ID 이름으로 동일 객체가 생성되므로 두 이름 모두 접근 가능합니다.
 
 -----------------------------------------
 출력 형식

@@ -58,7 +58,7 @@ When executing a step, the executor delegates to `StepController.runStep()` whic
 | `retry=N` | Retry up to N times, emitting `onStepRetry` per attempt. |
 | `jump="stepId"` | On error, raise a JumpSignal to that step. |
 
-The controller also fires `onStepStart/End/Error/Retry/Jump` so UIs/logs can follow progress. Step outputs are stored under the header’s `-> output` name.
+The controller also fires `onStepStart/End/Error/Retry/Jump` so UIs/logs can follow progress. Step outputs are stored under `ctx[runId][namespace]`, where the namespace defaults to the step ID but may be overridden via `step ... -> resultVar`; even when overridden, the controller mirrors the same object under the original step ID so both `resultVar.field` and `stepId.field` resolve.
 
 ## 5. ExecutionContext interaction
 - Store results via `ctx.set(name, value)`; later arguments that match ctx keys automatically resolve to those values.
@@ -77,13 +77,13 @@ The controller also fires `onStepStart/End/Error/Retry/Jump` so UIs/logs can fol
 
 ## 8. Example – how the executor drives steps
 ```qplan
-step id="pipeline" desc="Full pipeline" -> result {
-  step id="prepare" desc="Prepare" -> prepareResult {
+step id="pipeline" desc="Full pipeline" {
+  step id="prepare" desc="Prepare" {
     file read path="./data.txt" -> raw
     return raw=raw
   }
 
-  step id="process" desc="Compute" onError="retry=2" -> processed {
+  step id="process" desc="Compute" onError="retry=2" {
     math op="div" a=raw b=0 -> impossible   # fails → retry
   }
 
@@ -91,7 +91,7 @@ step id="pipeline" desc="Full pipeline" -> result {
     print text="done"
   }
 
-  return final=processed
+  return final=process
 }
 ```
 - The executor runs steps sequentially, retries the `process` step on failure, and lets `cleanup` proceed thanks to `onError="continue"`.

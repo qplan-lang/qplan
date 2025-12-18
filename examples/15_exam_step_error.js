@@ -21,7 +21,7 @@ step id="continueExample" desc="Continue policy" onError="continue" {
   print "Continue example end"
 }
 
-step id="retryExample" desc="Retry policy" onError="retry=2" -> retryResult {
+step id="retryExample" desc="Retry policy" onError="retry=2" {
   print "Retry example, current counter =" retryCounter
   if retryCounter < 1 {
     set retryCounter = retryCounter + 1
@@ -36,14 +36,14 @@ step id="jumpExample" desc="Jump policy" onError="jump='recovery'" {
   math add a=missingVar b=1 -> broken
 }
 
-step id="recovery" desc="Jump target" -> recoveryResult {
+step id="recovery" desc="Jump target" {
   print "Running recovery step"
   return message="Jump handled"
 }
 
 step id="summary" desc="Summary" {
-  print "retry result:" retryResult
-  print "recovery result:" recoveryResult
+  print "retry result:" retryExample
+  print "recovery result:" recovery
 }
 `;
 

@@ -56,7 +56,7 @@ function normalizeAst(ast) {
   if (ast && typeof ast === "object") {
     const result = {};
     for (const [key, value] of Object.entries(ast)) {
-      if (key === "line") continue;
+      if (key === "line" || key === "argRefs") continue;
       result[key] = normalizeAst(value);
     }
     return result;
@@ -89,6 +89,10 @@ const TEST_CASES = [
   {
     name: "dot_access",
     file: "tests/parser/dot_access.qplan",
+  },
+  {
+    name: "unicode_identifiers",
+    file: "tests/parser/unicode_identifiers.qplan",
   },
 ];
 

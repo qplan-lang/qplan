@@ -1,6 +1,6 @@
 import { ExecutionContext } from "../core/executionContext.js";
 import { StepNode } from "../core/ast.js";
-import { StepResolution } from "./stepTypes.js";
+import { StepResolution, StepInfo } from "./stepTypes.js";
 import { JumpSignal, StepReturnSignal } from "./stepSignals.js";
 import {
   StepEventEmitter,
@@ -36,19 +36,22 @@ export class StepController {
     getResultSince: (snapshot: number) => { hasResult: boolean; value: any }
   ): Promise<void> {
     const info = this.getStepInfo(node);
+    const stepId = info?.id ?? node.id;
+    if (!stepId) {
+      throw new Error("step id is required to store results");
+    }
+    const resultKey = info?.resultKey ?? node.output ?? stepId;
     if (!info) {
       const snapshot = beginAttempt();
       try {
         await executor();
         const result = getResultSince(snapshot);
-        if (node.output && result.hasResult) {
-          ctx.set(node.output, result.value);
+        if (result.hasResult) {
+          this.setStepResultWithAlias(ctx, resultKey, stepId, result.value);
         }
       } catch (err) {
         if (err instanceof StepReturnSignal) {
-          if (node.output) {
-            ctx.set(node.output, err.value);
-          }
+          this.setStepResultWithAlias(ctx, resultKey, stepId, err.value);
           return;
         }
         throw err;
@@ -71,19 +74,18 @@ export class StepController {
       try {
         await executor();
         const result = getResultSince(snapshot);
-        const resultValue = result.hasResult ? result.value : undefined;
-        if (node.output && result.hasResult) {
-          ctx.set(node.output, result.value);
+        let resultValue = result.hasResult ? result.value : undefined;
+        if (result.hasResult) {
+          resultValue = this.applyStepNamespace(info, ctx, resultValue, false);
+          this.setStepResultWithAlias(ctx, resultKey, stepId, resultValue);
         }
         await this.events.onStepEnd?.(eventInfo, resultValue, this.runContext);
         return;
       } catch (err) {
         if (err instanceof StepReturnSignal) {
-          const result = err.value;
-          if (node.output) {
-            ctx.set(node.output, result);
-          }
-          await this.events.onStepEnd?.(eventInfo, result, this.runContext);
+          const applied = this.applyStepNamespace(info, ctx, err.value, true);
+          this.setStepResultWithAlias(ctx, resultKey, stepId, applied);
+          await this.events.onStepEnd?.(eventInfo, applied, this.runContext);
           return;
         }
         if (err instanceof JumpSignal) {
@@ -129,4 +131,37 @@ export class StepController {
     }
   }
 
+  private setStepResultWithAlias(
+    ctx: ExecutionContext,
+    primaryKey: string,
+    stepId: string,
+    value: any
+  ) {
+    ctx.setStepResult(primaryKey, value);
+    if (stepId && primaryKey !== stepId) {
+      ctx.setStepResult(stepId, value);
+    }
+  }
+  private applyStepNamespace(
+    info: StepInfo,
+    ctx: ExecutionContext,
+    value: any,
+    explicit: boolean
+  ): any {
+    if (explicit || !info.actionOutputs?.length) {
+      return value;
+    }
+    const result: Record<string, any> = {};
+    let hasValue = false;
+    for (const outputName of info.actionOutputs) {
+      if (!outputName) continue;
+      if (!ctx.has(outputName)) continue;
+      result[outputName] = ctx.get(outputName);
+      hasValue = true;
+    }
+    if (!hasValue) {
+      return value;
+    }
+    return result;
+  }
 }

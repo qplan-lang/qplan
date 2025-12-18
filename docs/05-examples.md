@@ -14,35 +14,35 @@ step id="hello" desc="First output" {
 
 ## 2. Read a file + compute averages
 ```qplan
-step id="load" desc="Read file" -> dataset {
+step id="load" desc="Read file" {
   file read path="./nums.txt" -> raw
   json parse data=raw -> parsed
   return list=parsed
 }
 
-step id="avg" desc="Average" -> stats {
-  math op="avg" arr=dataset.list -> avg
-  math op="sum" arr=dataset.list -> total
+step id="avg" desc="Average" {
+  math op="avg" arr=load.list -> avg
+  math op="sum" arr=load.list -> total
   return average=avg total=total
 }
 
 step id="report" desc="Print" {
-  print label="total" value=stats.total
-  print label="avg" value=stats.average
+  print label="total" value=avg.total
+  print label="avg" value=avg.average
 }
 ```
 - Reads a JSON array from disk, parses it, and calculates average and sum.
-- References the `load` step output via `dataset.list` using dot paths.
+- References the `load` step output via `load.list` using dot paths.
 
 ## 3. Async flow with Future + Join
 ```qplan
-step id="async" desc="Create futures" -> futures {
+step id="async" desc="Create futures" {
   future task="A" delay=300 value="doneA" -> f1
   future task="B" delay=500 value="doneB" -> f2
   return list=[f1,f2]
 }
 
-step id="join" desc="Join futures" -> results {
+step id="join" desc="Join futures" {
   join futures="f1,f2" -> values
   return values=values
 }
@@ -69,7 +69,7 @@ step id="skip" desc="Next step" {
 
 ## 5. Each loop with stop/skip
 ```qplan
-step id="loop" desc="Loop example" -> summary {
+step id="loop" desc="Loop example" {
   var 0 -> total
   json parse data="[1,2,3,4]" -> nums
   each (n, idx) in nums {
@@ -89,7 +89,7 @@ step id="loop" desc="Loop example" -> summary {
 
 ## 6. Counter updates with While + Set
 ```qplan
-step id="counter" desc="While loop" -> result {
+step id="counter" desc="While loop" {
   var 0 -> count
   while count < 5 {
     set count = count + 1
@@ -105,7 +105,7 @@ step id="prepare" desc="Initialize" {
   var 0 -> retryCount
 }
 
-step id="mayFail" desc="Failure example" onError="retry=2" -> payload {
+step id="mayFail" desc="Failure example" onError="retry=2" {
   math op="div" a=1 b=retryCount -> fail   # first run divides by zero → error → retry
   return value=fail
 }
@@ -115,7 +115,7 @@ step id="cleanup" desc="Handle error" onError="continue" {
 }
 
 step id="summary" desc="Wrap up" {
-  print final=payload.value
+  print final=mayFail.value
 }
 ```
 - `onError="retry=2"` retries the entire step twice before surfacing the final error.

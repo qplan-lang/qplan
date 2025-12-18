@@ -16,7 +16,7 @@ function normalizeAst(ast) {
   if (ast && typeof ast === "object") {
     const result = {};
     for (const [key, value] of Object.entries(ast)) {
-      if (key === "line") continue;
+      if (key === "line" || key === "argRefs") continue;
       result[key] = normalizeAst(value);
     }
     return result;

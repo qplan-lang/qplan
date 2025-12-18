@@ -1,14 +1,14 @@
-step id="calc" desc="collect stats" -> stats {
+step id="calc" desc="collect stats" {
   var {"total": 28, "average": 4, "detail": {"status": "ok"}} -> info
-  return total=info.total average=info.average detail=info.detail
+  return total=info.total, average=info.average, detail=info.detail
 }
 
 step id="use" desc="use dot access" {
-  math op="add" a=stats.total b=2 -> adjusted
-  if (stats.average >= 4) {
+  math op="add" a=calc.total b=2 -> adjusted
+  if (calc.average >= 4) {
     print "ok"
   } else {
     print "low"
   }
-  json op="get" data=stats.detail path="status" -> status
+  json op="get" data=calc.detail path="status" -> status
 }

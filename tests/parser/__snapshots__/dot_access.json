@@ -7,7 +7,6 @@
         "type": "Step",
         "id": "calc",
         "desc": "collect stats",
-        "output": "stats",
         "block": {
           "type": "Block",
           "statements": [
@@ -66,7 +65,7 @@
               "module": "math",
               "args": {
                 "op": "add",
-                "a": "stats.total",
+                "a": "calc.total",
                 "b": 2
               },
               "output": "adjusted"
@@ -75,9 +74,10 @@
               "type": "If",
               "condition": {
                 "type": "Simple",
-                "left": "stats.average",
+                "left": "calc.average",
                 "comparator": ">=",
                 "right": 4,
+                "rightType": "number",
                 "negated": false
               },
               "thenBlock": {
@@ -124,7 +124,7 @@
               "module": "json",
               "args": {
                 "op": "get",
-                "data": "stats.detail",
+                "data": "calc.detail",
                 "path": "status"
               },
               "output": "status"

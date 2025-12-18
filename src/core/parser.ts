@@ -31,6 +31,7 @@ import {
   ExpressionNode
 } from "./ast.js";
 import { ParserError } from "./parserError.js";
+import { isValidStepId } from "../step/stepId.js";
 
 export class Parser {
   private pos = 0;
@@ -89,10 +90,30 @@ export class Parser {
   }
 
   private consumeValueAny(): any {
+    return this.consumeValueWithKind().value;
+  }
+
+  private consumeValueWithKind():
+    | { value: any; kind: "string" }
+    | { value: any; kind: "number" }
+    | { value: any; kind: "identifier" }
+    | { value: any; kind: "json" } {
     const t = this.peek();
-    if (t.type === TokenType.String) return this.consumeString();
-    if (t.type === TokenType.Number) return Number(this.consume(TokenType.Number).value);
-    if (t.type === TokenType.Identifier) return this.consumeIdentifierPath();
+    if (t.type === TokenType.String) {
+      return { value: this.consumeString(), kind: "string" };
+    }
+    if (t.type === TokenType.Number) {
+      return {
+        value: Number(this.consume(TokenType.Number).value),
+        kind: "number",
+      };
+    }
+    if (t.type === TokenType.Identifier) {
+      return { value: this.consumeIdentifierPath(), kind: "identifier" };
+    }
+    if (t.type === TokenType.Symbol && (t.value === "[" || t.value === "{")) {
+      return { value: this.parseJsonLiteralValue(), kind: "json" };
+    }
     throw new ParserError(`Unexpected value '${t.value}'`, t.line);
   }
 
@@ -200,6 +221,7 @@ export class Parser {
     }
 
     const args: Record<string, any> = {};
+    const identifierRefs = new Set<string>();
     const options = this.collectModuleOptions(line);
     this.applyOptionsToArgs(args, options);
     let suppressStore = false;
@@ -217,6 +239,7 @@ export class Parser {
           vars.push(this.consumeIdentifier());
         }
         args["using"] = vars;
+        vars.forEach(v => identifierRefs.add(v));
       }
 
       let out: string;
@@ -233,7 +256,8 @@ export class Parser {
         module: moduleName,
         args,
         output: out,
-        line
+        line,
+        argRefs: identifierRefs.size ? Array.from(identifierRefs) : undefined,
       };
     }
 
@@ -249,8 +273,12 @@ export class Parser {
       ) {
         const key = this.consumeIdentifier();
         this.consume(TokenType.Symbol, "=");
-        const value = this.consumeValueAny();
+        const consumed = this.consumeValueWithKind();
+        const value = consumed.value;
         args[key] = value;
+        if (consumed.kind === "identifier" && typeof value === "string") {
+          identifierRefs.add(value);
+        }
         continue;
       }
       break;
@@ -275,6 +303,7 @@ export class Parser {
       args,
       output: out,
       line,
+      argRefs: identifierRefs.size ? Array.from(identifierRefs) : undefined,
     };
   }
 
@@ -302,6 +331,7 @@ export class Parser {
     let desc: string | undefined;
     let stepType: string | undefined;
     let onError: string | undefined;
+    let outputVar: string | undefined;
 
     let extraMeta:
       | {
@@ -326,10 +356,19 @@ export class Parser {
       onError = extraMeta.onError ?? onError;
     }
 
-    let output: string | undefined;
+    if (!id) {
+      throw new ParserError("step requires id=\"<identifier>\"", line);
+    }
+    if (!isValidStepId(id)) {
+      throw new ParserError(
+        `Invalid step id '${id}'. Use letters (Unicode supported), digits, or underscore; start with a letter or underscore.`,
+        line
+      );
+    }
+
     if (this.check(TokenType.Symbol, "->")) {
       this.consume(TokenType.Symbol, "->");
-      output = this.consumeIdentifier();
+      outputVar = this.consumeIdentifier();
     }
 
     this.consume(TokenType.Symbol, "{");
@@ -342,7 +381,7 @@ export class Parser {
       desc,
       stepType,
       onError,
-      output,
+      output: outputVar,
       block,
       line,
     };
@@ -383,7 +422,7 @@ export class Parser {
     const meta: { [key: string]: string | undefined } = {};
 
     while (true) {
-      if (this.check(TokenType.Symbol, "{") || this.check(TokenType.Symbol, "->")) {
+      if (this.check(TokenType.Symbol, "{")) {
         break;
       }
       if (!this.match(TokenType.Identifier)) {
@@ -420,6 +459,14 @@ export class Parser {
   private parsePrintAction(moduleName: string, line: number): ActionNode {
     const entries = this.collectPrintEntries(line);
     const args: Record<string, any> = { __entries: entries };
+    const identifierRefs: string[] = [];
+    for (const entry of entries as any[]) {
+      if (entry.kind === "identifier" && typeof entry.name === "string") {
+        identifierRefs.push(entry.name);
+      } else if (entry.kind === "kv" && typeof entry.refName === "string") {
+        identifierRefs.push(entry.refName);
+      }
+    }
     let output: string;
     let suppressStore = false;
 
@@ -441,6 +488,7 @@ export class Parser {
       args,
       output,
       line,
+      argRefs: identifierRefs.length ? identifierRefs : undefined,
     };
   }
 
@@ -467,8 +515,13 @@ export class Parser {
       ) {
         const key = this.consumeIdentifier();
         this.consume(TokenType.Symbol, "=");
-        const value = this.consumeValueAny();
-        entries.push({ kind: "kv", key, value });
+        const consumed = this.consumeValueWithKind();
+        entries.push({
+          kind: "kv",
+          key,
+          value: consumed.value,
+          refName: consumed.kind === "identifier" ? (consumed.value as string) : undefined,
+        });
         continue;
       }
 
@@ -798,6 +851,7 @@ export class Parser {
       this.consume(TokenType.Keyword, "NOT");
     }
 
+    const line = this.peek().line;
     const left = this.consumeIdentifierPath();
 
     const opToken = this.peek();
@@ -825,12 +879,16 @@ export class Parser {
 
     const rt = this.peek();
     let right: any;
+    let rightType: "identifier" | "string" | "number";
     if (rt.type === TokenType.Number) {
       right = Number(this.consume(TokenType.Number).value);
+      rightType = "number";
     } else if (rt.type === TokenType.String) {
-      right = this.consume(TokenType.String).value;
+      right = this.consumeString();
+      rightType = "string";
     } else if (rt.type === TokenType.Identifier) {
       right = this.consumeIdentifierPath();
+      rightType = "identifier";
     } else {
       throw new ParserError(`Invalid right operand '${rt.value}'`, rt.line);
     }
@@ -840,7 +898,9 @@ export class Parser {
       left,
       comparator,
       right,
+      rightType,
       negated,
+      line,
     };
   }
 
@@ -963,24 +1023,24 @@ export class Parser {
     const entries: ReturnEntry[] = [];
 
     while (true) {
-      if (!this.match(TokenType.Identifier)) break;
-      const key = this.consumeIdentifier();
-      if (!this.check(TokenType.Symbol, "=")) {
-        throw new ParserError("return requires 'key=expression'", this.peek().line);
-      }
-      this.consume(TokenType.Symbol, "=");
-      const expression = this.parseExpression();
-      entries.push({ key, expression });
-
-      const next = this.peek();
-      if (
-        next.type === TokenType.Identifier &&
-        this.peek(1).type === TokenType.Symbol &&
-        this.peek(1).value === "="
-      ) {
+      if (this.check(TokenType.Symbol, ",")) {
+        this.consume(TokenType.Symbol, ",");
         continue;
       }
-      break;
+      if (!this.match(TokenType.Identifier)) break;
+      const key = this.consumeIdentifier();
+      let expression: ExpressionNode;
+      if (this.check(TokenType.Symbol, "=")) {
+        this.consume(TokenType.Symbol, "=");
+        expression = this.parseExpression();
+      } else {
+        expression = {
+          type: "Identifier",
+          name: key,
+        };
+      }
+      entries.push({ key, expression });
+
     }
 
     if (!entries.length) {

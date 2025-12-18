@@ -25,6 +25,7 @@
                 "left": "count",
                 "comparator": "<",
                 "right": 3,
+                "rightType": "number",
                 "negated": false
               },
               "block": {

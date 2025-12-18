@@ -144,7 +144,6 @@
         "id": "retryExample",
         "desc": "Retry policy",
         "onError": "retry=2",
-        "output": "retryResult",
         "block": {
           "type": "Block",
           "statements": [
@@ -173,6 +172,7 @@
                 "left": "retryCounter",
                 "comparator": "<",
                 "right": 1,
+                "rightType": "number",
                 "negated": false
               },
               "thenBlock": {
@@ -287,7 +287,6 @@
         "type": "Step",
         "id": "recovery",
         "desc": "Jump target",
-        "output": "recoveryResult",
         "block": {
           "type": "Block",
           "statements": [
@@ -338,7 +337,7 @@
                   },
                   {
                     "kind": "identifier",
-                    "name": "retryResult"
+                    "name": "retryExample"
                   }
                 ],
                 "__suppressStore": true
@@ -356,7 +355,7 @@
                   },
                   {
                     "kind": "identifier",
-                    "name": "recoveryResult"
+                    "name": "recovery"
                   }
                 ],
                 "__suppressStore": true
