@@ -90,6 +90,7 @@ ${trimmedRequirement}
 - 자연어 설명, 주석을 절대로 넣지 마세요.
 - 코드블록(\`\`\`)을 절대로 넣지 마세요.
 - step 블록 목록을 모두 출력했다면 즉시 종료하고, 뒤에 요약/정리/추가 텍스트(예: "A -> B")를 붙이지 마세요.
+- 하나의 step에 전 과정을 몰아넣지 말고, 데이터 수집/전처리/분석/보고 등 **주요 목적별**로 step을 분리하세요. Step 내부에는 서로 긴밀히 연관된 action만 두세 개 정도 배치하고, 역할이 다르면 새로운 step을 만드세요.
 - 동일한 step 을 반복하거나 빈 step 을 만들지 마세요.
 - Action 결과 변수 이름도 재사용에 주의하고, 필요할 때만 명시적으로 \`return\` 으로 객체를 구성하세요.
 - ctx 변수나 Step 결과의 하위 필드는 \`stats.average\`, \`resultNamespace.value\` 처럼 점(.) 표기로 접근할 수 있습니다. Step 내부에서 생성한 action output 은 자동으로 \`resultNamespace.outputName\` 형태로 노출되며(기본 namespace 는 step ID), 추가 필드가 필요하면 \`return gear, accounts total=sum\` 처럼 명시적으로 반환하세요.
