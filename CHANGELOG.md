@@ -26,6 +26,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.2.1] - 2025-12-16
+- Fixed step outputs being passed as literal identifier strings by resolving action arguments from the execution context before module execution.
+
+---
+
+## [0.2.0] - 2025-12-15
+- Step `return` shorthand (`return gear, accounts, total=sum`) now expands per the grammar specification, guaranteeing results live under both the step ID and any alias namespace.
+- Step outputs are always mirrored under both `stepId` and `stepId.outputVar`, so later steps can reference either form without extra wiring.
+
+---
+
 ## [0.1.6] - 2025-12-15
 
 ### Added

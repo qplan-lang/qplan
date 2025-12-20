@@ -14,6 +14,15 @@ const envEchoModule = {
   },
 };
 
+const captureInputsModule = {
+  id: "capture_inputs",
+  description: "Echoes received inputs for verifying ctx argument resolution",
+  inputs: [],
+  async execute(inputs) {
+    return { ...inputs };
+  },
+};
+
 async function testEnvHooksAndPlanEvents() {
   const customRegistry = new ModuleRegistry();
   customRegistry.register(envEchoModule);
@@ -150,6 +159,42 @@ step id="custom" desc="Alias namespace" -> 결과네임스페이스 {
   assert.deepStrictEqual(snapshot[runId].결과네임스페이스, { 최종: "alias-value" });
 }
 
+async function testActionArgsResolveAgainstCtx() {
+  const registry = new ModuleRegistry();
+  registry.register(captureInputsModule);
+
+  const script = `
+step id="fetch_basic" desc="기본 데이터" {
+  var {"code":"005930","name":"Samsung Electronics"} -> basicInfo
+}
+
+step id="fetch_news" desc="뉴스" {
+  var [
+    {"title":"삼성전자 실적", "sentiment":"positive"},
+    {"title":"삼성전자 공급망", "sentiment":"neutral"}
+  ] -> newsList
+}
+
+step id="summarize" desc="요약 리포트 작성" {
+  capture_inputs basicInfo=basicInfo news=newsList
+                 viaStep=fetch_basic viaStepField=fetch_basic.basicInfo -> summary
+}
+`;
+
+  const ctx = await runQplan(script, { registry });
+  const summary = ctx.get("summary");
+
+  assert.strictEqual(summary.basicInfo.code, "005930");
+  assert.strictEqual(summary.basicInfo.name, "Samsung Electronics");
+  assert.strictEqual(summary.news.length, 2);
+  assert.strictEqual(summary.viaStep.basicInfo.name, "Samsung Electronics");
+  assert.deepStrictEqual(summary.viaStepField, {
+    code: "005930",
+    name: "Samsung Electronics",
+  });
+}
+
 await testEnvHooksAndPlanEvents();
 await testReturnShorthandAndStepNamespace();
+await testActionArgsResolveAgainstCtx();
 console.log("runtime runQplan-tests passed");

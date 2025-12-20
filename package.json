@@ -1,6 +1,6 @@
 {
   "name": "qplan",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "AI Planning Language & Execution Engine",
   "type": "module",
   "main": "dist/index.js",
@@ -22,6 +22,7 @@
   "keywords": [
     "workflow",
     "ai",
+    "agent",
     "automation",
     "planning",
     "plan",

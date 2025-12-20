@@ -166,13 +166,14 @@ export class Executor {
     const mod = this.registry.get(node.module);
     if (!mod) throw new Error(`Unknown module: ${node.module}`);
 
+    const actionArgs = this.resolveActionArgs(node.args, ctx);
     let result;
 
     try {
       if (typeof mod === "function") {
-        result = await mod(node.args, ctx);
+        result = await mod(actionArgs, ctx);
       } else if (typeof mod.execute === "function") {
-        result = await mod.execute(node.args, ctx);
+        result = await mod.execute(actionArgs, ctx);
       } else {
         throw new Error(`Invalid module type: ${node.module}`);
       }
@@ -200,6 +201,25 @@ export class Executor {
 
     this.lastActionResult = result;
     this.actionSequence++;
+  }
+
+  private resolveActionArgs(
+    args: Record<string, any> | undefined,
+    ctx: ExecutionContext
+  ): Record<string, any> {
+    if (!args || !Object.keys(args).length) {
+      return {};
+    }
+
+    const resolved: Record<string, any> = {};
+    for (const [key, value] of Object.entries(args)) {
+      if (typeof value === "string" && ctx.has(value)) {
+        resolved[key] = ctx.get(value);
+      } else {
+        resolved[key] = value;
+      }
+    }
+    return resolved;
   }
 
   private async execIf(node: IfNode, ctx: ExecutionContext) {
