@@ -145,6 +145,28 @@ QPlan은 각 Step을 순차적으로 실행하며
 UI, 로그 기록, 알림 시스템 등은
 이 stepEvents를 활용하여 구성할 수 있습니다.
 
+Step 목록을 UI에 미리 표시하거나 실행 도중 상태(pending/running/retrying/completed/error)를 추적해야 한다면 `QPlan` 객체를 사용할 수 있습니다.
+
+```ts
+import { QPlan } from "qplan";
+
+const qplan = new QPlan(qplanScript, { registry });
+console.table(qplan.getStepList()); // [{ id, desc, status, ... }]
+const validation = qplan.validate();
+if (!validation.ok) throw new Error(validation.error);
+
+await qplan.run({
+  registry,
+  stepEvents: {
+    onStepStart(info) {
+      // qplan.getStepList() 내 해당 step 상태가 running 으로 자동 갱신됨
+    },
+  },
+});
+```
+
+`qplan.getStepList()` 는 동일 배열을 유지하면서 각 항목의 status/result/error 를 실시간으로 업데이트하므로, 대시보드/로그에서 그대로 사용할 수 있습니다.
+
 ---
 
 ## 5. 개발자가 QPlan Language 전체를 이해할 필요는 없습니다

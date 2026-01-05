@@ -100,6 +100,8 @@ Scripts generated this way can run immediately via `runQplan` or be pre-validate
 
 ## ✅ Validation & execution tools
 - **validateQplanScript(script)**—returns tokenize/parse/semantic-validation results. Success: `{ ok: true, ast }`; failure: `{ ok: false, error, line, issues }`.
+- **QPlan(script, { registry }?)**—object wrapper around validation/execution. Call `qplan.validate()` to reuse the validator result, `qplan.getStepList()` to expose step metadata/status for UIs, and `await qplan.run({ ... })` to execute while the internal step list tracks pending/running/retrying/completed/error states (see `examples/19_exam_qplan_object.js`).
+- **Comment support**—QPlan scripts accept `// line comments`, `# line comments`, and `/* block comments */`; the tokenizer skips them everywhere (files, inline strings, etc.).
 - **CLI validator**—`src/tools/validateScript.ts` powers `npm run validate -- examples/12_exam_step.qplan`, inspecting files or stdin (`-`).
 - **Semantic Validator**—catches structural errors like missing jump targets or invalid onError="jump" references early.
 - **ExecutionContext debugging**—`ctx.toJSON()` dumps the full variable state for UI/log inspection.

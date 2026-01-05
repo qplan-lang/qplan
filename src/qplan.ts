@@ -1,0 +1,209 @@
+import type { ASTRoot } from "./core/ast.js";
+import { resolveSteps } from "./step/stepResolver.js";
+import type { StepResolution, StepInfo } from "./step/stepTypes.js";
+import { ModuleRegistry } from "./core/moduleRegistry.js";
+import { ExecutionContext } from "./core/executionContext.js";
+import { Executor } from "./core/executor.js";
+import type {
+  PlanEventInfo,
+  StepEventEmitter,
+  StepEventRunContext,
+} from "./step/stepEvents.js";
+import type { StepEventInfo } from "./step/stepTypes.js";
+import { validateScript, QplanValidationResult } from "./core/qplanValidation.js";
+
+export type StepLifecycleStatus =
+  | "pending"
+  | "running"
+  | "retrying"
+  | "completed"
+  | "error";
+
+export interface QPlanStepState {
+  id: string;
+  desc?: string;
+  type?: string;
+  order: number;
+  path: string[];
+  parentStepId?: string;
+  status: StepLifecycleStatus;
+  error?: Error;
+  result?: any;
+}
+
+export interface QPlanOptions {
+  registry?: ModuleRegistry;
+}
+
+export interface QPlanRunOptions {
+  registry?: ModuleRegistry;
+  stepEvents?: StepEventEmitter;
+  env?: Record<string, any>;
+  metadata?: Record<string, any>;
+  runId?: string;
+}
+
+interface InternalStepState extends QPlanStepState {
+  info: StepInfo;
+}
+
+let qplanRunCounter = 0;
+
+export class QPlan {
+  private ast: ASTRoot;
+  private resolution: StepResolution;
+  private stepStates: Map<string, InternalStepState> = new Map();
+  private defaultRegistry?: ModuleRegistry;
+
+  constructor(private script: string, options: QPlanOptions = {}) {
+    this.defaultRegistry = options.registry;
+    this.ast = this.buildAst(script);
+    this.resolution = resolveSteps(this.ast.block);
+    this.initializeStepStates();
+  }
+
+  getStepList(): QPlanStepState[] {
+    return Array.from(this.stepStates.values())
+      .sort((a, b) => a.order - b.order)
+      .map(({ info: _info, ...rest }) => ({ ...rest }));
+  }
+
+  async run(options: QPlanRunOptions = {}): Promise<ExecutionContext> {
+    this.resetStepStates();
+    const registry = options.registry ?? this.defaultRegistry ?? new ModuleRegistry();
+    const runId = options.runId ?? `run-${Date.now()}-${++qplanRunCounter}`;
+    const ctx = new ExecutionContext({
+      env: options.env,
+      metadata: options.metadata,
+      runId,
+    });
+    const runContext: StepEventRunContext = {
+      runId,
+      script: this.script,
+      ctx,
+      registry,
+      env: options.env,
+      metadata: options.metadata,
+    };
+    const executor = new Executor(registry, this.buildTrackingEmitter(options.stepEvents));
+    await executor.run(this.ast, ctx, runContext);
+    return ctx;
+  }
+
+  private buildAst(script: string): ASTRoot {
+    const result = validateScript(script);
+    if (!result.ok) {
+      const error = new Error(result.error);
+      (error as any).line = result.line;
+      throw error;
+    }
+    return result.ast;
+  }
+
+  validate(): QplanValidationResult {
+    return validateScript(this.script);
+  }
+
+  private initializeStepStates() {
+    this.stepStates.clear();
+    for (const info of this.resolution.infoById.values()) {
+      this.stepStates.set(info.id, this.createState(info));
+    }
+  }
+
+  private createState(info: StepInfo): InternalStepState {
+    return {
+      id: info.id,
+      desc: info.desc,
+      type: info.stepType,
+      order: info.order,
+      path: info.path,
+      parentStepId: info.parentId,
+      status: "pending",
+      info,
+    };
+  }
+
+  private resetStepStates() {
+    for (const entry of this.stepStates.values()) {
+      entry.status = "pending";
+      entry.error = undefined;
+      entry.result = undefined;
+    }
+  }
+
+  private buildTrackingEmitter(userEmitter?: StepEventEmitter): StepEventEmitter {
+    const forward = async <K extends keyof StepEventEmitter>(
+      name: K,
+      ...args: any[]
+    ) => {
+      const handler = userEmitter?.[name];
+      if (handler) {
+        await (handler as (...inner: any[]) => any)(...args);
+      }
+    };
+
+    return {
+      onPlanStart: async (plan: PlanEventInfo, context?: StepEventRunContext) => {
+        this.resetStepStates();
+        await forward("onPlanStart", plan, context as any);
+      },
+      onPlanEnd: async (plan: PlanEventInfo, context?: StepEventRunContext) => {
+        await forward("onPlanEnd", plan, context as any);
+      },
+      onStepStart: async (info: StepEventInfo, context?: StepEventRunContext) => {
+        this.markRunning(info.stepId);
+        await forward("onStepStart", info, context as any);
+      },
+      onStepEnd: async (info: StepEventInfo, result: any, context?: StepEventRunContext) => {
+        this.markCompleted(info.stepId, result);
+        await forward("onStepEnd", info, result, context as any);
+      },
+      onStepError: async (info: StepEventInfo, error: Error, context?: StepEventRunContext) => {
+        this.markError(info.stepId, error);
+        await forward("onStepError", info, error, context as any);
+      },
+      onStepRetry: async (
+        info: StepEventInfo,
+        attempt: number,
+        error: Error,
+        context?: StepEventRunContext
+      ) => {
+        this.markRetrying(info.stepId, error);
+        await forward("onStepRetry", info, attempt, error, context as any);
+      },
+      onStepJump: async (info: StepEventInfo, target: string, context?: StepEventRunContext) => {
+        await forward("onStepJump", info, target, context as any);
+      },
+    };
+  }
+
+  private markRunning(stepId: string) {
+    const state = this.stepStates.get(stepId);
+    if (!state) return;
+    state.status = "running";
+    state.error = undefined;
+    state.result = undefined;
+  }
+
+  private markCompleted(stepId: string, result: any) {
+    const state = this.stepStates.get(stepId);
+    if (!state) return;
+    state.status = "completed";
+    state.result = result;
+  }
+
+  private markError(stepId: string, error: Error) {
+    const state = this.stepStates.get(stepId);
+    if (!state) return;
+    state.status = "error";
+    state.error = error;
+  }
+
+  private markRetrying(stepId: string, error: Error) {
+    const state = this.stepStates.get(stepId);
+    if (!state) return;
+    state.status = "retrying";
+    state.error = error;
+  }
+}

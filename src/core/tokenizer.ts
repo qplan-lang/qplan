@@ -81,6 +81,38 @@ export function tokenize(input: string): Token[] {
       continue;
     }
 
+    // Line/Block comments starting with // or /* */
+    if (c === "/") {
+      const next = input[i + 1];
+      if (next === "/") {
+        i += 2;
+        while (i < input.length && input[i] !== "\n") i++;
+        continue;
+      }
+      if (next === "*") {
+        i += 2;
+        let closed = false;
+        while (i < input.length) {
+          const ch = input[i];
+          if (ch === "\n") {
+            line++;
+            i++;
+            continue;
+          }
+          if (ch === "*" && i + 1 < input.length && input[i + 1] === "/") {
+            i += 2;
+            closed = true;
+            break;
+          }
+          i++;
+        }
+        if (!closed) {
+          throw new Error(`Tokenizer error at line ${line}: unterminated block comment`);
+        }
+        continue;
+      }
+    }
+
     // String "..."
     if (c === '"') {
       i++;

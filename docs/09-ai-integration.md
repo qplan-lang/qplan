@@ -58,7 +58,7 @@ await runQplan(aiScript);
 - CI pipelines can run `npm run validate -- script.qplan` for automated checks.
 
 ## 7. Step events for monitoring
-`runQplan(script, { stepEvents })` lets you subscribe to plan start/end plus step start/end/error/retry/jump events. Each callback receives a `StepEventRunContext` so you can correlate user/session data without extra closures. Use them to visualize LLM-generated plans or plan re-runs.
+`runQplan(script, { stepEvents })` (or `qplan.run({ ... })` if you wrapped the script with `new QPlan(script)`) lets you subscribe to plan start/end plus step start/end/error/retry/jump events. Each callback receives a `StepEventRunContext` so you can correlate user/session data without extra closures. Use them to visualize LLM-generated plans or plan re-runs.
 
 ```ts
 await runQplan(aiScript, {
@@ -77,7 +77,7 @@ await runQplan(aiScript, {
 ## 8. Recommended strategy
 1. Register only core + necessary modules, expose `registry.list()` to the LLM.
 2. Use `buildAIPlanPrompt(requirement)` to structure the user request.
-3. Validate/execute the AI output via `validateQplanScript` and `runQplan`.
+3. Validate/execute the AI output via `validateQplanScript` and `runQplan` (or the `QPlan` wrapper when you need long-lived step metadata).
 4. Surface step events and ctx results in the UI/backend to show progress and success.
 
 Following this flow delivers the “AI thinks, QPlan executes” pattern quickly.

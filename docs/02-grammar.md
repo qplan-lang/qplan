@@ -39,6 +39,7 @@ step id="demo" desc="Simple sum" {
   - `type`: arbitrary tag (task/group/loop, etc.).
   - `onError`: `fail` (default) / `continue` / `retry=<N>` / `jump="<stepId>"`.
 - Step IDs must contain Unicode letters or ASCII underscores, start with a letter/underscore, and may include digits after the first character.
+- Comments are supported anywhere: use `// comment` or `# note` for single-line comments and `/* block */` for multi-line comments. The parser ignores them entirely.
 - Step results are automatically stored under `ctx[runId][namespace]`, where `namespace` defaults to the step ID (override with `-> resultVar`). Other steps reuse them via `namespace.field`, and the engine also mirrors the same object under the original step ID so both names stay valid.
 - Steps can contain nested steps to form a sub-step tree.
 - Identifiers (module names, action outputs, variables, return keys, `set` targets, etc.) may include any Unicode letter/digit plus `_`, but they must start with a letter or underscore.

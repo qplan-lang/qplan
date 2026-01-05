@@ -100,6 +100,8 @@ const aiScript = await callLlm(prompt);
 
 ## ✅ 검증 & 실행 도구
 - **validateQplanScript(script)** — Tokenize, Parse, Semantic Validation 결과를 반환한다. 성공 시 `{ ok: true, ast }`, 실패 시 `{ ok: false, error, line, issues }` 구조다.
+- **QPlan(script, { registry }?)** — 스크립트를 객체로 감싸 사전 검증(`qplan.validate()`), 스텝 목록(`qplan.getStepList()`), 실행(`qplan.run()`) 동안 상태(pending/running/retrying/completed/error)를 추적할 수 있는 래퍼. `examples/19_exam_qplan_object.js` 에서 UI + 실행 흐름 전체 예시를 제공한다.
+- **주석 지원** — QPlan 스크립트 어디서나 `// 한 줄 주석`, `# 한 줄 주석`, `/* 블록 주석 */` 을 사용할 수 있으며, 토크나이저가 전부 무시한다.
 - **CLI 검증기** — `src/tools/validateScript.ts` 를 통해 `npm run validate -- examples/12_exam_step.qplan` 처럼 파일 또는 stdin(`-`)을 검사할 수 있다.
 - **Semantic Validator** — jump to 대상 Step 누락, onError="jump" 대상 검증 등 구조적 오류를 미리 탐지한다.
 - **ExecutionContext 디버깅** — `ctx.toJSON()` 으로 현재 변수 상태를 전부 출력해 UI/로그에서 쉽게 확인할 수 있다.

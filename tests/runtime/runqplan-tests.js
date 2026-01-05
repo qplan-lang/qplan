@@ -194,7 +194,31 @@ step id="summarize" desc="요약 리포트 작성" {
   });
 }
 
+async function testCommentsIgnoredDuringExecution() {
+  const script = `
+// header comment
+step id="setup" {
+  # hash comment
+  var 1 -> one
+  /* block
+     comment */
+  var 2 -> two
+}
+
+step id="sum" {
+  math add a=setup.one b=setup.two -> total
+  // comment after computation
+  return total=total
+}
+`;
+
+  const ctx = await runQplan(script);
+  const total = ctx.get("sum.total");
+  assert.strictEqual(total, 3);
+}
+
 await testEnvHooksAndPlanEvents();
 await testReturnShorthandAndStepNamespace();
 await testActionArgsResolveAgainstCtx();
+await testCommentsIgnoredDuringExecution();
 console.log("runtime runQplan-tests passed");

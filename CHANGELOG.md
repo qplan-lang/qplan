@@ -7,22 +7,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased]
+## [0.3.0] - 2026-01-06
 
 ### Added
-- Initial doc set: README, grammar.md, modules.md, architecture.md, examples.md  
-- CONTRIBUTING.md  
-- CHANGELOG.md  
-- Base QPlan language grammar  
-- EBNF-driven language spec  
-- Concept for core modules (FETCH, CALC, AI, CALL)  
-- Execution engine architecture (Tokenizer → Parser → AST → Executor)
+- `QPlan` wrapper class (`src/qplan.ts`) and walkthrough example (`examples/19_exam_qplan_object.js`) so scripts can be pre-validated, step lists rendered, and lifecycle tracked outside of `runQplan`.
+- Comment syntax support (`//`, `#`, `/* ... */`) plus README/overview/architecture/quickstart/AI-integration updates explaining how to use it.
+- Comment-focused sample (`examples/20_exam_comments.js`) and accompanying parser/runtime tests (`tests/parser/comments.qplan`, new runtime test).
 
 ### Changed
-- Documentation structure cleanup (migrating into `docs/`)
+- Split out reusable validator logic (`src/core/qplanValidation.ts`) so `validateQplanScript` and `QPlan.validate()` share the same implementation.
+- Documented the QPlan object + comment support across both EN/KR docs.
 
 ### Fixed
-- None
+- N/A (feature-focused release).
 
 ---
 

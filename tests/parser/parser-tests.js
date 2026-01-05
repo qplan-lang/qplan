@@ -94,6 +94,10 @@ const TEST_CASES = [
     name: "unicode_identifiers",
     file: "tests/parser/unicode_identifiers.qplan",
   },
+  {
+    name: "comments",
+    file: "tests/parser/comments.qplan",
+  },
 ];
 
 async function runTestCase(test) {

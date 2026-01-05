@@ -24,6 +24,7 @@ ExecutionContext (variables, futures, step outputs)
 | Step Resolver / Controller | Step 트리를 분석해 order/path/parent 관계를 계산하고, 실행 중에는 onError 정책(fail/continue/retry/jump)과 Plan/Step 이벤트(onPlanStart/End, onStepStart/End/Error/Retry/Jump)를 관리한다. | `src/step/stepResolver.ts`, `src/step/stepController.ts`, `src/step/stepEvents.ts` |
 | Executor | AST를 순차/병렬로 실행한다. If/While/Each/Parallel/Jump/Set/Return/Future/Join/Stop/Skip을 모두 처리하며 ExecutionContext를 갱신한다. | `src/core/executor.ts` |
 | ExecutionContext | ctx.set/get/has/toJSON 을 제공하는 런타임 저장소. dot-path(`stats.total`) 접근을 지원하고, 실행 옵션으로 전달한 `env`, `metadata` 는 `ctx.getEnv()`, `ctx.getMetadata()` 로 읽을 수 있다. | `src/core/executionContext.ts` |
+| QPlan 래퍼 | 스크립트를 객체로 감싸 Tokenize/Parse/Semantic Validation 결과와 Step 메타데이터를 캐싱하고, `getStepList()` 로 UI 친화적인 스텝 정보 및 상태를 제공하며, `run()` 시 내부 stepEvents로 상태(pending/running/retrying/completed/error)를 추적한다. | `src/qplan.ts`, `examples/19_exam_qplan_object.js` |
 | ModuleRegistry | ActionModule 등록/조회/메타데이터 노출 담당. `new ModuleRegistry()` 를 호출하면 기본 모듈이 자동 등록되며, `{ seedBasicModules: false }` 옵션으로 비활성화할 수 있다. | `src/core/moduleRegistry.ts`, `src/index.ts` |
 | ActionModule | 함수형 또는 `{ execute(inputs, ctx) {} }` 객체형 모듈 규격. `id/description/usage/inputs` 메타데이터가 있으면 LLM/문서화에 활용된다. | `src/core/actionModule.ts` |
 | Prompt Builders | `buildAIPlanPrompt`, `buildQplanSuperPrompt`, `buildAIGrammarSummary` 는 현재 registry에 등록된 모듈과 문법 요약을 묶어 LLM 프롬프트를 생성한다. | `src/core/buildAIPlanPrompt.ts`, `src/core/buildQplanSuperPrompt.ts`, `src/core/buildAIGrammarSummary.ts` |
@@ -57,12 +58,12 @@ ExecutionContext (variables, futures, step outputs)
 ## 7. Tooling & Validation
 - **validateQplanScript(script)** – Tokenize + Parse + Semantic Validation 결과를 반환. 문제 없으면 `{ ok: true, ast }`, 에러 시 `{ ok: false, error, line, issues? }` 구조다.
 - **CLI** – `npm run validate -- <file>` (`src/tools/validateScript.ts`) 로 파일 또는 stdin을 검사해 CI/에디터 통합에 활용한다.
-- **Step Events** – `runQplan(script, { env, metadata, stepEvents })` 로 플랜 시작/종료 및 Step 진행 상황을 관찰하고 UI/로그/모니터링 시스템에 반영한다. 이벤트마다 `StepEventRunContext` 가 함께 전달된다.
+- **Step Events** – `runQplan(script, { env, metadata, stepEvents })` 또는 `qplan.run({ ... })` 로 플랜 시작/종료 및 Step 진행 상황을 관찰하고 UI/로그/모니터링 시스템에 반영한다. 이벤트마다 `StepEventRunContext` 가 함께 전달된다.
 
 ## 8. 확장 & 통합 포인트
 1. **모듈 추가** – ActionModule 작성 후 `registry.register(customModule)` 호출. 메타데이터를 채우면 Prompt Builder가 자동으로 사용법을 포함한다.
 2. **커스텀 Executor hook** – `stepEvents` 로 플랜/Step 시작·종료·오류·재시도·점프 이벤트를 수신하고, 컨텍스트 정보(env/metadata)를 함께 받아 Gantt, 진행률, 감사 로그를 구현한다.
-3. **LLM 통합** – `buildAIPlanPrompt` 호출 전에 `setUserLanguage("<언어 문자열>")` 로 언어를 지정하고, 프롬프트를 만든 뒤 `runQplan` 으로 실행하면 “AI thinks, QPlan executes” 패턴을 완성할 수 있다.
+3. **LLM 통합** – `buildAIPlanPrompt` 호출 전에 `setUserLanguage("<언어 문자열>")` 로 언어를 지정하고, 프롬프트를 만든 뒤 `runQplan` 또는 `QPlan` 래퍼로 실행하면 “AI thinks, QPlan executes” 패턴을 완성할 수 있다.
 4. **Grammar/Docs** – `docs/02-grammar.md`, `docs/06-executor.md`, `docs/10-step-system.md` 등 세부 문서를 참고해 기능별로 확장 전략을 수립한다.
 
 ## 9. 요약 다이어그램

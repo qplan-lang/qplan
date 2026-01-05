@@ -255,6 +255,21 @@ QPlan 스크립트를 실행하는 메인 함수입니다.
 
 ---
 
+### 9.1.1 `new QPlan(script, { registry }?)`
+
+QPlan 스크립트를 객체로 감싸 실행 전 단계에서 검증/스텝 목록/상태를 관리할 수 있습니다.
+
+- `const qplan = new QPlan(script, { registry })`: Tokenize + Parse + Semantic Validation을 한 번만 수행해 AST/StepResolution을 캐싱합니다.
+- `qplan.validate()` : `validateQplanScript` 와 동일한 결과를 반환합니다.
+- `qplan.getStepList()` : `[{ id, desc, path, status, result, error }]` 구조의 배열을 돌려주며, `run()` 중에도 상태(pending/running/retrying/completed/error)가 실시간으로 갱신됩니다.
+- `await qplan.run({ registry, stepEvents, env, metadata, runId })` : 내부적으로 `runQplan` 흐름을 재사용하되, 위에서 받아온 stepEvents를 감싸 스텝 상태를 자동 갱신합니다.
+
+`examples/19_exam_qplan_object.js` 에서 전체 사용 흐름을 확인할 수 있습니다. UI에서 스텝 트리를 미리 렌더링하거나 실행 중 상태를 표시해야 할 때 유용합니다.
+
+> 💡 주석: QPlan 스크립트 어디서든 `//` / `#` 한 줄 주석과 `/* ... */` 블록 주석을 사용할 수 있으며 토크나이저가 자동으로 무시합니다.
+
+---
+
 ### 9.2 `buildAIPlanPrompt(requirement: string, options?)`
 
 사용자 요구사항을 입력하면,  

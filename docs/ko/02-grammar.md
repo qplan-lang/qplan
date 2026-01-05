@@ -39,6 +39,7 @@ step id="demo" desc="간단 합계" {
   - `type`: 임의 태그(task/group/loop 등)
   - `onError`: `fail`(기본) / `continue` / `retry=<N>` / `jump="<stepId>"`
 - Step ID 는 유니코드 Letter 또는 `_` 로 시작해야 하며, 이후에는 숫자를 포함한 Letter/Number/`_` 를 사용할 수 있다.
+- 어디서든 주석을 사용할 수 있다: `// 한 줄`, `# 한 줄`, `/* 여러 줄 */` 형태를 모두 지원하며 파서는 완전히 무시한다.
 - Step 결과는 항상 `ctx[runId][namespace]` 에 저장되며 namespace 기본값은 Step ID(`step ... -> resultVar` 로 재정의 가능) 이다. 같은 실행(run) 안에서는 `namespace.xxx` 로 접근하며, namespace 를 바꿔도 엔진이 동일 객체를 Step ID 아래에도 복제한다.
 - Step 내부에서는 추가 Step을 중첩해 Sub-step 트리를 만들 수 있다.
 - 모듈 이름, 변수, Action output, `return` key, `set` 대상 등 모든 식별자는 유니코드 문자/숫자/`_` 를 포함할 수 있으며, 첫 글자는 문자 또는 `_` 이어야 한다.

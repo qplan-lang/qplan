@@ -131,6 +131,24 @@ const ctx = await runQplan(qplanScript, {
 
 QPlan runs each step sequentially, invoking your modules and emitting step events for UIs/logging/alerts.
 
+Need to render the step tree before or during execution? Wrap the script in the `QPlan` object instead:
+
+```ts
+import { QPlan } from "qplan";
+
+const qplan = new QPlan(qplanScript, { registry });
+qplan.getStepList();        // [{ id, desc, path, status, ... }]
+qplan.validate();           // same result as validateQplanScript
+await qplan.run({
+  registry,
+  stepEvents: {
+    onStepStart(info) { /* status auto-updates; just log */ },
+  },
+});
+```
+
+`qplan.getStepList()` returns a stable array whose entries change status (pending → running → completed/error, etc.) as `run()` progresses, enabling dashboards to stay in sync without extra plumbing.
+
 ---
 
 ## 5. You don’t need to master QPlan’s full language

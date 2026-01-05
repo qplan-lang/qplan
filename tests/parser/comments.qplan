@@ -1,0 +1,10 @@
+// top-level comment
+step id="outer" {
+  # hash comment before action
+  var 1 -> first
+  /* block
+     comment */
+  var 2 -> second
+  math add a=first b=second -> total
+  return sum=total
+}

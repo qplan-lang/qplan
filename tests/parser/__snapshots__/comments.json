@@ -1,0 +1,58 @@
+{
+  "type": "Root",
+  "block": {
+    "type": "Block",
+    "statements": [
+      {
+        "type": "Step",
+        "id": "outer",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "var",
+              "args": {
+                "value": 1
+              },
+              "output": "first"
+            },
+            {
+              "type": "Action",
+              "module": "var",
+              "args": {
+                "value": 2
+              },
+              "output": "second"
+            },
+            {
+              "type": "Action",
+              "module": "math",
+              "args": {
+                "__options": [
+                  "add"
+                ],
+                "op": "add",
+                "a": "first",
+                "b": "second"
+              },
+              "output": "total"
+            },
+            {
+              "type": "Return",
+              "entries": [
+                {
+                  "key": "sum",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "total"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

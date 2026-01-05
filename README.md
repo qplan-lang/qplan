@@ -199,6 +199,8 @@ Includes `if`, `while`, `each`, `parallel`, `future`, `join`, `jump`, `skip`, `s
 ## 9. API Overview
 
 - **runQplan(script, options)** – Executes QPlan scripts. Options include `registry`, `stepEvents`, `env`, `metadata`, and `runId`.
+- **QPlan(script, { registry }?)** – Object wrapper that parses/validates once, exposes `getStepList()` for UI rendering, and tracks step lifecycle states while `run()` executes. See `examples/19_exam_qplan_object.js`.
+- Comments are available everywhere. Use `// inline`, `# inline`, or `/* block */`. The tokenizer skips them entirely when parsing scripts.
 - **buildAIPlanPrompt(requirement, { registry, language })** – Creates AI planning prompts for any registry/language pair.
 - **listRegisteredModules(registry?)** – Returns module metadata for prompt builders or dashboards.
 - **registry** – Default ModuleRegistry preloaded with built-in modules (file module available only in Node).

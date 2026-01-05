@@ -58,7 +58,7 @@ await runQplan(aiScript);
 - CI 파이프라인에서는 `npm run validate -- script.qplan` 형태로 자동 검사할 수 있다.
 
 ## 7. Step 이벤트와 AI 모니터링
-`runQplan(script, { env, metadata, stepEvents })` 옵션으로 플랜 시작/종료 + Step 시작/종료/오류/재시도/점프 이벤트를 수신할 수 있다. 각 이벤트는 `StepEventRunContext` 를 전달하므로 별도 WeakMap 없이 사용자/세션 정보를 추적할 수 있다.
+`runQplan(script, { env, metadata, stepEvents })` (또는 `new QPlan(script)` 으로 래핑한 뒤 `qplan.run({ ... })`) 옵션으로 플랜 시작/종료 + Step 시작/종료/오류/재시도/점프 이벤트를 수신할 수 있다. 각 이벤트는 `StepEventRunContext` 를 전달하므로 별도 WeakMap 없이 사용자/세션 정보를 추적할 수 있다.
 
 ```ts
 await runQplan(aiScript, {
@@ -77,7 +77,7 @@ await runQplan(aiScript, {
 ## 8. 권장 전략 요약
 1. 기본 모듈 + 필요한 확장 모듈만 registry에 등록하고 `registry.list()` 를 LLM에 제공한다.
 2. `buildAIPlanPrompt(requirement)` 로 사용자 요청을 구조화된 프롬프트로 변환한다.
-3. AI 결과를 `validateQplanScript`/`runQplan` 으로 검증/실행한다.
+3. AI 결과를 `validateQplanScript`/`runQplan` (또는 `QPlan` 래퍼) 으로 검증/실행한다.
 4. Step 이벤트 로그와 ctx 결과를 UI/백엔드에서 활용해 진행률과 성공 여부를 사용자에게 보여준다.
 
 이 흐름을 따르면 “AI thinks, QPlan executes” 패턴을 빠르게 구현할 수 있다.
