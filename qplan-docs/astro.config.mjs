@@ -5,7 +5,7 @@ import react from '@astrojs/react';
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://qplan-lang.github.io",
-  base: "/qplan/",
+  site: "https://www.qplan.org",
+  base: "/",
   integrations: [react()]
 });
