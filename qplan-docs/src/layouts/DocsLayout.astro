@@ -1,0 +1,358 @@
+---
+import Layout from './Layout.astro';
+import Navbar from '../components/Navbar.astro';
+
+interface Props {
+	title: string;
+    headings: { depth: number; slug: string; text: string; }[];
+    entries: any[];
+    currentSlug: string;
+}
+
+const { title, headings, entries, currentSlug } = Astro.props;
+
+// Determine current language from slug
+const currentLang = currentSlug.startsWith('ko/') ? 'ko' : 'en';
+
+// Helper to format sidebar titles
+function formatTitle(slug: string) {
+    const parts = slug.split('/');
+    const cleanSlug = parts[parts.length - 1]; // "01-overview"
+    const cleanName = cleanSlug.replace(/^\d+-/, '').replace(/-/g, ' ');
+    return cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
+}
+
+// Helper to get URL for a specific language
+function getUrlForLang(targetLang: string) {
+    const parts = currentSlug.split('/');
+    // parts is likely ['en', '01-overview'] or ['ko', '01-overview']
+    // If slug starts with lang code, remove it.
+    // Astro content slugs: 'en/01-overview'
+    const docPath = parts.slice(1).join('/');
+    return `/docs/${targetLang}/${docPath}`;
+}
+
+const langUrls = {
+    en: getUrlForLang('en'),
+    ko: getUrlForLang('ko')
+};
+
+// Filter entries to only show current language docs
+const currentLangEntries = entries.filter(entry => entry.slug.startsWith(currentLang + '/'));
+
+---
+
+<Layout title={title}>
+    <Navbar currentLang={currentLang} langUrls={langUrls} />
+    
+    <div class="docs-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                
+
+                <div class="sidebar-group">
+                    <p class="sidebar-header">Documentation</p>
+                    <ul>
+                        {currentLangEntries.map(entry => (
+                            <li>
+                                <a 
+                                    href={`/docs/${entry.slug}`} 
+                                    class={currentSlug === entry.slug ? 'active' : ''}
+                                >
+                                    {entry.data.title || formatTitle(entry.slug)}
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <article class="markdown-body">
+                <slot />
+            </article>
+            
+            <div class="doc-footer">
+                <p>Caught a mistake? <a href="https://github.com/qplan-lang/qplan/tree/main/docs" target="_blank">Edit this page on GitHub</a></p>
+            </div>
+        </main>
+        
+        <!-- Table of Contents (Right Sidebar) -->
+        <aside class="toc">
+            {headings.length > 0 && (
+                <div class="toc-container">
+                    <p class="toc-header">On this page</p>
+                    <ul>
+                        {headings.filter(h => h.depth <= 2).map(h => (
+                            <li>
+                                <a href={`#${h.slug}`}>{h.text}</a>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+        </aside>
+    </div>
+</Layout>
+
+<style>
+    .docs-container {
+        display: flex;
+        max-width: 1400px; /* Reduced from 1600px for better readability width */
+        margin: 0 auto;
+        padding-top: 64px; /* Matches new navbar height */
+        min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        width: 260px;
+        position: fixed;
+        top: 64px;
+        bottom: 0;
+        overflow-y: auto;
+        padding: 2rem 1.5rem;
+        border-right: 1px solid var(--border-color);
+        background: var(--color-bg-secondary);
+    }
+    
+    .sidebar-header {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+        color: var(--color-text-light);
+        margin-bottom: 1rem;
+        margin-top: 1.5rem;
+    }
+    
+    .lang-switch-container {
+        margin-bottom: 1rem;
+    }
+
+    .lang-switch-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background: var(--color-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--color-text);
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .lang-switch-btn:hover {
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+    }
+
+    .sidebar-nav ul { list-style: none; }
+    .sidebar-nav li { margin-bottom: 0.25rem; }
+
+    .sidebar-nav a:not(.lang-switch-btn) {
+        display: block;
+        padding: 0.4rem 0.6rem;
+        color: var(--color-text-muted);
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .sidebar-nav a:not(.lang-switch-btn):hover {
+        color: var(--color-text);
+        background: rgba(0,0,0,0.03);
+    }
+    
+    :global([data-theme="dark"]) .sidebar-nav a:not(.lang-switch-btn):hover {
+        background: rgba(255,255,255,0.05);
+    }
+
+    .sidebar-nav a.active {
+        color: var(--color-primary);
+        background: var(--color-primary-light);
+        font-weight: 600;
+    }
+    
+    :global([data-theme="dark"]) .sidebar-nav a.active {
+        background: rgba(59, 130, 246, 0.15); /* Darker blue bg for active */
+    }
+
+    /* Main Content */
+    .content {
+        flex: 1;
+        margin-left: 260px; 
+        margin-right: 240px; 
+        padding: 3rem 4rem;
+        max-width: 100%;
+    }
+    
+    .doc-footer {
+        margin-top: 4rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border-color);
+        color: var(--color-text-light);
+        font-size: 0.9rem;
+    }
+    
+    .doc-footer a {
+        color: var(--color-primary);
+        text-decoration: none;
+    }
+    .doc-footer a:hover { text-decoration: underline; }
+
+    /* Markdown Styling Refinements */
+    .markdown-body {
+        line-height: 1.75;
+        font-size: 1.05rem;
+        color: var(--color-text);
+    }
+    
+    .markdown-body :global(h1) {
+        font-size: 2.25rem;
+        margin-bottom: 1.5rem;
+        color: var(--color-text);
+        font-weight: 800;
+        letter-spacing: -0.02em;
+    }
+
+    .markdown-body :global(h2) {
+        font-size: 1.75rem;
+        margin-top: 3rem;
+        margin-bottom: 1rem;
+        color: var(--color-text);
+        font-weight: 700;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.5rem;
+    }
+
+    .markdown-body :global(h3) {
+        font-size: 1.4rem;
+        margin-top: 2rem;
+        margin-bottom: 0.75rem;
+        color: var(--color-text);
+        font-weight: 600;
+    }
+
+    .markdown-body :global(p), .markdown-body :global(ul), .markdown-body :global(ol) {
+        margin-bottom: 1.25rem;
+        color: var(--color-text); /* Ensure high contrast */
+    }
+
+    .markdown-body :global(code) {
+        background: var(--color-bg-secondary);
+        padding: 0.2em 0.4em;
+        border-radius: 4px;
+        font-size: 0.85em;
+        color: var(--color-primary);
+        font-family: var(--font-mono);
+        border: 1px solid var(--border-color);
+    }
+    
+    :global([data-theme="dark"]) .markdown-body :global(code) {
+        background: rgba(255,255,255,0.1);
+        color: #e2e8f0;
+        border: none;
+    }
+
+    .markdown-body :global(pre code) {
+        background: transparent;
+        color: inherit;
+        border: none;
+        padding: 0;
+        font-family: inherit;
+    }
+
+    .markdown-body :global(pre) {
+        background: #0f172a !important; /* Always dark code blocks */
+        color: #f8fafc; /* Ensure text is light on dark background */
+        padding: 1.5rem !important;
+        border-radius: 8px;
+        margin: 1.5rem 0;
+        border: 1px solid var(--border-color);
+        overflow-x: auto;
+    }
+    
+    :global([data-theme="dark"]) .markdown-body :global(pre) {
+        background: #1e1e2e !important;
+        border-color: #313244;
+    }
+
+    .markdown-body :global(blockquote) {
+        border-left: 4px solid var(--color-primary);
+        background: var(--color-primary-light);
+        padding: 1rem 1.5rem;
+        border-radius: 0 4px 4px 0;
+        margin-bottom: 1.5rem;
+        color: var(--color-primary-dark);
+    }
+    
+    :global([data-theme="dark"]) .markdown-body :global(blockquote) {
+        background: rgba(37, 99, 235, 0.1);
+        color: #bfdbfe;
+    }
+
+    .markdown-body :global(a) {
+        color: var(--color-primary);
+        text-decoration: underline;
+        text-underline-offset: 2px;
+    }
+
+    .markdown-body :global(a:hover) {
+        color: var(--color-primary-dark);
+    }
+
+    /* TOC */
+    .toc {
+        width: 240px;
+        position: fixed;
+        top: 64px;
+        right: 0;
+        padding: 2rem 1.5rem;
+        max-height: calc(100vh - 64px);
+        overflow-y: auto;
+    }
+
+    .toc-header {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--color-text-light);
+        margin-bottom: 1rem;
+        letter-spacing: 0.05em;
+    }
+
+    .toc ul { list-style: none; padding-left: 0; }
+    .toc li { margin-bottom: 0.5rem; }
+    
+    .toc a {
+        font-size: 0.85rem;
+        color: var(--color-text-muted);
+        text-decoration: none;
+        display: block;
+        line-height: 1.4;
+        transition: color 0.2s;
+    }
+
+    .toc a:hover {
+        color: var(--color-primary);
+    }
+
+    @media (max-width: 1350px) {
+        .toc { display: none; }
+        .content { margin-right: 0; }
+    }
+
+    @media (max-width: 900px) {
+        .sidebar { display: none; } /* Mobile menu needed separately */
+        .content { margin-left: 0; padding: 2rem 1.5rem; }
+        .docs-container { display: block; }
+    }
+</style>

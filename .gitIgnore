@@ -51,4 +51,5 @@ yarn.lock
 pnpm-lock.yaml
 
 /keys/
-/qplan-docs/
+/qplan-docs/node_modules/
+/qplan-docs/dist/

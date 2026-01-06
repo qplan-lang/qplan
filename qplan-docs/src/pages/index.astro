@@ -1,0 +1,760 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+---
+
+<Layout title="QPlan - AI Planning Language & Execution Engine">
+	<Navbar />
+	
+	<main>
+		<!-- Hero Section -->
+		<section class="hero">
+			<div class="container hero-content">
+				<h1 class="hero-title">
+					The Language for <span class="highlight">AI Agents</span>
+				</h1>
+				<p class="hero-subtitle">
+					QPlan lets AI design plans in a structured language, 
+                    ensuring execution happens <strong>strictly within modules you specify</strong>.
+				</p>
+				<div class="hero-actions">
+					<a href="/docs/en/11-qplan_quickstart_guide" class="btn btn-primary">Get Started</a>
+					<a href="/docs/en/01-overview" class="btn btn-secondary">Documentation</a>
+				</div>
+                    
+                <div class="install-cmd-container">
+                    <div class="install-cmd">
+                        <code>npm install qplan</code>
+                        <button class="copy-btn" title="Copy to clipboard">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="hero-image" id="hero-animation">
+                    <div id="step-desc" class="step-desc-floating">Constructing prompt from user intent...</div>
+                    <div class="window-frame">
+                        <div class="window-header glass-header">
+                            <div class="window-controls">
+                                <span class="dot red"></span>
+                                <span class="dot yellow"></span>
+                                <span class="dot green"></span>
+                            </div>
+                            <div class="step-indicator">
+                                <span class="step active" data-step="1">Request</span>
+                                <span class="step-arrow">→</span>
+                                <span class="step" data-step="2">Generate</span>
+                                <span class="step-arrow">→</span>
+                                <span class="step" data-step="3">Execute</span>
+                            </div>
+                        </div>
+                        <div class="window-content strict-height">
+                            <!-- Step 1: Request -->
+                            <div class="anim-step visible" id="step-1">
+                                <pre><code><span class="comment">// 1. User Request</span>
+<span class="keyword">const</span> prompt = buildAIPlanPrompt(
+  <span class="string">"Load data from file and process it"</span>
+);
+<span class="keyword">await</span> llm.<span class="func">generate</span>(prompt);</code></pre>
+                            </div>
+
+                            <!-- Step 2: Generation (Typing) -->
+                            <div class="anim-step" id="step-2">
+                                <div class="typing-container">
+                                    <pre><code id="typing-code"></code><span class="cursor">|</span></pre>
+                                </div>
+                                <div class="ai-label">AI generates plan (QPlan)</div>
+                            </div>
+
+                            <!-- Step 3: Execution (Highlight) -->
+                            <div class="anim-step" id="step-3">
+                                <pre><code><div class="code-line" id="line-1"><span class="keyword">step</span> id="process_data" &#123;</div><div class="code-line" id="line-2">  <span class="comment">// 1. Load data from file</span></div><div class="code-line" id="line-3">  <span class="keyword">file</span> read path="./data.json" -> raw</div><div class="code-line" id="line-4">  </div><div class="code-line" id="line-5">  <span class="comment">// 2. Parse and iterate</span></div><div class="code-line" id="line-6">  <span class="keyword">json</span> parse data=raw -> data</div><div class="code-line" id="line-7">  <span class="keyword">each</span> item <span class="keyword">in</span> data.items &#123;</div><div class="code-line" id="line-8">    <span class="keyword">set</span> item.processed = true</div><div class="code-line" id="line-9">  &#125;</div><div class="code-line" id="line-10">&#125;</div></code></pre>
+                                <div class="exec-label">
+                                    Execution confined to your modules
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+			</div>
+		</section>
+
+		<!-- Features Grid -->
+		<section class="features">
+			<div class="container">
+                <div class="section-header">
+                    <h2>Why QPlan?</h2>
+                    
+                    <p class="subtitle">
+                        AI should be free to plan,<br/>
+                        but execution must be controlled.
+                    </p>
+                    
+                    <p class="short-desc">
+                        QPlan separates thinking from doing,<br/>
+                        ensuring every plan runs strictly within the modules you define,<br/>
+                        deterministically and safely.
+                    </p>
+                    
+                    <button id="read-more-btn" class="read-more-btn">
+                        More <span class="arrow">▼</span>
+                    </button>
+                    
+                    <div id="more-content" class="more-content hidden">
+                        <div class="more-inner">
+                            <p>
+                                AI possesses infinite potential.<br/>
+                                However, if AI can generate arbitrary code and execute anything,<br/>
+                                systems may veer in unintended directions.
+                            </p>
+                            <p>
+                                We believed a new execution language was needed—<br/>
+                                one that allows AI to think and plan freely,<br/>
+                                while strictly limiting its actions to allowed functions.
+                            </p>
+                            <p>
+                                So we built QPlan.
+                            </p>
+                            <p>
+                                QPlan is a workflow language and execution engine designed to let<br/>
+                                LLMs generate complex execution plans as QPlan scripts based on user requests,<br/>
+                                ensuring those plans run strictly within developer-defined modules.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+				<div class="grid">
+					<div class="card">
+						<h3>AI-First Design</h3>
+						<p>Designed for LLMs to generate. The grammar is compact, explicit, and deterministic, reducing hallucinations.</p>
+					</div>
+					<div class="card">
+						<h3>Safe Execution</h3>
+						<p>Sandboxed variables and strict capabilities. No arbitrary code execution unless explicitly allowed.</p>
+					</div>
+					<div class="card">
+						<h3>Step System</h3>
+						<p>Robust control flow with `jump`, `retry`, `onError`, and real-time execution hooks for full observability.</p>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 QPlan Team. Released under the MIT License.</p>
+        </div>
+    </footer>
+</Layout>
+
+<script>
+    // Hero Animation Logic
+    const steps = ['step-1', 'step-2', 'step-3'];
+    const stepEls = steps.map(id => document.getElementById(id));
+    const indicators = document.querySelectorAll('.step');
+    const typingCode = document.getElementById('typing-code');
+    const descEl = document.getElementById('step-desc');
+    
+    const descriptions = [
+       "Constructing prompt from user intent...",
+       "AI generating deterministic plan...",
+       "Executing safely within module boundaries..."
+    ];
+    
+    const qplanCode = `step id="process_data" {
+  file read path="./data.json" -> raw
+  json parse data=raw -> data
+  
+  each item in data.items {
+    set item.processed = true
+  }
+  
+  return result=data
+}`;
+
+    let currentStep = 0;
+    let isPlaying = false;
+    let typeInterval: any = null;
+    let execInterval: any = null;
+
+    function reset() {
+        stepEls.forEach(el => el?.classList.remove('visible'));
+        indicators.forEach(el => el.classList.remove('active'));
+        
+        // Reset typing
+        if (typingCode) typingCode.innerHTML = '';
+        
+        // Reset exec highlighting
+        document.querySelectorAll('.code-line').forEach(l => l.classList.remove('active-line'));
+        
+        currentStep = 0;
+    }
+
+    function setActiveStep(index: number) {
+        stepEls.forEach((el, i) => {
+            if (i === index) el?.classList.add('visible');
+            else el?.classList.remove('visible');
+        });
+        
+        indicators.forEach((el, i) => {
+            if (i === index) el.classList.add('active');
+            else el.classList.remove('active');
+        });
+        
+        if (descEl) descEl.textContent = descriptions[index];
+    }
+
+    // Step 2: Typing Effect
+    async function playTyping() {
+        if (typingCode) typingCode.innerHTML = '';
+        const lines = qplanCode.split('\n');
+        
+        // Use a simple HTML-safe typing
+        let htmlBuffer = '';
+        
+        for (let i = 0; i < qplanCode.length; i++) {
+            if (!isPlaying) return;
+            // Simple syntax coloring heuristic could be added here, 
+            // but for typing effect plain text or simple span wrap is easier.
+            // For now, let's type plain text and maybe colorize keywords if possible?
+            // To keep it simple and robust, we just type text.
+            // If we want coloring, we need a parser or pre-tokenized array.
+            // Let's type plain text for Step 2 to simulate generation.
+            
+            typingCode!.textContent += qplanCode[i];
+            
+            // Randomize typing speed for realism (20ms - 50ms)
+            await new Promise(r => setTimeout(r, Math.random() * 30 + 20));
+        }
+    }
+
+    // Highlighting helper for typing (optional, can be skipped for MVP)
+    // Step 3 is pre-highlighted HTML, so that's fine.
+
+    async function playExecution() {
+        const lines = document.querySelectorAll('.code-line');
+        for (let i = 0; i < lines.length; i++) {
+            if (!isPlaying) return;
+            
+            // Highlight current line
+            lines.forEach(l => l.classList.remove('active-line'));
+            lines[i].classList.add('active-line');
+            
+            // Wait based on line content (simulating work)
+            await new Promise(r => setTimeout(r, 800));
+        }
+    }
+
+    async function runSequence() {
+        if (!isPlaying) return;
+        
+        // Step 1: Request
+        setActiveStep(0);
+        await new Promise(r => setTimeout(r, 4000));
+        if (!isPlaying) return;
+
+        // Step 2: Generate
+        setActiveStep(1);
+        await playTyping();
+        await new Promise(r => setTimeout(r, 1000));
+        if (!isPlaying) return;
+
+        // Step 3: Execute
+        setActiveStep(2);
+        await playExecution();
+        await new Promise(r => setTimeout(r, 3000));
+        
+        // Loop
+        if (isPlaying) runSequence();
+    }
+
+    // Intersection Observer to control playback
+    const observer = new IntersectionObserver((entries) => {
+         entries.forEach(entry => {
+             if (entry.isIntersecting) {
+                 if (!isPlaying) {
+                     isPlaying = true;
+                     runSequence();
+                 }
+             } else {
+                 isPlaying = false;
+                 reset(); // Optional: reset state on exit
+             }
+         });
+    }, { threshold: 0.5 });
+    
+    const container = document.getElementById('hero-animation');
+    if (container) observer.observe(container);
+
+    // Read More Toggle
+    const readMoreBtn = document.getElementById('read-more-btn');
+    const moreContent = document.getElementById('more-content');
+    
+    readMoreBtn?.addEventListener('click', () => {
+        const isHidden = moreContent?.classList.contains('hidden');
+        if (isHidden) {
+            moreContent?.classList.remove('hidden');
+            readMoreBtn.classList.add('open');
+        } else {
+            moreContent?.classList.add('hidden');
+            readMoreBtn.classList.remove('open');
+        }
+    });
+</script>
+
+<style>
+    /* ... existing styles ... */
+	/* Hero Section */
+	.hero {
+		padding-top: 100px;
+		padding-bottom: 80px;
+        background: radial-gradient(circle at 50% 0%, var(--color-bg-secondary) 0%, var(--color-bg) 100%);
+		text-align: center;
+        border-bottom: 1px solid var(--border-color);
+	}
+
+	.container {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 0 1.5rem;
+	}
+
+	.hero-title {
+		font-size: 3.5rem;
+		line-height: 1.1;
+		font-weight: 800;
+		margin-bottom: 1.5rem;
+        letter-spacing: -0.03em;
+        color: var(--color-text);
+	}
+
+	.highlight {
+        color: var(--color-primary);
+	}
+
+	.hero-subtitle {
+		font-size: 1.25rem;
+		color: var(--color-text-muted);
+		max-width: 650px;
+		margin: 0 auto 2.5rem;
+		line-height: 1.6;
+	}
+
+	.hero-actions {
+		display: flex;
+        flex-wrap: wrap;
+		gap: 1rem;
+		justify-content: center;
+		align-items: center;
+		margin-bottom: 2rem;
+	}
+
+    .install-cmd-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 4rem;
+    }
+
+	.btn {
+		padding: 0.75rem 1.5rem;
+		border-radius: 8px;
+		font-weight: 600;
+		text-decoration: none;
+		transition: all 0.2s;
+        font-size: 1rem;
+	}
+
+	.btn-primary {
+		background: var(--color-primary);
+		color: white;
+	}
+
+	.btn-primary:hover {
+		background: var(--color-primary-dark);
+        transform: translateY(-1px);
+	}
+
+	.btn-secondary {
+		background: var(--color-bg);
+		color: var(--color-text);
+		border: 1px solid var(--border-color);
+	}
+
+	.btn-secondary:hover {
+		border-color: var(--color-text-muted);
+        background: var(--color-bg-secondary);
+	}
+    
+    .install-cmd {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 1.25rem;
+        background: var(--color-bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        color: var(--color-text-muted);
+    }
+    
+    .copy-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        opacity: 0.5;
+    }
+    .copy-btn:hover { opacity: 1; }
+
+    /* Hero Code Window */
+    .hero-image {
+        perspective: 1000px;
+    }
+    
+    .window-frame {
+        text-align: left;
+        background: var(--color-bg);
+        border-radius: 12px;
+        box-shadow: var(--shadow-md), 0 20px 40px -10px rgba(0,0,0,0.1);
+        border: 1px solid var(--border-color);
+        max-width: 700px;
+        margin: 0 auto;
+        overflow: hidden;
+        transition: transform 0.3s;
+    }
+    
+    .hero-image:hover .window-frame {
+        transform: translateY(-5px);
+    }
+    
+    :global([data-theme="dark"]) .window-frame {
+        background: #1e1e2e; /* Specifically nice dark code bg */
+        border-color: #313244;
+    }
+
+    /* Animation Styles */
+    .glass-header {
+        justify-content: space-between !important;
+        background: rgba(255, 255, 255, 0.8) !important;
+        backdrop-filter: blur(8px);
+    }
+    
+    :global([data-theme="dark"]) .glass-header {
+        background: rgba(30, 30, 46, 0.8) !important;
+    }
+    
+    .window-header {
+        background: var(--color-bg-secondary);
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .window-controls { display: flex; gap: 0.5rem; }
+    
+    .step-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        color: var(--color-text-muted);
+    }
+    
+    .step {
+        opacity: 0.4;
+        transition: opacity 0.3s;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+    }
+    .step.active {
+        opacity: 1;
+        color: var(--color-primary);
+    }
+    .step-arrow { opacity: 0.3; }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .red { background: #ff5f56; }
+    .yellow { background: #ffbd2e; }
+    .green { background: #27c93f; }
+    
+    .strict-height {
+        height: 380px; /* Increased height */
+        overflow: hidden;
+        position: relative;
+        background: var(--color-bg);
+    }
+    
+    :global([data-theme="dark"]) .strict-height {
+        background: #1e1e2e;
+    }
+    
+    .anim-step {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        padding: 2rem;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        visibility: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .anim-step.visible {
+        opacity: 1;
+        transform: translateY(0);
+        visibility: visible;
+        z-index: 10;
+    }
+    
+    .anim-step pre { margin: 0; }
+    
+    .ai-label, .exec-label {
+        margin-top: auto;
+        padding-top: 1rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--color-primary);
+        animation: fadeIn 0.5s;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    .typing-container {
+        font-family: var(--font-mono);
+        color: var(--color-text);
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+    :global([data-theme="dark"]) .typing-container {
+        color: #cdd6f4;
+    }
+    
+    .cursor {
+        display: inline-block;
+        width: 8px; height: 1.2em;
+        background: var(--color-primary);
+        animation: blink 1s infinite;
+        vertical-align: sub;
+        margin-left: 2px;
+    }
+    
+    .code-line {
+        padding: 0.1rem 0.5rem;
+        margin: 0 -0.5rem;
+        border-radius: 4px;
+        transition: background 0.2s, opacity 0.2s;
+        border-left: 3px solid transparent;
+        line-height: 1.6;
+    }
+    
+    /* In step 3 (exec), default code is dim, active is bright */
+    #step-3 .code-line { opacity: 0.3; filter: blur(0.5px); }
+    #step-3 .code-line.active-line {
+        opacity: 1;
+        filter: none;
+        background: rgba(37, 99, 235, 0.1); 
+        border-left-color: var(--color-primary);
+    }
+    :global([data-theme="dark"]) #step-3 .code-line.active-line {
+        background: rgba(37, 99, 235, 0.2); 
+    }
+    
+    @keyframes blink { 50% { opacity: 0; } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } }
+
+    .keyword { color: var(--color-primary); font-weight: 600; }
+    .comment { color: var(--color-text-light); font-style: italic; }
+    .string, .func { color: #eab308; } /* Yellow for strings */
+    
+    :global([data-theme="dark"]) .keyword { color: #cba6f7; }
+    :global([data-theme="dark"]) .comment { color: #6c7086; }
+    :global([data-theme="dark"]) .string { color: #f9e2af; }
+    :global([data-theme="dark"]) .func { color: #89b4fa; }
+
+    /* Features Section */
+	.features {
+		padding: 6rem 0;
+		background: var(--color-bg);
+	}
+    
+    .section-header {
+        text-align: center;
+        margin-bottom: 4rem;
+    }
+    
+    .section-header h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+    
+    .section-header .subtitle {
+        color: var(--color-primary);
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .section-header .description {
+        color: var(--color-text-muted);
+        font-size: 1.1rem;
+        max-width: 700px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+	.grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		gap: 2rem;
+	}
+
+	.card {
+		padding: 2rem;
+		border-radius: 12px;
+        background: var(--color-bg-secondary);
+        border: 1px solid var(--border-color);
+		transition: transform 0.2s;
+	}
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-md);
+    }
+
+	.icon {
+		font-size: 2.5rem;
+		margin-bottom: 1rem;
+	}
+
+	.card h3 {
+		font-size: 1.25rem;
+		margin-bottom: 0.75rem;
+		color: var(--color-text);
+	}
+
+	.card p {
+		color: var(--color-text-muted);
+		line-height: 1.6;
+	}
+    
+ .section-header .subtitle {
+        color: var(--color-primary);
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+    
+    .section-header .short-desc {
+        color: var(--color-text);
+        font-size: 1.1rem;
+        max-width: 600px;
+        margin: 0 auto 1.5rem;
+        line-height: 1.6;
+    }
+    
+    .read-more-btn {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        color: var(--color-text-muted);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: all 0.2s;
+    }
+    
+    .read-more-btn:hover {
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+        background: var(--color-bg-secondary);
+    }
+    
+    .read-more-btn .arrow {
+        font-size: 0.7rem;
+        transition: transform 0.3s;
+    }
+    
+    .read-more-btn.open .arrow {
+        transform: rotate(180deg);
+    }
+    
+    .more-content {
+        max-width: 600px;
+        margin: 1.5rem auto 0;
+        text-align: center;
+        overflow: hidden;
+        transition: all 0.3s;
+        max-height: 1000px;
+        opacity: 1;
+    }
+    
+    .more-content.hidden {
+        max-height: 0;
+        opacity: 0;
+        margin-top: 0;
+    }
+    
+    .more-inner {
+        padding: 1rem 0 0 0;
+        background: transparent;
+        border: none;
+    }
+    
+    .more-inner p {
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        color: var(--color-text);
+        word-break: keep-all;
+    }
+    
+    .more-inner p:last-child { margin-bottom: 0; }
+    
+    .more-inner .emphasized {
+        color: var(--color-primary);
+        font-weight: 700;
+        font-size: 1.1rem;
+        text-align: center;
+        margin: 1.5rem 0;
+    }
+
+    footer {
+        padding: 2rem 0;
+        text-align: center;
+        color: var(--color-text-light);
+        font-size: 0.9rem;
+        border-top: 1px solid var(--border-color);
+        margin-top: auto;
+    }
+ .step-desc-floating {
+        text-align: center;
+        margin-bottom: 1rem;
+        font-family: var(--font-mono);
+        font-size: 0.9rem;
+        color: var(--color-text); /* Use text color for better readability outside */
+        font-weight: 600;
+        min-height: 1.5em;
+        transition: opacity 0.3s;
+    }
+    
+    :global([data-theme="dark"]) .step-desc-floating {
+        color: var(--color-primary); /* Primary looks better in dark mode */
+    }
+</style>
