@@ -1,0 +1,11 @@
+plan {
+  @title "Sample Plan"
+  @summary "Plan with meta"
+  @version "0.1"
+  @since "2025-01-01"
+
+  step id="init" {
+    var 1 -> x
+    return x=x
+  }
+}

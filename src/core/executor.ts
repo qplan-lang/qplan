@@ -76,6 +76,7 @@ export class Executor {
       rootSteps: resolution.rootSteps.map(info =>
         createStepEventInfo(info, runContext)
       ),
+      planMeta: root.planMeta,
     };
     await this.stepEvents.onPlanStart?.(planInfo, runContext);
     if (resolution.rootSteps.length > 0) {

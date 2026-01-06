@@ -98,6 +98,10 @@ const TEST_CASES = [
     name: "comments",
     file: "tests/parser/comments.qplan",
   },
+  {
+    name: "plan_meta",
+    file: "tests/parser/plan_meta.qplan",
+  },
 ];
 
 async function runTestCase(test) {

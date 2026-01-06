@@ -1,6 +1,7 @@
 import { StepEventInfo, StepInfo } from "./stepTypes.js";
 import { ExecutionContext } from "../core/executionContext.js";
 import { ModuleRegistry } from "../core/moduleRegistry.js";
+import type { PlanMeta } from "../core/ast.js";
 
 export interface StepEventRunContext {
   runId: string;
@@ -15,6 +16,7 @@ export interface PlanEventInfo {
   runId: string;
   totalSteps: number;
   rootSteps: StepEventInfo[];
+  planMeta?: PlanMeta;
 }
 
 export interface StepEventEmitter {

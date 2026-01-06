@@ -98,6 +98,7 @@ step id="pipeline" desc="Full pipeline" {
 
 Use this reference to understand how the executor, StepController, and ExecutionContext coordinate, aiding custom module development or step-event hook design.
 
-### 참고 예제
+### Reference Example
 
-`examples/19_exam_qplan_object.js` 는 `QPlan` 객체로 스크립트를 준비하고 `getStepList()`/`run()` 을 통해 스텝 상태를 추적하는 전체 흐름을 보여준다.
+`examples/19_exam_qplan_object.js` demonstrates the full flow of preparing a script with the `QPlan` object and tracking step states via `getStepList()`/`run()`.
+See: [examples/19_exam_qplan_object.js](https://github.com/qplan-lang/qplan/blob/main/examples/19_exam_qplan_object.js)

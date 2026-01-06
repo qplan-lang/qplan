@@ -12,6 +12,8 @@ Core goals:
 - **Deterministic & Observable**: step order/path/event logging makes every run reproducible and traceable.
 - **Future-proof**: Future/Parallel/Join, dot-path variable references, and other modern controls are first-class.
 
+If you want the "why" behind these goals, see [`docs/qplan-why.md`](docs/qplan-why.md).
+
 > **AI thinks, QPlan executes.**
 
 ## 🧩 Engine components

@@ -26,6 +26,21 @@ step id="demo" desc="Simple sum" {
 
 ## 2.1 Script structure & steps
 - A root script may list **step statements only**. Actions/If/Set outside a step cause a parser error.
+- Optionally, wrap the script in a `plan { ... }` block to attach metadata that humans/tools can read.
+  ```
+  plan {
+    @title "Onboarding Plan"
+    @summary "Create accounts and schedule training"
+    @version "0.1"
+    @since "2025-01-01"
+
+    step id="setup" {
+      ...
+    }
+  }
+  ```
+  - Supported meta keys: `title`, `summary`, `version`, `since`.
+  - Plan meta must appear at the top of the plan block (before any steps).
 - Step form:
   ```
   step ["desc"] id="stepId" [desc="Description"] [type="task"] [onError="retry=3"] {
@@ -159,7 +174,12 @@ Expressions may combine numbers, strings, JSON literals, existing variables, par
 # 3. Full EBNF grammar (Version B)
 
 ```
-Script          = { StepStmt } ;
+Script          = PlanBlock | { StepStmt } ;
+
+PlanBlock       = "plan" , "{" , { PlanMeta } , { StepStmt } , "}" ;
+PlanMeta        = "@" , PlanMetaKey , PlanMetaValue ;
+PlanMetaKey     = "title" | "summary" | "version" | "since" ;
+PlanMetaValue   = QuotedString | Number ;
 
 StepStmt        = "step" , StepHead , [ "->" , Identifier ] , Block ;
 StepHead        = [ QuotedString ] , { StepAttr } ;

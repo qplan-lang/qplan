@@ -1,0 +1,43 @@
+{
+  "type": "Root",
+  "block": {
+    "type": "Block",
+    "statements": [
+      {
+        "type": "Step",
+        "id": "init",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Action",
+              "module": "var",
+              "args": {
+                "value": 1
+              },
+              "output": "x"
+            },
+            {
+              "type": "Return",
+              "entries": [
+                {
+                  "key": "x",
+                  "expression": {
+                    "type": "Identifier",
+                    "name": "x"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "planMeta": {
+    "title": "Sample Plan",
+    "summary": "Plan with meta",
+    "version": "0.1",
+    "since": "2025-01-01"
+  }
+}

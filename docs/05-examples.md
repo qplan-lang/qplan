@@ -135,9 +135,24 @@ await runQplan(script);
 - Registering modules automatically teaches the AI how to call them via the prompt builder.
 
 ## 9. Validate before running
-```bash
-npm run validate -- examples/12_exam_step.qplan
+```ts
+import { runQplan, validateQplanScript } from "qplan";
+
+const candidate = `
+plan {
+  @title "Mini example"
+  step id="one" { print "ok" }
+}
+`;
+
+const validation = validateQplanScript(candidate);
+
+if (!validation.ok) {
+  console.error("QPlan validation failed:", validation.error, validation.issues);
+} else {
+  await runQplan(candidate);
+}
 ```
-- Early validation of grammar, step structure, and jump targets prevents runtime surprises.
+- The `validateQplanScript` helper lets you keep validation inline with your execution flow (e.g., in agents or CI) without shelling out to the CLI.
 
 Use these examples as a baseline, then add your own ActionModules or customize step structures to capture diverse automation scenarios in QPlan.

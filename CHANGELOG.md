@@ -7,6 +7,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.4.0] - 2026-01-07
+
+### Added
+- `plan { ... }` wrapper syntax with `@title`, `@summary`, `@version`, and `@since` metadata for human-readable QPlan scripts.
+- Plan metadata exposure via AST (`planMeta`) and plan start events.
+- `QPlan.getPlanMeta()` plus examples and tests covering plan metadata.
+
+### Changed
+- AI-friendly grammar summary and docs updated to describe the `plan` block.
+
+---
+
 ## [0.3.0] - 2026-01-06
 
 ### Added

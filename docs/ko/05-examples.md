@@ -135,9 +135,24 @@ await runQplan(script);
 - registry에 모듈을 등록하면 Prompt Builder가 자동으로 사용법을 AI에 전달한다.
 
 ## 9. 실행 전 검증
-```bash
-npm run validate -- examples/12_exam_step.qplan
+```ts
+import { runQplan, validateQplanScript } from "qplan";
+
+const candidate = `
+plan {
+  @title "미니 예제"
+  step id="one" { print "ok" }
+}
+`;
+
+const validation = validateQplanScript(candidate);
+
+if (!validation.ok) {
+  console.error("QPlan 검증 실패:", validation.error, validation.issues);
+} else {
+  await runQplan(candidate);
+}
 ```
-- 문법/Step 구조/jump 대상 등을 조기에 검증하면 실행 시 오류를 줄일 수 있다.
+- `validateQplanScript` 를 사용하면 CLI 대신 코드 흐름 안에서 검증/실행을 자연스럽게 연결할 수 있다.
 
 상기 예제들을 참고해 자신만의 ActionModule을 추가하거나 Step 구조를 응용하면 다양한 자동화 시나리오를 QPlan으로 표현할 수 있다.

@@ -221,6 +221,7 @@ step id="checkout" desc="결제" {
 - `return gear accounts total=sum` (또는 `return gear, accounts, total=sum`) 처럼 `=` 없이도 자동으로 `return gear=gear accounts=accounts total=sum` 으로 확장되며, `return` 을 생략하면 Step 내 Action output 들이 기본적으로 `stepId.outputName` 형태로 노출됩니다(필요하면 Step 헤더에 `-> resultVar` 를 붙여 namespace 를 변경할 수 있습니다).
 - Step 헤더에서 `-> resultVar` 로 namespace 를 바꿔도 엔진이 같은 객체를 Step ID 아래에도 복제하므로 `resultVar.field`, `stepId.field` 둘 다 동작합니다.
 - 모듈/변수/Action output/`return` key 등 대부분의 식별자는 유니코드 문자·숫자·`_` 를 포함할 수 있으며, 첫 글자는 문자 또는 `_` 이어야 하므로 `return 결과=값` 같은 한글 식별자도 허용됩니다.
+- 필요하면 스크립트를 `plan { ... }` 로 감싼 뒤 `@title`, `@summary`, `@version`, `@since` 메타정보를 붙여 사람/도구가 읽을 수 있게 할 수 있습니다.
 
 ### 8.4 ExecutionContext
 

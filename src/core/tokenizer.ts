@@ -9,7 +9,7 @@
  *  - String ("문자열")
  *  - Number (123, 12.5)
  *  - Keyword (IF, ELSE, END, PARALLEL, USING, EACH, AS, IN, STOP, SKIP, AND, OR, NOT, SET, WHILE)
- *  - Symbol (=, ->, :, ,, )
+ *  - Symbol (=, ->, :, ,, @)
  */
 
 export enum TokenType {
@@ -173,8 +173,8 @@ export function tokenize(input: string): Token[] {
       continue;
     }
 
-    // Simple symbols (=, :, ,, .) — keep after comparison rule
-    if (c === ":" || c === "," || c === ".") {
+    // Simple symbols (=, :, ,, ., @) — keep after comparison rule
+    if (c === ":" || c === "," || c === "." || c === "@") {
       tokens.push({ type: TokenType.Symbol, value: c, line });
       i++;
       continue;

@@ -28,7 +28,8 @@ import {
   ReturnEntry,
   ConditionClause,
   ConditionExpression,
-  ExpressionNode
+  ExpressionNode,
+  PlanMeta
 } from "./ast.js";
 import { ParserError } from "./parserError.js";
 import { isValidStepId } from "../step/stepId.js";
@@ -121,11 +122,70 @@ export class Parser {
   // Root
   // ----------------------------------------------------------
   parse(): ASTRoot {
+    if (this.isPlanStart()) {
+      const { block, meta } = this.parsePlan();
+      return {
+        type: "Root",
+        block,
+        planMeta: meta,
+      };
+    }
     const block = this.parseBlock(false);
     return {
       type: "Root",
       block,
     };
+  }
+
+  private isPlanStart(): boolean {
+    const t = this.peek();
+    if (t.type === TokenType.Keyword && t.value === "PLAN") return true;
+    if (t.type === TokenType.Identifier && t.value.toLowerCase() === "plan") return true;
+    return false;
+  }
+
+  private parsePlan(): { block: BlockNode; meta?: PlanMeta } {
+    if (this.match(TokenType.Keyword, "PLAN")) {
+      this.consume(TokenType.Keyword, "PLAN");
+    } else {
+      const name = this.consumeIdentifier();
+      if (name.toLowerCase() !== "plan") {
+        throw new ParserError(`Unexpected token '${name}'`, this.peek().line);
+      }
+    }
+    this.consume(TokenType.Symbol, "{");
+    const meta = this.parsePlanMeta();
+    const block = this.parseBlock(false);
+    this.consume(TokenType.Symbol, "}");
+    return { block, meta };
+  }
+
+  private parsePlanMeta(): PlanMeta | undefined {
+    const meta: PlanMeta = {};
+    while (this.check(TokenType.Symbol, "@")) {
+      const marker = this.consume(TokenType.Symbol, "@");
+      if (!this.match(TokenType.Identifier)) {
+        throw new ParserError("plan meta requires @<key> \"value\"", marker.line);
+      }
+      const key = this.consumeIdentifier();
+      const normalized = key.toLowerCase();
+      if (!["title", "summary", "version", "since"].includes(normalized)) {
+        throw new ParserError(`Unknown plan meta '@${key}'`, marker.line);
+      }
+      meta[normalized as keyof PlanMeta] = this.parsePlanMetaValue();
+    }
+    return Object.keys(meta).length ? meta : undefined;
+  }
+
+  private parsePlanMetaValue(): string {
+    const token = this.peek();
+    if (token.type === TokenType.String) {
+      return this.consumeString();
+    }
+    if (token.type === TokenType.Number) {
+      return this.consume(TokenType.Number).value;
+    }
+    throw new ParserError(`Invalid plan meta value '${token.value}'`, token.line);
   }
 
   // ----------------------------------------------------------

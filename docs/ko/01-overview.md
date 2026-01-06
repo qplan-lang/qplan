@@ -12,6 +12,8 @@ QPlan은 **AI가 설계하고 사람이 검증할 수 있는 Step 기반 워크�
 - **Deterministic & Observable**: Step order/path/event 로깅을 통해 언제든 재현/모니터링이 쉽다.
 - **Future-proof**: Future/Parallel/Join, dot-path 변수 참조 등 현대적 제어 흐름을 기본 지원한다.
 
+이 목표들의 배경 설명은 [`docs/ko/qplan-why.md`](docs/ko/qplan-why.md) 를 참고해 주세요.
+
 > **AI thinks, QPlan executes.**
 
 ## 🧩 엔진 구성요소

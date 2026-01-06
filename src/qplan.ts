@@ -1,4 +1,4 @@
-import type { ASTRoot } from "./core/ast.js";
+import type { ASTRoot, PlanMeta } from "./core/ast.js";
 import { resolveSteps } from "./step/stepResolver.js";
 import type { StepResolution, StepInfo } from "./step/stepTypes.js";
 import { ModuleRegistry } from "./core/moduleRegistry.js";
@@ -66,6 +66,10 @@ export class QPlan {
     return Array.from(this.stepStates.values())
       .sort((a, b) => a.order - b.order)
       .map(({ info: _info, ...rest }) => ({ ...rest }));
+  }
+
+  getPlanMeta(): PlanMeta | undefined {
+    return this.ast.planMeta;
   }
 
   async run(options: QPlanRunOptions = {}): Promise<ExecutionContext> {

@@ -189,6 +189,7 @@ Central place where modules are registered and exposed to AI/runtime. Module IDs
 
 ### Step System
 Structured workflow with sub-steps, jump policies, retry logic, and error handling. Return statements are optional: `return gear accounts total=sum` (or `return gear, accounts, total=sum`) automatically expands to `return gear=gear accounts=accounts total=sum`. If you omit `return`, every action output inside the step is exposed under the step’s result namespace (`stepId.outputName` by default, or a custom name when you add `-> resultVar` to the step header). Even when you override the namespace, the engine mirrors the same object under the original step ID, so both `resultVar.field` and `stepId.field` keep working. Identifiers (module names, variables, return keys, etc.) may include any Unicode letter/digit plus `_` so long as they start with a letter or underscore, meaning `return 결과=값` works alongside ASCII names.
+You can optionally wrap a script in `plan { ... }` and add `@title`, `@summary`, `@version`, or `@since` for human-readable metadata.
 
 ### ExecutionContext
 Stores runtime variables, supports dot-path access (`stats.total`), and keeps per-run `env`/`metadata` values retrievable via `ctx.getEnv()` / `ctx.getMetadata()`.

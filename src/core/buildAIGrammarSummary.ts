@@ -14,10 +14,34 @@
  */
 
 export function buildAIGrammarSummary(): string {
-  return `
+ return `
 -----------------------------------------
 QPlan Language Core Grammar (AI-Friendly Summary)
 -----------------------------------------
+
+0) Plan Block (optional)
+-----------------------------------------
+전체 스크립트를 plan 블록으로 감싸 메타정보를 붙일 수 있다.
+메타는 plan 블록 시작 부분에만 선언한다.
+
+예)
+plan {
+  @title "온보딩 플랜"
+  @summary "계정 생성부터 교육 예약까지"
+  @version "0.1"
+  @since "2025-01-01"
+
+  step id="setup" {
+    ...
+  }
+}
+
+지원 메타:
+  - title
+  - summary
+  - version
+  - since
+
 
 1) Step & Jump
 -----------------------------------------

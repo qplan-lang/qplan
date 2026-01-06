@@ -188,6 +188,14 @@ export interface UnaryExpression {
 export interface ASTRoot {
   type: "Root";
   block: BlockNode;
+  planMeta?: PlanMeta;
+}
+
+export interface PlanMeta {
+  title?: string;
+  summary?: string;
+  version?: string;
+  since?: string;
 }
 
 export type ASTNode =
