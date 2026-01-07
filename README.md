@@ -3,6 +3,38 @@ AI Planning Language & Execution Engine
 
 https://qplan.org
 
+## QuickStart
+
+```bash
+npm install qplan
+```
+
+```ts
+import { buildAIPlanPrompt, runQplan, registry } from "qplan";
+// TODO: registry.register(askUserModule); registry.register(saveDbModule);
+
+const requirement = "Ask the user for their name, then save it to the developer database.";
+const prompt = buildAIPlanPrompt(requirement);
+
+// TODO: call your LLM here
+const aiScript = await callAnyLLM(prompt);
+
+const ctx = await runQplan(aiScript, { registry });
+console.log(ctx);
+```
+
+### Example AI-generated QPlan
+```qplan
+step id="ask_name" {
+  askUser prompt="What is your name?" -> name
+}
+
+step id="save_user" {
+  saveDb name=name
+}
+```
+
+
 ## 1. Introduction
 
 QPlan is a **lightweight AI Planning Language & Execution Engine** designed for scenarios where an AI writes a plan and the system executes it.

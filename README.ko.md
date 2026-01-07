@@ -3,6 +3,57 @@
 
 🌐 https://qplan.org
 
+## QuickStart
+
+```bash
+npm install qplan
+```
+
+```ts
+import { buildAIPlanPrompt, runQplan, registry } from "qplan";
+// TODO: registry.register(askUserModule); registry.register(saveDbModule);
+
+const requirement = "사용자의 이름을 입력받고 개발자 DB에 저장해줘.";
+const prompt = buildAIPlanPrompt(requirement);
+
+// TODO: LLM을 이용해 동적 qplan script를 작성시키도록 합니다.
+const aiScript = await callAnyLLM(prompt);
+
+const ctx = await runQplan(aiScript, { registry });
+console.log(ctx);
+```
+
+### Example AI로 생성된 QPlan
+```qplan
+step id="ask_name" {
+  askUser prompt="What is your name?" -> name
+}
+
+step id="save_user" {
+  saveDb name=name
+}
+```
+
+```ts
+import { buildAIPlanPrompt, runQplan } from "qplan";
+
+const requirement = "사용자의 이름을 입력받고 개발자 DB에 저장해줘.";
+const prompt = buildAIPlanPrompt(requirement);
+const aiScript = await callAnyLLM(prompt); // LLM 호출 코드
+// aiScript - 예시:
+// step id="ask_name" desc="Ask user name" {
+//   askUser prompt="What is your name?" -> name
+//   return name=name
+// }
+// step id="save_user" desc="Save to dev DB" {
+//   saveUser name=ask_name.name -> record
+//   return id=record.id
+// }
+// step id="done" desc="Finish" { ... }
+const result = await runQplan(aiScript);
+console.log(result);
+```
+
 ---
 
 ## 1. Introduction
