@@ -7,6 +7,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.4.1] - 2026-01-07
+
+### Added
+- Add Homepage link (`https://qplan.org`).
+
+---
+
 ## [0.4.0] - 2026-01-07
 
 ### Added
