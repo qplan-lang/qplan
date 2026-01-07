@@ -1,5 +1,7 @@
 # QPlan
-🌐 https://qplan.org
+AI Planning Language & Execution Engine 
+
+https://qplan.org
 
 ## 1. Introduction
 

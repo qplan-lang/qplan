@@ -1,5 +1,6 @@
-# QPlan — AI Planning Language & Execution Engine  
+# QPlan 
 경량 AI Planning Language & 실행 엔진
+
 🌐 https://qplan.org
 
 ---
