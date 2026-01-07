@@ -40,7 +40,7 @@
   "bugs": {
     "url": "https://github.com/qplan-lang/qplan/issues"
   },
-  "homepage": "https://github.com/qplan-lang/qplan#readme",
+  "homepage": "https://qplan.org",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^25.0.0",
