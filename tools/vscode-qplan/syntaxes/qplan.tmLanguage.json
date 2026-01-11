@@ -63,7 +63,7 @@
       "patterns": [
         {
           "name": "keyword.control.qplan",
-          "match": "\\b(if|else|while|each|in|parallel|jump|to|stop|skip|set|return)\\b"
+          "match": "\\b(if|else|while|each|in|parallel|jump|to|stop|skip|continue|break|set|return)\\b"
         },
         {
           "name": "keyword.other.qplan",
