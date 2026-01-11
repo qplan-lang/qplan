@@ -35,6 +35,25 @@ if value EXISTS dummy or nothing NOT_EXISTS dummy2 {
 } else {
   echo msg="not exists" -> msg4
 }
+
+# 5) Boolean Literals (true/false)
+var true -> isRun
+var false -> isStop
+
+if isRun == true {
+  echo msg="isRun is true" -> msg5_1
+}
+if isStop == false {
+  echo msg="isStop is false" -> msg5_2
+}
+if isRun == false {
+  echo msg="should not run" -> msg5_3
+} else {
+  echo msg="false check ok" -> msg5_3
+}
+if isStop != true {
+  echo msg="not true check ok" -> msg5_4
+}
 `;
 
 const ctx = await runQplan(script);

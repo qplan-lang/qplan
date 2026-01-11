@@ -100,8 +100,12 @@ export class Parser {
     | { value: any; kind: "string" }
     | { value: any; kind: "number" }
     | { value: any; kind: "identifier" }
+    | { value: any; kind: "boolean" }
     | { value: any; kind: "json" } {
     const t = this.peek();
+    if (t.type === TokenType.Boolean) {
+      return { value: this.consume(TokenType.Boolean).value === "true", kind: "boolean" };
+    }
     if (t.type === TokenType.String) {
       return { value: this.consumeString(), kind: "string" };
     }
@@ -276,9 +280,11 @@ export class Parser {
     const moduleName = moduleToken.value;
     const line = moduleToken.line;
 
+    /*
     if (!insideStep) {
       throw new ParserError("Actions must be inside a step block", line);
     }
+    */
 
     if (moduleName === "var") {
       return this.parseVarAction(moduleName, line);
@@ -377,9 +383,11 @@ export class Parser {
 
   private parseSet(insideStep: boolean): SetNode {
     const kw = this.consume(TokenType.Keyword, "SET");
+    /*
     if (!insideStep) {
       throw new ParserError("SET is only allowed inside a step block", kw.line);
     }
+    */
     const line = kw.line;
     const target = this.consumeIdentifier();
     this.consume(TokenType.Symbol, "=");
@@ -457,9 +465,11 @@ export class Parser {
 
   private parseJump(insideStep: boolean): JumpNode {
     const kw = this.consume(TokenType.Keyword, "JUMP");
+    /*
     if (!insideStep) {
       throw new ParserError("JUMP is only allowed inside a step block", kw.line);
     }
+    */
     const line = kw.line;
 
     const targetKey = this.consumeIdentifier();
@@ -644,6 +654,9 @@ export class Parser {
     if (token.type === TokenType.Number) {
       return Number(this.consume(TokenType.Number).value);
     }
+    if (token.type === TokenType.Boolean) {
+      return this.consume(TokenType.Boolean).value === "true";
+    }
     if (token.type === TokenType.Symbol && (token.value === "[" || token.value === "{")) {
       return this.parseJsonLiteralValue();
     }
@@ -793,6 +806,12 @@ export class Parser {
         value: Number(this.consume(TokenType.Number).value),
       };
     }
+    if (token.type === TokenType.Boolean) {
+      return {
+        type: "Literal",
+        value: this.consume(TokenType.Boolean).value === "true",
+      };
+    }
     if (token.type === TokenType.String) {
       return {
         type: "Literal",
@@ -828,9 +847,11 @@ export class Parser {
   // ---------------------------------------
   private parseIf(insideStep: boolean): IfNode {
     const kw = this.consume(TokenType.Keyword, "IF");
+    /*
     if (!insideStep) {
       throw new ParserError("IF is only allowed inside a step block", kw.line);
     }
+    */
     const line = kw.line;
 
     const condition = this.parseConditionExpression();
@@ -861,9 +882,11 @@ export class Parser {
 
   private parseWhile(insideStep: boolean): WhileNode {
     const kw = this.consume(TokenType.Keyword, "WHILE");
+    /*
     if (!insideStep) {
       throw new ParserError("WHILE is only allowed inside a step block", kw.line);
     }
+    */
     const line = kw.line;
     const condition = this.parseConditionExpression();
     this.consume(TokenType.Symbol, "{");
@@ -947,7 +970,7 @@ export class Parser {
 
     const rt = this.peek();
     let right: any;
-    let rightType: "identifier" | "string" | "number";
+    let rightType: "identifier" | "string" | "number" | "boolean";
     if (rt.type === TokenType.Number) {
       right = Number(this.consume(TokenType.Number).value);
       rightType = "number";
@@ -957,6 +980,9 @@ export class Parser {
     } else if (rt.type === TokenType.Identifier) {
       right = this.consumeIdentifierPath();
       rightType = "identifier";
+    } else if (rt.type === TokenType.Boolean) {
+      right = this.consume(TokenType.Boolean).value === "true";
+      rightType = "boolean";
     } else {
       throw new ParserError(`Invalid right operand '${rt.value}'`, rt.line);
     }
@@ -977,9 +1003,11 @@ export class Parser {
   // ----------------------------------------------------------
   private parseParallel(insideStep: boolean): ParallelNode {
     const start = this.consume(TokenType.Keyword, "PARALLEL");
+    /*
     if (!insideStep) {
       throw new ParserError("PARALLEL is only allowed inside a step block", start.line);
     }
+    */
     const line = start.line;
 
     let ignoreErrors = false;
@@ -1027,9 +1055,11 @@ export class Parser {
   // ----------------------------------------------------------
   private parseEach(insideStep: boolean): EachNode {
     const kw = this.consume(TokenType.Keyword, "EACH");
+    /*
     if (!insideStep) {
       throw new ParserError("EACH is only allowed inside a step block", kw.line);
     }
+    */
     const line = kw.line;
 
     let iterator: string;
@@ -1087,17 +1117,21 @@ export class Parser {
 
   private parseSkip(insideStep: boolean): SkipNode {
     const kw = this.consume(TokenType.Keyword, "SKIP");
+    /*
     if (!insideStep) {
       throw new ParserError("SKIP is only allowed inside a step block", kw.line);
     }
+    */
     return { type: "Skip", line: kw.line };
   }
 
   private parseReturn(insideStep: boolean): ReturnNode {
     const kw = this.consume(TokenType.Keyword, "RETURN");
+    /*
     if (!insideStep) {
       throw new ParserError("RETURN is only allowed inside a step block", kw.line);
     }
+    */
     const entries: ReturnEntry[] = [];
 
     while (true) {

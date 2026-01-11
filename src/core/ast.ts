@@ -92,7 +92,7 @@ export interface ConditionClause {
   negated?: boolean;
   comparator: string;
   right: any;
-  rightType?: "identifier" | "string" | "number";
+  rightType?: "identifier" | "string" | "number" | "boolean";
   line: number;
 }
 

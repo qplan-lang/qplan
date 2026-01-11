@@ -16,6 +16,7 @@ export enum TokenType {
   Identifier = "Identifier",
   String = "String",
   Number = "Number",
+  Boolean = "Boolean",
   Keyword = "Keyword",
   Symbol = "Symbol",
   EOF = "EOF",
@@ -144,7 +145,9 @@ export function tokenize(input: string): Token[] {
         word += input[i++];
       }
 
-      if (KEYWORDS.has(word.toUpperCase())) {
+      if (word === "true" || word === "false") {
+        tokens.push({ type: TokenType.Boolean, value: word, line });
+      } else if (KEYWORDS.has(word.toUpperCase())) {
         tokens.push({
           type: TokenType.Keyword,
           value: word.toUpperCase(),
