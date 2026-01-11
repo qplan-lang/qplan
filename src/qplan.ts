@@ -197,6 +197,21 @@ export class QPlan {
       onStepJump: async (info: StepEventInfo, target: string, context?: StepEventRunContext) => {
         await forward("onStepJump", info, target, context as any);
       },
+      onAbort: async (context?: StepEventRunContext) => {
+        await forward("onAbort", context as any);
+      },
+      onPause: async (context?: StepEventRunContext) => {
+        await forward("onPause", context as any);
+      },
+      onResume: async (context?: StepEventRunContext) => {
+        await forward("onResume", context as any);
+      },
+      onTimeout: async (context?: StepEventRunContext) => {
+        await forward("onTimeout", context as any);
+      },
+      onStateChange: async (newState: ExecutionState, oldState: ExecutionState, context?: StepEventRunContext) => {
+        await forward("onStateChange", newState, oldState, context as any);
+      },
     };
   }
 

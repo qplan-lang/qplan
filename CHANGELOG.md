@@ -29,6 +29,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   - `StepSkipSignal`: Signal for skipping current step
   - `AbortError`: Error thrown when execution is aborted
 
+- **Execution Events (New)**
+  - `onAbort`: Triggered when execution is aborted
+  - `onPause` / `onResume`: Triggered on pause/resume
+  - `onTimeout`: Triggered when execution times out
+  - `onStateChange`: Triggered on any execution state change
+
 ### Changed
 - **BREAKING**: Loop control keywords renamed for clarity
   - `stop` → `break` (for loop exit)

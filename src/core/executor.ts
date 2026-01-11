@@ -78,7 +78,8 @@ export class Executor {
 
     // Controller 시작
     if (this.controller) {
-      this.controller.start(runContext.runId);
+      this.controller.setEventEmitter(this.stepEvents);
+      this.controller.start(runContext);
     }
 
     const resolution = resolveSteps(root.block);

@@ -12,6 +12,7 @@
  */
 
 import { ExecutionContext } from "./executionContext.js";
+import { StepEventEmitter, StepEventRunContext } from "../step/stepEvents.js";
 
 export enum ExecutionState {
     IDLE = "idle",
@@ -69,9 +70,15 @@ export class ExecutionController {
     private startTime?: number;
     private blockStack: BlockStackFrame[] = [];
     private currentStepId?: string;
+    private eventEmitter?: StepEventEmitter;
+    private runContext?: StepEventRunContext;
     private runId?: string;
 
     constructor(private options: ExecutionControllerOptions = {}) { }
+
+    setEventEmitter(emitter: StepEventEmitter) {
+        this.eventEmitter = emitter;
+    }
 
     // ========================================
     // State Management
@@ -82,7 +89,11 @@ export class ExecutionController {
     }
 
     setState(state: ExecutionState): void {
-        this._state = state;
+        const oldState = this._state;
+        if (oldState !== state) {
+            this._state = state;
+            this.eventEmitter?.onStateChange?.(state, oldState, this.runContext);
+        }
     }
 
     isIdle(): boolean {
@@ -109,69 +120,6 @@ export class ExecutionController {
         return this._state === ExecutionState.ERROR;
     }
 
-    // ========================================
-    // Execution Control
-    // ========================================
-
-    start(runId: string): void {
-        this.runId = runId;
-        this._state = ExecutionState.RUNNING;
-        this.aborted = false;
-        this.startTime = Date.now();
-
-        // 타임아웃 설정
-        if (this.options.timeout && this.options.timeout > 0) {
-            this.setTimeout(this.options.timeout);
-        }
-    }
-
-    /**
-     * 실행 중지 (강제 종료)
-     */
-    abort(): void {
-        if (this._state === ExecutionState.COMPLETED || this._state === ExecutionState.ABORTED) {
-            return;
-        }
-        this._state = ExecutionState.ABORTED;
-        this.aborted = true;
-        this.clearTimeout();
-
-        // 일시중지 상태였다면 재개하여 abort 처리
-        if (this.pauseResolve) {
-            this.pauseResolve();
-            this.pausePromise = undefined;
-            this.pauseResolve = undefined;
-        }
-    }
-
-    /**
-     * 일시중지
-     */
-    pause(): void {
-        if (this._state !== ExecutionState.RUNNING) {
-            return;
-        }
-        this._state = ExecutionState.PAUSED;
-        this.pausePromise = new Promise<void>((resolve) => {
-            this.pauseResolve = resolve;
-        });
-    }
-
-    /**
-     * 재개
-     */
-    resume(): void {
-        if (this._state !== ExecutionState.PAUSED) {
-            return;
-        }
-        this._state = ExecutionState.RUNNING;
-        if (this.pauseResolve) {
-            this.pauseResolve();
-            this.pausePromise = undefined;
-            this.pauseResolve = undefined;
-        }
-    }
-
     /**
      * 각 노드 실행 전 호출하여 제어 상태 확인
      */
@@ -192,16 +140,88 @@ export class ExecutionController {
         }
     }
 
+    // ========================================
+    // Execution Control
+    // ========================================
+
+    start(runContext: StepEventRunContext): void {
+        this.runContext = runContext;
+        this.runId = runContext.runId;
+        this.setState(ExecutionState.RUNNING);
+        this.aborted = false;
+        this.startTime = Date.now();
+
+        // 타임아웃 설정
+        if (this.options.timeout && this.options.timeout > 0) {
+            this.setTimeout(this.options.timeout);
+        }
+    }
+
+    /**
+     * 실행 중지 (강제 종료)
+     */
+    abort(): void {
+        if (this._state === ExecutionState.COMPLETED || this._state === ExecutionState.ABORTED) {
+            return;
+        }
+        this.setState(ExecutionState.ABORTED);
+        this.aborted = true;
+        this.clearTimeout();
+
+        this.eventEmitter?.onAbort?.(this.runContext);
+
+        // 일시중지 상태였다면 재개하여 abort 처리
+        if (this.pauseResolve) {
+            this.pauseResolve();
+            this.pausePromise = undefined;
+            this.pauseResolve = undefined;
+        }
+    }
+
+    /**
+     * 일시중지
+     */
+    pause(): void {
+        if (this._state !== ExecutionState.RUNNING) {
+            return;
+        }
+        this.setState(ExecutionState.PAUSED);
+        this.eventEmitter?.onPause?.(this.runContext);
+
+        this.pausePromise = new Promise<void>((resolve) => {
+            this.pauseResolve = resolve;
+        });
+    }
+
+    /**
+     * 재개
+     */
+    resume(): void {
+        if (this._state !== ExecutionState.PAUSED) {
+            return;
+        }
+        this.setState(ExecutionState.RUNNING); // setState triggers onStateChange
+        this.eventEmitter?.onResume?.(this.runContext);
+
+        if (this.pauseResolve) {
+            this.pauseResolve();
+            this.pausePromise = undefined;
+            this.pauseResolve = undefined;
+        }
+    }
+
+    // ...
+
     complete(): void {
         if (this._state === ExecutionState.ABORTED) {
             return;
         }
-        this._state = ExecutionState.COMPLETED;
+        this.setState(ExecutionState.COMPLETED);
         this.clearTimeout();
     }
 
     error(): void {
-        this._state = ExecutionState.ERROR;
+        this.setState(ExecutionState.ERROR);
         this.clearTimeout();
     }
 
@@ -212,8 +232,10 @@ export class ExecutionController {
     private setTimeout(ms: number): void {
         this.clearTimeout();
         this.timeoutId = setTimeout(() => {
-            this._state = ExecutionState.ABORTED;
+            this.setState(ExecutionState.ABORTED);
             this.aborted = true;
+            this.eventEmitter?.onTimeout?.(this.runContext);
+            this.eventEmitter?.onAbort?.(this.runContext); // Timeout is implicitly an abort
         }, ms);
     }
 

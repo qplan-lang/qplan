@@ -58,7 +58,7 @@ Executor는 Step을 실행할 때 `StepController.runStep()` 을 호출해 다�
 | `retry=N` | 최대 N회 재시도. 각 재시도마다 `onStepRetry` 이벤트 호출. |
 | `jump="stepId"` | 오류 시 지정 Step으로 JumpSignal 발생. |
 
-StepController는 또한 `onStepStart/End/Error/Retry/Jump` 이벤트를 호출해 UI/로그 시스템이 Step 진행률을 추적할 수 있도록 한다. Step 결과는 `ctx[runId][namespace]` 에 저장되며, namespace 기본값은 Step ID 이지만 `step ... -> resultVar` 로 변경할 수 있다. namespace 를 바꿔도 동일 객체를 Step ID 아래에도 복제하므로 같은 실행(run) 안에서는 `resultVar.xxx` 와 `stepId.xxx` 를 모두 사용할 수 있다.
+StepController는 또한 `onStepStart/End/Error/Retry/Jump` 이벤트뿐만 아니라 플랜 레벨 이벤트인 `onPlanStart/End`, 그리고 실행 제어 이벤트(`onAbort`, `onPause`, `onResume`, `onTimeout`, `onStateChange`)도 호출해 UI/로그 시스템이 상세 진행 상황을 추적할 수 있도록 한다. Step 결과는 `ctx[runId][namespace]` 에 저장되며, namespace 기본값은 Step ID 이지만 `step ... -> resultVar` 로 변경할 수 있다. namespace 를 바꿔도 동일 객체를 Step ID 아래에도 복제하므로 같은 실행(run) 안에서는 `resultVar.xxx` 와 `stepId.xxx` 를 모두 사용할 수 있다.
 
 ## 5. ExecutionContext 상호작용
 - Executor는 `ctx.set(name, value)` 로 Action 결과를 저장하고, 이후 Action 인수에서 문자열이 ctx 변수와 일치하면 자동으로 해당 값을 대입한다.

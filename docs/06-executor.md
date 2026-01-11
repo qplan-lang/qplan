@@ -58,7 +58,7 @@ When executing a step, the executor delegates to `StepController.runStep()` whic
 | `retry=N` | Retry up to N times, emitting `onStepRetry` per attempt. |
 | `jump="stepId"` | On error, raise a JumpSignal to that step. |
 
-The controller also fires `onStepStart/End/Error/Retry/Jump` so UIs/logs can follow progress. Step outputs are stored under `ctx[runId][namespace]`, where the namespace defaults to the step ID but may be overridden via `step ... -> resultVar`; even when overridden, the controller mirrors the same object under the original step ID so both `resultVar.field` and `stepId.field` resolve.
+The controller also fires `onStepStart/End/Error/Retry/Jump` as well as plan-level events `onPlanStart/End` and execution control events (`onAbort`, `onPause`, `onResume`, `onTimeout`, `onStateChange`) so UIs/logs can follow progress. Step outputs are stored under `ctx[runId][namespace]`, where the namespace defaults to the step ID but may be overridden via `step ... -> resultVar`; even when overridden, the controller mirrors the same object under the original step ID so both `resultVar.field` and `stepId.field` resolve.
 
 ## 5. ExecutionContext interaction
 - Store results via `ctx.set(name, value)`; later arguments that match ctx keys automatically resolve to those values.
