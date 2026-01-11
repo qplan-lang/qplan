@@ -19,18 +19,18 @@ import { buildAIGrammarSummary } from "./buildAIGrammarSummary.js";
  *  - 사용 가능한 모듈 전체 목록 (동적)
  */
 export function buildQplanSuperPrompt(registry: ModuleRegistry): string {
-  const grammar = buildAIGrammarSummary();
-  const modules = registry.list();
+   const grammar = buildAIGrammarSummary();
+   const modules = registry.list();
 
-  const moduleText = modules
-    .map(m => {
-      const usage = m.usage ? `\n  예시:\n${indent(m.usage.trim(), 4)}` : "";
-      const inputs = m.inputs ? `\n  입력값: ${m.inputs.join(", ")}` : "";
-      return `- ${m.id}: ${m.description ?? ""}${inputs}${usage}`;
-    })
-    .join("\n\n");
+   const moduleText = modules
+      .map(m => {
+         const usage = m.usage ? `\n  예시:\n${indent(m.usage.trim(), 4)}` : "";
+         const inputs = m.inputs ? `\n  입력값: ${m.inputs.join(", ")}` : "";
+         return `- ${m.id}: ${m.description ?? ""}${inputs}${usage}`;
+      })
+      .join("\n\n");
 
-  return `
+   return `
 당신은 QPlan Language의 전문가입니다.
 이제부터 당신의 역할은 사용자의 요구를 분석하고,
 정확한 QPlan 스크립트를 작성하는 것입니다.
@@ -98,7 +98,7 @@ ${moduleText}
 2) 문법 오류 없는 QPlan 생성  
 3) 모듈과 usage를 정확히 활용  
 4) Step/Sub-step 구조, jump, onError 정책(fail/continue/retry/jump), Step output/return 을 정확히 구성  
-5) If / Each / Parallel / Future / Join 등 복합 로직 구성 (stop / skip 포함)  
+5) If / Each / Parallel / Future / Join 등 복합 로직 구성 (반복문엔 break/continue, 실행제어엔 stop/skip 활용)  
 6) ctx 변수를 올바르게 참조  
 7) 존재하지 않는 모듈은 절대 사용하지 않음  
 
@@ -110,8 +110,8 @@ QPlan은 단순한 문자열이 아니라 구조적 워크플로우 언어입니
 }
 
 function indent(text: string, spaces: number): string {
-  return text
-    .split("\n")
-    .map(line => " ".repeat(spaces) + line)
-    .join("\n");
+   return text
+      .split("\n")
+      .map(line => " ".repeat(spaces) + line)
+      .join("\n");
 }

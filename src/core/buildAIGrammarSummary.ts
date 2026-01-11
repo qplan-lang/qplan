@@ -14,7 +14,7 @@
  */
 
 export function buildAIGrammarSummary(): string {
- return `
+  return `
 -----------------------------------------
 QPlan Language Core Grammar (AI-Friendly Summary)
 -----------------------------------------
@@ -77,6 +77,9 @@ Jump 문법:
   - 블록 간 이동 가능 (Step 트리를 따라 상위/하위 위치로 점프)
   - onError 정책에 따라 fail/continue/retry/jump 흐름을 제어할 수 있음
 
+Step 실행 제어:
+  skip   → 현재 Step 실행을 중단하고 다음 Step으로 이동 (onError="continue"와 유사)
+  stop   → 전체 Plan 실행 즉시 중단
 
 2) Action
 -----------------------------------------
@@ -178,8 +181,8 @@ each (price, idx) in prices {
 }
 
 반복 제어:
-  stop      → 현재 each 탈출
-  skip      → 다음 반복으로 건너뜀
+  break    → 현재 each/while 루프 탈출
+  continue → 다음 반복으로 진행
 
 
 8) While 반복문
@@ -192,7 +195,7 @@ while <condition> {
 설명:
 - if 조건과 동일한 문법/연산자를 사용
 - 조건이 참인 동안 블록 반복
-- 내부에서 stop/skip 사용 가능
+- 내부에서 break/continue 사용 가능
 
 예)
 while total < limit {
