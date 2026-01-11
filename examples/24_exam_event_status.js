@@ -1,13 +1,13 @@
 /**
  * QPlan Event Status Test
  * 
- * onPlanEnd 이벤트에서 status를 확인하는 예제
+ * Example checking status in onPlanEnd event
  */
 
 import { QPlan } from "../dist/index.js";
 
 // ========================================
-// 1. 정상 완료 (completed)
+// 1. Normal Completion (completed)
 // ========================================
 async function testCompleted() {
     console.log("\n=== 1. Completed Status Test ===");
@@ -35,7 +35,7 @@ step id="step2" {
 }
 
 // ========================================
-// 2. Stop 키워드로 중단 (stopped)
+// 2. Stop with keyword (stopped)
 // ========================================
 async function testStopped() {
     console.log("\n=== 2. Stopped Status Test ===");
@@ -68,13 +68,13 @@ step id="step3" {
             }
         });
     } catch (err) {
-        // stop은 에러를 throw하므로 catch됨
+        // stop throws an error, so it is caught
         console.log("  Caught:", err.message);
     }
 }
 
 // ========================================
-// 3. Abort로 강제 중단 (aborted)
+// 3. Forced Stop with Abort (aborted)
 // ========================================
 async function testAborted() {
     console.log("\n=== 3. Aborted Status Test ===");
@@ -95,7 +95,7 @@ step id="step3" {
 
     const qplan = new QPlan(script);
 
-    // 100ms 후 abort 호출
+    // Call abort after 100ms
     setTimeout(() => {
         console.log("  Calling abort()...");
         qplan.abort();
@@ -116,7 +116,7 @@ step id="step3" {
 }
 
 // ========================================
-// 4. 에러 발생 (error)
+// 4. Error Occurrence (error)
 // ========================================
 async function testError() {
     console.log("\n=== 4. Error Status Test ===");
@@ -127,7 +127,7 @@ step id="step1" {
 }
 
 step id="step2" {
-  // 존재하지 않는 모듈 호출 -> 에러
+  // Call non-existent module -> Error
   nonexistent_module foo="bar"
 }
 
@@ -153,7 +153,7 @@ step id="step3" {
 }
 
 // ========================================
-// 5. 모든 상태 비교
+// 5. Compare All Statuses
 // ========================================
 async function testAllStatuses() {
     console.log("\n=== 5. All Status Comparison ===");

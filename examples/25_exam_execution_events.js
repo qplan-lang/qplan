@@ -1,7 +1,7 @@
 /**
  * QPlan Execution Control Events Test
  * 
- * 실행 제어 이벤트 (abort, pause, resume, timeout, stateChange) 테스트
+ * Execution control events (abort, pause, resume, timeout, stateChange) test
  */
 
 import { QPlan } from "../dist/index.js";
@@ -22,7 +22,7 @@ step id="step1" {
 
     const qplan = new QPlan(script);
 
-    // 50ms 후 일시정지, 그 후 100ms 뒤 재개
+    // Pause after 50ms, then resume after 100ms
     setTimeout(() => {
         console.log("  [Control] Calling pause()...");
         qplan.pause();
@@ -64,7 +64,7 @@ step id="step1" {
 
     const qplan = new QPlan(script);
 
-    // 100ms 후 중단
+    // Stop after 100ms
     setTimeout(() => {
         console.log("  [Control] Calling abort()...");
         qplan.abort();
