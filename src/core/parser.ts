@@ -19,6 +19,8 @@ import {
   WhileNode,
   ParallelNode,
   EachNode,
+  BreakNode,
+  ContinueNode,
   StopNode,
   SkipNode,
   SetNode,
@@ -39,7 +41,7 @@ export class Parser {
   private printTempVar = 0;
   private autoTempVar = 0;
 
-  constructor(private tokens: Token[]) {}
+  constructor(private tokens: Token[]) { }
 
   // ----------------------------------------------------------
   // 기본 유틸
@@ -228,10 +230,16 @@ export class Parser {
     // WHILE
     if (this.match(TokenType.Keyword, "WHILE")) return this.parseWhile(insideStep);
 
-    // STOP
-    if (this.match(TokenType.Keyword, "STOP")) return this.parseStop(insideStep);
+    // BREAK (루프 탈출)
+    if (this.match(TokenType.Keyword, "BREAK")) return this.parseBreak();
 
-    // SKIP
+    // CONTINUE (루프 다음 반복)
+    if (this.match(TokenType.Keyword, "CONTINUE")) return this.parseContinue();
+
+    // STOP (Plan 전체 중단)
+    if (this.match(TokenType.Keyword, "STOP")) return this.parseStop();
+
+    // SKIP (Step 건너뛰기)
     if (this.match(TokenType.Keyword, "SKIP")) return this.parseSkip(insideStep);
 
     // RETURN
@@ -395,11 +403,11 @@ export class Parser {
 
     let extraMeta:
       | {
-          id?: string;
-          desc?: string;
-          stepType?: string;
-          onError?: string;
-        }
+        id?: string;
+        desc?: string;
+        stepType?: string;
+        onError?: string;
+      }
       | undefined;
 
     if (this.match(TokenType.String)) {
@@ -1057,13 +1065,23 @@ export class Parser {
   }
 
   // ----------------------------------------------------------
-  // STOP / SKIP
+  // BREAK / CONTINUE (루프 제어)
   // ----------------------------------------------------------
-  private parseStop(insideStep: boolean): StopNode {
+  private parseBreak(): BreakNode {
+    const kw = this.consume(TokenType.Keyword, "BREAK");
+    return { type: "Break", line: kw.line };
+  }
+
+  private parseContinue(): ContinueNode {
+    const kw = this.consume(TokenType.Keyword, "CONTINUE");
+    return { type: "Continue", line: kw.line };
+  }
+
+  // ----------------------------------------------------------
+  // STOP / SKIP (Plan/Step 제어)
+  // ----------------------------------------------------------
+  private parseStop(): StopNode {
     const kw = this.consume(TokenType.Keyword, "STOP");
-    if (!insideStep) {
-      throw new ParserError("STOP is only allowed inside a step block", kw.line);
-    }
     return { type: "Stop", line: kw.line };
   }
 

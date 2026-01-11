@@ -25,7 +25,7 @@ export const echoModule = Object.assign(
 ```
 
 ## 2. 기본 등록 모듈 (basicModules)
-`src/modules/index.ts` 에서 기본 registry에 자동 등록되는 9개 모듈:
+`src/modules/index.ts` 에서 기본 registry에 자동 등록되는 11개 모듈:
 
 | 모듈 | 설명 |
 | --- | --- |
@@ -38,6 +38,8 @@ export const echoModule = Object.assign(
 | `future` | `{ __future: Promise }` 래퍼로 비동기 작업을 생성. |
 | `join` | `futures="a,b,c"` 로 등록된 Future들을 `Promise.all` 로 결합. |
 | `json` | parse/stringify/get/set/keys/values/entries 기능 지원. |
+| `time` | 현재 시간을 다양한 포맷으로 반환(기본 `HH:mm:ss`). |
+| `date` | 현재 날짜/시간을 다양한 포맷으로 반환(기본 `YYYY-MM-DD`). |
 
 기본 모듈 등록은 `src/index.ts` 에서 자동 수행된다:
 ```ts

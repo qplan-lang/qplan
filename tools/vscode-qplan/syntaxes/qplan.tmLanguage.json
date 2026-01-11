@@ -1,0 +1,103 @@
+{
+  "scopeName": "source.qplan",
+  "name": "QPlan",
+  "patterns": [
+    {"include": "#comments"},
+    {"include": "#meta"},
+    {"include": "#strings"},
+    {"include": "#numbers"},
+    {"include": "#keywords"},
+    {"include": "#constants"},
+    {"include": "#attributes"},
+    {"include": "#operators"}
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.qplan",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.line.number-sign.qplan",
+          "match": "#.*$"
+        },
+        {
+          "name": "comment.block.qplan",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "meta": {
+      "patterns": [
+        {
+          "name": "meta.directive.qplan",
+          "begin": "^\\s*@",
+          "beginCaptures": {
+            "0": {"name": "punctuation.definition.directive.qplan"}
+          },
+          "end": "$",
+          "patterns": [
+            {"name": "keyword.other.qplan", "match": "\\b(title|summary|version|since)\\b"},
+            {"include": "#strings"},
+            {"include": "#numbers"}
+          ]
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.qplan",
+          "match": "\"(?:\\\\.|[^\"\\\\])*\""
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {"name": "constant.numeric.qplan", "match": "\\b\\d+(?:\\.\\d+)?\\b"}
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.qplan",
+          "match": "\\b(if|else|while|each|in|parallel|jump|to|stop|skip|set|return)\\b"
+        },
+        {
+          "name": "keyword.other.qplan",
+          "match": "\\b(plan|step)\\b"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.qplan",
+          "match": "\\b(true|false)\\b"
+        },
+        {
+          "name": "keyword.operator.logical.qplan",
+          "match": "\\b(AND|OR|NOT|EXISTS|NOT_EXISTS|and|or|not|exists|not_exists)\\b"
+        }
+      ]
+    },
+    "attributes": {
+      "patterns": [
+        {
+          "name": "entity.other.attribute-name.qplan",
+          "match": "\\b(id|desc|type|onError|concurrency|ignoreErrors)\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.qplan",
+          "match": "->|==|!=|>=|<=|=|>|<"
+        }
+      ]
+    }
+  }
+}

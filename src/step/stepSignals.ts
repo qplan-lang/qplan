@@ -13,3 +13,24 @@ export class StepReturnSignal extends Error {
     this.name = "StepReturnSignal";
   }
 }
+
+export class AbortError extends Error {
+  constructor(message: string = "Execution aborted") {
+    super(message);
+    this.name = "AbortError";
+  }
+}
+
+export class PlanStopSignal extends Error {
+  constructor(message: string = "Plan stopped") {
+    super(message);
+    this.name = "PlanStopSignal";
+  }
+}
+
+export class StepSkipSignal extends Error {
+  constructor(message: string = "Step skipped") {
+    super(message);
+    this.name = "StepSkipSignal";
+  }
+}

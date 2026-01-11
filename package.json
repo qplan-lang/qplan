@@ -1,6 +1,6 @@
 {
   "name": "qplan",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "AI Planning Language & Execution Engine",
   "type": "module",
   "main": "dist/index.js",

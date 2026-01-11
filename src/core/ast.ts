@@ -134,7 +134,18 @@ export interface WhileNode extends BaseNode {
 }
 
 /**
- * 반복 제어
+ * 루프 제어
+ */
+export interface BreakNode extends BaseNode {
+  type: "Break";
+}
+
+export interface ContinueNode extends BaseNode {
+  type: "Continue";
+}
+
+/**
+ * Plan/Step 제어
  */
 export interface StopNode extends BaseNode {
   type: "Stop";
@@ -204,6 +215,8 @@ export type ASTNode =
   | WhileNode
   | ParallelNode
   | EachNode
+  | BreakNode
+  | ContinueNode
   | StopNode
   | SkipNode
   | ReturnNode

@@ -17,6 +17,8 @@ import {
   WhileNode,
   ParallelNode,
   EachNode,
+  BreakNode,
+  ContinueNode,
   ConditionClause,
   ConditionExpression,
   StopNode,
@@ -31,7 +33,7 @@ import { ModuleRegistry } from "./moduleRegistry.js";
 import { ExecutionContext } from "./executionContext.js";
 import { resolveSteps } from "../step/stepResolver.js";
 import { StepController } from "../step/stepController.js";
-import { JumpSignal, StepReturnSignal } from "../step/stepSignals.js";
+import { JumpSignal, StepReturnSignal, PlanStopSignal, StepSkipSignal, AbortError } from "../step/stepSignals.js";
 import {
   StepEventEmitter,
   StepEventRunContext,
@@ -40,6 +42,7 @@ import {
   defaultStepEventEmitter,
 } from "../step/stepEvents.js";
 import { StepInfo } from "../step/stepTypes.js";
+import { ExecutionController, ExecutionState } from "./executionController.js";
 
 class LoopSignal extends Error {
   constructor(public kind: "break" | "continue") {
@@ -54,21 +57,30 @@ export class Executor {
   private actionSequence = 0;
   private stepEvents: StepEventEmitter;
   private blockJumpOverrides = new Map<BlockNode, number>();
+  private controller?: ExecutionController;
 
   constructor(private registry: ModuleRegistry, stepEvents?: StepEventEmitter) {
     this.stepEvents = stepEvents
       ? {
-          ...defaultStepEventEmitter,
-          ...stepEvents
-        }
+        ...defaultStepEventEmitter,
+        ...stepEvents
+      }
       : defaultStepEventEmitter;
   }
 
   async run(
     root: ASTRoot,
     ctx: ExecutionContext,
-    runContext: StepEventRunContext
+    runContext: StepEventRunContext,
+    controller?: ExecutionController
   ): Promise<ExecutionContext> {
+    this.controller = controller;
+
+    // Controller 시작
+    if (this.controller) {
+      this.controller.start(runContext.runId);
+    }
+
     const resolution = resolveSteps(root.block);
     const planInfo: PlanEventInfo = {
       runId: runContext.runId,
@@ -102,7 +114,31 @@ export class Executor {
           throw err;
         }
       }
+
+      // 정상 완료
+      if (this.controller) {
+        this.controller.complete();
+      }
+      planInfo.status = 'completed';
+
       return ctx;
+    } catch (err) {
+      // 에러 발생 - status 판별
+      if (this.controller) {
+        this.controller.error();
+      }
+
+      // 에러 타입에 따라 status 설정
+      if (err instanceof PlanStopSignal) {
+        planInfo.status = 'stopped';
+      } else if (err instanceof AbortError) {
+        planInfo.status = 'aborted';
+      } else {
+        planInfo.status = 'error';
+      }
+      planInfo.error = err as Error;
+
+      throw err;
     } finally {
       this.stepController = undefined;
       await this.stepEvents.onPlanEnd?.(planInfo, runContext);
@@ -146,6 +182,11 @@ export class Executor {
   }
 
   private async executeNode(node: ASTNode, ctx: ExecutionContext): Promise<any> {
+    // 실행 제어 확인 (abort, pause 등)
+    if (this.controller) {
+      await this.controller.checkControl();
+    }
+
     switch (node.type) {
       case "Action": return this.execAction(node, ctx);
       case "If": return this.execIf(node, ctx);
@@ -153,6 +194,8 @@ export class Executor {
       case "Parallel": return this.execParallel(node, ctx);
       case "Each": return this.execEach(node, ctx);
       case "Block": return this.executeBlock(node, ctx);
+      case "Break": return this.execBreak(node);
+      case "Continue": return this.execContinue(node);
       case "Stop": return this.execStop(node);
       case "Skip": return this.execSkip(node);
       case "Set": return this.execSet(node, ctx);
@@ -353,18 +396,34 @@ export class Executor {
     }
   }
 
-  private execStop(node: StopNode) {
+  // ----------------------------------------------------------
+  // 루프 제어
+  // ----------------------------------------------------------
+  private execBreak(node: BreakNode) {
     if (this.loopDepth === 0) {
-      throw new Error(`STOP is only allowed inside loops (line ${node.line})`);
+      throw new Error(`BREAK is only allowed inside loops (line ${node.line})`);
     }
     throw new LoopSignal("break");
   }
 
-  private execSkip(node: SkipNode) {
+  private execContinue(node: ContinueNode) {
     if (this.loopDepth === 0) {
-      throw new Error(`SKIP is only allowed inside loops (line ${node.line})`);
+      throw new Error(`CONTINUE is only allowed inside loops (line ${node.line})`);
     }
     throw new LoopSignal("continue");
+  }
+
+  // ----------------------------------------------------------
+  // Plan/Step 제어
+  // ----------------------------------------------------------
+  private execStop(node: StopNode) {
+    // Plan 전체 중단
+    throw new PlanStopSignal("Plan stopped by STOP statement");
+  }
+
+  private execSkip(node: SkipNode) {
+    // Step 건너뛰기
+    throw new StepSkipSignal("Step skipped by SKIP statement");
   }
 
   private execSet(node: SetNode, ctx: ExecutionContext) {
@@ -386,6 +445,16 @@ export class Executor {
   }
 
   private async execStep(node: StepNode, ctx: ExecutionContext) {
+    // 현재 Step ID 설정
+    if (this.controller) {
+      this.controller.setCurrentStep(node.id);
+
+      // 자동 체크포인트 생성
+      if (this.controller.shouldAutoCheckpoint()) {
+        this.controller.createSnapshot(ctx, `before-step-${node.id}`);
+      }
+    }
+
     const beginAttempt = () => this.actionSequence;
     const getResultSince = (snapshot: number) => ({
       hasResult: this.actionSequence > snapshot,

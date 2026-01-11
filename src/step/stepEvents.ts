@@ -12,11 +12,15 @@ export interface StepEventRunContext {
   metadata?: Record<string, any>;
 }
 
+export type PlanStatus = 'completed' | 'stopped' | 'aborted' | 'error';
+
 export interface PlanEventInfo {
   runId: string;
   totalSteps: number;
   rootSteps: StepEventInfo[];
   planMeta?: PlanMeta;
+  status?: PlanStatus;
+  error?: Error;
 }
 
 export interface StepEventEmitter {
@@ -30,13 +34,13 @@ export interface StepEventEmitter {
 }
 
 export const defaultStepEventEmitter: Required<StepEventEmitter> = {
-  async onPlanStart() {},
-  async onPlanEnd() {},
-  async onStepStart() {},
-  async onStepEnd() {},
-  async onStepError() {},
-  async onStepRetry() {},
-  async onStepJump() {},
+  async onPlanStart() { },
+  async onPlanEnd() { },
+  async onStepStart() { },
+  async onStepEnd() { },
+  async onStepError() { },
+  async onStepRetry() { },
+  async onStepJump() { },
 };
 
 export function createStepEventInfo(
