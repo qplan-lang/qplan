@@ -101,10 +101,15 @@ export class Parser {
     | { value: any; kind: "number" }
     | { value: any; kind: "identifier" }
     | { value: any; kind: "boolean" }
-    | { value: any; kind: "json" } {
+    | { value: any; kind: "json" }
+    | { value: any; kind: "null" } {
     const t = this.peek();
     if (t.type === TokenType.Boolean) {
       return { value: this.consume(TokenType.Boolean).value === "true", kind: "boolean" };
+    }
+    if (t.type === TokenType.Null) {
+      this.consume(TokenType.Null);
+      return { value: null, kind: "null" };
     }
     if (t.type === TokenType.String) {
       return { value: this.consumeString(), kind: "string" };
@@ -657,6 +662,10 @@ export class Parser {
     if (token.type === TokenType.Boolean) {
       return this.consume(TokenType.Boolean).value === "true";
     }
+    if (token.type === TokenType.Null) {
+      this.consume(TokenType.Null);
+      return null;
+    }
     if (token.type === TokenType.Symbol && (token.value === "[" || token.value === "{")) {
       return this.parseJsonLiteralValue();
     }
@@ -812,6 +821,13 @@ export class Parser {
         value: this.consume(TokenType.Boolean).value === "true",
       };
     }
+    if (token.type === TokenType.Null) {
+      this.consume(TokenType.Null);
+      return {
+        type: "Literal",
+        value: null,
+      };
+    }
     if (token.type === TokenType.String) {
       return {
         type: "Literal",
@@ -866,9 +882,20 @@ export class Parser {
     let elseBlock: BlockNode | undefined;
     if (this.check(TokenType.Keyword, "ELSE")) {
       this.consume(TokenType.Keyword, "ELSE");
-      this.consume(TokenType.Symbol, "{");
-      elseBlock = this.parseBlock(insideStep);
-      this.consume(TokenType.Symbol, "}");
+
+      if (this.match(TokenType.Keyword, "IF")) {
+        // else if ... -> transform to else { if ... }
+        const nestedIf = this.parseIf(insideStep);
+        elseBlock = {
+          type: "Block",
+          statements: [nestedIf],
+          line: nestedIf.line,
+        };
+      } else {
+        this.consume(TokenType.Symbol, "{");
+        elseBlock = this.parseBlock(insideStep);
+        this.consume(TokenType.Symbol, "}");
+      }
     }
 
     return {
@@ -968,21 +995,37 @@ export class Parser {
       );
     }
 
-    const rt = this.peek();
+    let rt = this.peek();
+    let isNegative = false;
+    if (rt.type === TokenType.Symbol && rt.value === "-") {
+      this.consume(TokenType.Symbol, "-");
+      isNegative = true;
+      rt = this.peek();
+    }
+
     let right: any;
-    let rightType: "identifier" | "string" | "number" | "boolean";
+    let rightType: "identifier" | "string" | "number" | "boolean" | "null";
     if (rt.type === TokenType.Number) {
       right = Number(this.consume(TokenType.Number).value);
+      if (isNegative) right = -right;
       rightType = "number";
     } else if (rt.type === TokenType.String) {
+      if (isNegative) throw new ParserError("Cannot negate a string", rt.line);
       right = this.consumeString();
       rightType = "string";
     } else if (rt.type === TokenType.Identifier) {
+      if (isNegative) throw new ParserError("Cannot negate an identifier in simple condition", rt.line);
       right = this.consumeIdentifierPath();
       rightType = "identifier";
     } else if (rt.type === TokenType.Boolean) {
+      if (isNegative) throw new ParserError("Cannot negate a boolean", rt.line);
       right = this.consume(TokenType.Boolean).value === "true";
       rightType = "boolean";
+    } else if (rt.type === TokenType.Null) {
+      if (isNegative) throw new ParserError("Cannot negate null", rt.line);
+      this.consume(TokenType.Null);
+      right = null;
+      rightType = "null";
     } else {
       throw new ParserError(`Invalid right operand '${rt.value}'`, rt.line);
     }
@@ -1078,7 +1121,7 @@ export class Parser {
     }
 
     this.consume(TokenType.Keyword, "IN");
-    const iterable = this.consumeIdentifier();
+    const iterable = this.consumeIdentifierPath();
 
     this.consume(TokenType.Symbol, "{");
     const block = this.parseBlock(insideStep);
