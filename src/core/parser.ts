@@ -567,6 +567,8 @@ export class Parser {
         identifierRefs.push(entry.name);
       } else if (entry.kind === "kv" && typeof entry.refName === "string") {
         identifierRefs.push(entry.refName);
+      } else if (entry.kind === "expression" && entry.value) {
+        this.extractIdentifiers(entry.value, identifierRefs);
       }
     }
     let output: string;
@@ -1197,5 +1199,22 @@ export class Parser {
       entries,
       line: kw.line,
     };
+  }
+
+  private extractIdentifiers(expr: ExpressionNode, refs: string[]) {
+    switch (expr.type) {
+      case "Identifier":
+        refs.push(expr.name);
+        break;
+      case "BinaryExpression":
+        this.extractIdentifiers(expr.left, refs);
+        this.extractIdentifiers(expr.right, refs);
+        break;
+      case "UnaryExpression":
+        this.extractIdentifiers(expr.argument, refs);
+        break;
+      default:
+        break;
+    }
   }
 }

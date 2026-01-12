@@ -14,6 +14,7 @@ import {
   ConditionExpression,
   ConditionClause,
   ExpressionNode,
+  VarNode,
 } from "./ast.js";
 import { resolveSteps } from "../step/stepResolver.js";
 import { StepResolution } from "../step/stepTypes.js";
@@ -132,6 +133,9 @@ function validateBlockVariables(
       case "Set":
         validateSetNode(stmt, available, issues);
         break;
+      case "Var":
+        validateVarNode(stmt, available, issues);
+        break;
       case "Return":
         validateReturnNode(stmt, available, issues);
         break;
@@ -198,6 +202,18 @@ function validateSetNode(
   const refs = new Set<string>();
   collectExpressionRefs(node.expression, refs);
   refs.forEach(ref => ensureReference(ref, node.line, available, issues));
+}
+
+function validateVarNode(
+  node: VarNode,
+  available: Set<string>,
+  issues: SemanticIssue[]
+) {
+  const refs = new Set<string>();
+  collectExpressionRefs(node.expression, refs);
+  refs.forEach(ref => ensureReference(ref, node.line, available, issues));
+
+  available.add(node.variable);
 }
 
 function validateReturnNode(
