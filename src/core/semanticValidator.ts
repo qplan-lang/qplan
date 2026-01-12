@@ -29,12 +29,14 @@ export function validateSemantics(root: ASTRoot): SemanticIssue[] {
   const issues: SemanticIssue[] = [];
   let stepIds: Set<string> = new Set();
   let resolution: StepResolution;
+  const planLabel = getPlanLabel(root);
+  const planSuffix = planLabel ? ` (plan '${planLabel}')` : "";
 
   try {
     resolution = resolveSteps(root.block);
   } catch (err) {
     issues.push({
-      message: err instanceof Error ? err.message : String(err),
+      message: `${err instanceof Error ? err.message : String(err)}${planSuffix}`,
       hint: "Fix step structure issues first (duplicate IDs, invalid jumps, nesting errors).",
     });
     return issues;
@@ -50,7 +52,7 @@ export function validateSemantics(root: ASTRoot): SemanticIssue[] {
           info.node.desc ??
           `step_${info.order}`;
         issues.push({
-          message: `step '${label}' has onError jump target '${info.errorPolicy.targetStepId}' but no such step exists`,
+          message: `step '${label}'${planSuffix} has onError jump target '${info.errorPolicy.targetStepId}' but no such step exists`,
           line: info.node.line,
           hint: `Add step '${info.errorPolicy.targetStepId}' or change onError jump target to an existing step ID.`,
         });
@@ -63,17 +65,24 @@ export function validateSemantics(root: ASTRoot): SemanticIssue[] {
   for (const jump of jumps) {
     if (!stepIds.has(jump.targetStepId)) {
       issues.push({
-        message: `jump target '${jump.targetStepId}' not found`,
+        message: `jump target '${jump.targetStepId}' not found${planSuffix}`,
         line: jump.line,
         hint: `Use jump to="${jump.targetStepId}" only if that step exists, or rename the jump target.`,
       });
     }
   }
 
-  const variableIssues = validateVariables(root.block);
+  const variableIssues = validateVariables(root.block, planLabel);
   issues.push(...variableIssues);
 
   return issues;
+}
+
+function getPlanLabel(root: ASTRoot): string | undefined {
+  if (!root.planMeta) return undefined;
+  if (root.planMeta.title) return root.planMeta.title;
+  if (root.planMeta.summary) return root.planMeta.summary;
+  return undefined;
 }
 
 function collectJumpNodes(block: BlockNode, acc: JumpNode[]) {
@@ -113,63 +122,65 @@ function visitNode(node: ASTNode, acc: JumpNode[]) {
   }
 }
 
-function validateVariables(block: BlockNode): SemanticIssue[] {
+function validateVariables(block: BlockNode, planLabel?: string): SemanticIssue[] {
   const issues: SemanticIssue[] = [];
   const available = new Set<string>();
-  validateBlockVariables(block, available, issues);
+  validateBlockVariables(block, available, issues, undefined, planLabel);
   return issues;
 }
 
 function validateBlockVariables(
   block: BlockNode,
   available: Set<string>,
-  issues: SemanticIssue[]
+  issues: SemanticIssue[],
+  stepId?: string,
+  planLabel?: string
 ) {
   for (const stmt of block.statements) {
     switch (stmt.type) {
       case "Action":
-        validateActionNode(stmt, available, issues);
+        validateActionNode(stmt, available, issues, stepId, planLabel);
         break;
       case "Set":
-        validateSetNode(stmt, available, issues);
+        validateSetNode(stmt, available, issues, stepId, planLabel);
         break;
       case "Var":
-        validateVarNode(stmt, available, issues);
+        validateVarNode(stmt, available, issues, stepId, planLabel);
         break;
       case "Return":
-        validateReturnNode(stmt, available, issues);
+        validateReturnNode(stmt, available, issues, stepId, planLabel);
         break;
       case "If":
-        validateConditionExpression(stmt.condition, available, issues);
+        validateConditionExpression(stmt.condition, available, issues, stepId, planLabel);
         if (stmt.thenBlock) {
-          validateBlockVariables(stmt.thenBlock, new Set(available), issues);
+          validateBlockVariables(stmt.thenBlock, new Set(available), issues, stepId, planLabel);
         }
         if (stmt.elseBlock) {
-          validateBlockVariables(stmt.elseBlock, new Set(available), issues);
+          validateBlockVariables(stmt.elseBlock, new Set(available), issues, stepId, planLabel);
         }
         break;
       case "While":
-        validateConditionExpression(stmt.condition, available, issues);
-        validateBlockVariables(stmt.block, new Set(available), issues);
+        validateConditionExpression(stmt.condition, available, issues, stepId, planLabel);
+        validateBlockVariables(stmt.block, new Set(available), issues, stepId, planLabel);
         break;
       case "Parallel":
-        validateBlockVariables(stmt.block, available, issues);
+        validateBlockVariables(stmt.block, available, issues, stepId, planLabel);
         break;
       case "Each":
-        ensureReference(stmt.iterable, stmt.line, available, issues);
+        ensureReference(stmt.iterable, stmt.line, available, issues, undefined, stepId, planLabel);
         {
           const loopScope = new Set(available);
           loopScope.add(stmt.iterator);
           if (stmt.indexVar) loopScope.add(stmt.indexVar);
-          validateBlockVariables(stmt.block, loopScope, issues);
+          validateBlockVariables(stmt.block, loopScope, issues, stepId, planLabel);
         }
         break;
       case "Step":
-        validateBlockVariables(stmt.block, available, issues);
+        validateBlockVariables(stmt.block, available, issues, stmt.id, planLabel);
         available.add(stmt.id);
         break;
       case "Block":
-        validateBlockVariables(stmt, available, issues);
+        validateBlockVariables(stmt, available, issues, stepId, planLabel);
         break;
       default:
         break;
@@ -180,11 +191,13 @@ function validateBlockVariables(
 function validateActionNode(
   node: ActionNode,
   available: Set<string>,
-  issues: SemanticIssue[]
+  issues: SemanticIssue[],
+  stepId?: string,
+  planLabel?: string
 ) {
   if (node.argRefs) {
     for (const ref of node.argRefs) {
-      ensureReference(ref, node.line, available, issues);
+      ensureReference(ref, node.line, available, issues, undefined, stepId, planLabel);
     }
   }
   const suppressStore = Boolean((node.args as any)?.__suppressStore);
@@ -196,22 +209,26 @@ function validateActionNode(
 function validateSetNode(
   node: SetNode,
   available: Set<string>,
-  issues: SemanticIssue[]
+  issues: SemanticIssue[],
+  stepId?: string,
+  planLabel?: string
 ) {
-  ensureReference(node.target, node.line, available, issues, "set target");
+  ensureReference(node.target, node.line, available, issues, "set target", stepId, planLabel);
   const refs = new Set<string>();
   collectExpressionRefs(node.expression, refs);
-  refs.forEach(ref => ensureReference(ref, node.line, available, issues));
+  refs.forEach(ref => ensureReference(ref, node.line, available, issues, undefined, stepId, planLabel));
 }
 
 function validateVarNode(
   node: VarNode,
   available: Set<string>,
-  issues: SemanticIssue[]
+  issues: SemanticIssue[],
+  stepId?: string,
+  planLabel?: string
 ) {
   const refs = new Set<string>();
   collectExpressionRefs(node.expression, refs);
-  refs.forEach(ref => ensureReference(ref, node.line, available, issues));
+  refs.forEach(ref => ensureReference(ref, node.line, available, issues, undefined, stepId, planLabel));
 
   available.add(node.variable);
 }
@@ -219,28 +236,32 @@ function validateVarNode(
 function validateReturnNode(
   node: ReturnNode,
   available: Set<string>,
-  issues: SemanticIssue[]
+  issues: SemanticIssue[],
+  stepId?: string,
+  planLabel?: string
 ) {
   for (const entry of node.entries) {
     const refs = new Set<string>();
     collectExpressionRefs(entry.expression, refs);
-    refs.forEach(ref => ensureReference(ref, node.line, available, issues));
+    refs.forEach(ref => ensureReference(ref, node.line, available, issues, undefined, stepId, planLabel));
   }
 }
 
 function validateConditionExpression(
   expr: ConditionExpression,
   available: Set<string>,
-  issues: SemanticIssue[]
+  issues: SemanticIssue[],
+  stepId?: string,
+  planLabel?: string
 ) {
   if (expr.type === "Binary") {
-    validateConditionExpression(expr.left, available, issues);
-    validateConditionExpression(expr.right, available, issues);
+    validateConditionExpression(expr.left, available, issues, stepId, planLabel);
+    validateConditionExpression(expr.right, available, issues, stepId, planLabel);
     return;
   }
-  ensureReference(expr.left, expr.line, available, issues);
+  ensureReference(expr.left, expr.line, available, issues, undefined, stepId, planLabel);
   if (expr.rightType === "identifier" && typeof expr.right === "string") {
-    ensureReference(expr.right, expr.line, available, issues);
+    ensureReference(expr.right, expr.line, available, issues, undefined, stepId, planLabel);
   }
 }
 
@@ -266,11 +287,17 @@ function ensureReference(
   line: number | undefined,
   available: Set<string>,
   issues: SemanticIssue[],
-  context?: string
+  context?: string,
+  stepId?: string,
+  planLabel?: string
 ) {
   const base = name.split(".")[0];
   if (available.has(base)) return;
-  const label = context ? `${context} '${name}'` : `variable '${name}'`;
+  const contextParts: string[] = [];
+  if (planLabel) contextParts.push(`plan '${planLabel}'`);
+  if (stepId) contextParts.push(`step '${stepId}'`);
+  const contextSuffix = contextParts.length ? ` (${contextParts.join(", ")})` : "";
+  const label = context ? `${context} '${name}'${contextSuffix}` : `variable '${name}'${contextSuffix}`;
   issues.push({
     message: `${label} is not defined`,
     line,
