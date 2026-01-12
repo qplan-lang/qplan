@@ -24,6 +24,7 @@ import {
   StopNode,
   SkipNode,
   SetNode,
+  VarNode,
   StepNode,
   JumpNode,
   ReturnNode,
@@ -271,6 +272,9 @@ export class Parser {
       return block;
     }
 
+    // VAR
+    if (this.check(TokenType.Identifier, "var")) return this.parseVar();
+
     // Action
     if (this.match(TokenType.Identifier)) return this.parseAction(insideStep);
 
@@ -290,10 +294,6 @@ export class Parser {
       throw new ParserError("Actions must be inside a step block", line);
     }
     */
-
-    if (moduleName === "var") {
-      return this.parseVarAction(moduleName, line);
-    }
 
     if (moduleName === "print") {
       return this.parsePrintAction(moduleName, line);
@@ -400,6 +400,25 @@ export class Parser {
     return {
       type: "Set",
       target,
+      expression,
+      line,
+    };
+  }
+
+  private parseVar(): VarNode {
+    const kw = this.consume(TokenType.Identifier, "var");
+    const line = kw.line;
+    const expression = this.parseExpression();
+
+    if (!this.check(TokenType.Symbol, "->")) {
+      throw new ParserError("var requires '-> outputVar'", line);
+    }
+    this.consume(TokenType.Symbol, "->");
+    const variable = this.consumeIdentifier();
+
+    return {
+      type: "Var",
+      variable,
       expression,
       line,
     };
@@ -608,68 +627,39 @@ export class Parser {
         continue;
       }
 
-      if (token.type === TokenType.String) {
-        entries.push({ kind: "literal", value: this.consumeString() });
-        continue;
-      }
+      // Expression parsing (includes String, Number, Identifier, and Operations)
+      // BUT we must avoid consuming key=value keys (handled above)
+      // So we use parseExpression but we need to ensure it doesn't eat into the next Argument if comma is missing?
+      // Actually, print arguments are comma-separated or space-separated?
+      // Implementation: parseExpression will consume as much as possible until it hits something it can't handle.
+      // If we see Identifier=..., that's a KV.
+      // Otherwise, try parsing an expression.
+      try {
+        const expr = this.parseExpression();
+        // Since we don't have an easy way to evaluate expression during parse time without changing print Action schema,
+        // we might need to wrap print to support runtime evaluation of these expressions?
+        //
+        // Wait, 'print' action currently takes raw values.
+        // If we want 'print "A" + "B"', we need to pass that ExpressionNode to the action?
+        // But ActionNode args are 'any'.
+        // For now, let's keep it simple: if it's a "print" action, we might allow expression nodes in the args.
+        // The current Executor 'execAction' resolves args. string/variable are resolved.
+        // If we pass an ExpressionNode object, executor doesn't know how to handle it automatically unless we teach it.
+        //
+        // HOWEVER, the user asked for var ... -> ...
+        // This change is for 'print' specially? The user example showed 'print "..." + ...'.
+        // The error shows unexpected token '+'.
+        // So yes, print needs to support expressions too.
 
-      if (token.type === TokenType.Number) {
-        entries.push({
-          kind: "literal",
-          value: Number(this.consume(TokenType.Number).value),
-        });
+        entries.push({ kind: "expression", value: expr });
         continue;
+      } catch (e) {
+        // If expression parsing fails, break
+        break;
       }
-
-      if (token.type === TokenType.Identifier) {
-        entries.push({ kind: "identifier", name: this.consumeIdentifierPath() });
-        continue;
-      }
-
-      break;
     }
 
     return entries;
-  }
-
-  private parseVarAction(moduleName: string, line: number): ActionNode {
-    const value = this.parseVarValue();
-    const args: Record<string, any> = { value };
-
-    if (!this.check(TokenType.Symbol, "->")) {
-      throw new ParserError("var requires '-> outputVar'", line);
-    }
-    this.consume(TokenType.Symbol, "->");
-    const output = this.consumeIdentifier();
-
-    return {
-      type: "Action",
-      module: moduleName,
-      args,
-      output,
-      line,
-    };
-  }
-
-  private parseVarValue(): any {
-    const token = this.peek();
-    if (token.type === TokenType.String) {
-      return this.consumeString();
-    }
-    if (token.type === TokenType.Number) {
-      return Number(this.consume(TokenType.Number).value);
-    }
-    if (token.type === TokenType.Boolean) {
-      return this.consume(TokenType.Boolean).value === "true";
-    }
-    if (token.type === TokenType.Null) {
-      this.consume(TokenType.Null);
-      return null;
-    }
-    if (token.type === TokenType.Symbol && (token.value === "[" || token.value === "{")) {
-      return this.parseJsonLiteralValue();
-    }
-    throw new ParserError(`Invalid var value '${token.value}'`, token.line);
   }
 
   private parseJsonLiteralValue(): any {

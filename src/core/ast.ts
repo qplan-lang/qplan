@@ -164,6 +164,15 @@ export interface SetNode extends BaseNode {
   expression: ExpressionNode;
 }
 
+/**
+ * var 문 (새 변수 선언/초기화 + 표현식 지원)
+ */
+export interface VarNode extends BaseNode {
+  type: "Var";
+  variable: string;
+  expression: ExpressionNode;
+}
+
 export type ExpressionNode =
   | LiteralExpression
   | IdentifierExpression
@@ -221,6 +230,7 @@ export type ASTNode =
   | SkipNode
   | ReturnNode
   | SetNode
+  | VarNode
   | BlockNode
   | StepNode
   | JumpNode;

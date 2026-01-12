@@ -24,6 +24,7 @@ import {
   StopNode,
   SkipNode,
   SetNode,
+  VarNode,
   ExpressionNode,
   StepNode,
   ReturnNode,
@@ -200,6 +201,7 @@ export class Executor {
       case "Stop": return this.execStop(node);
       case "Skip": return this.execSkip(node);
       case "Set": return this.execSet(node, ctx);
+      case "Var": return this.execVar(node, ctx);
       case "Return": return this.execReturn(node, ctx);
       case "Step": return this.execStep(node, ctx);
       case "Jump": return this.execJump(node);
@@ -264,6 +266,19 @@ export class Executor {
         resolved[key] = value;
       }
     }
+
+    // Special handling for __entries (print module) which now contains ExpressionNodes
+    if (resolved.__entries && Array.isArray(resolved.__entries)) {
+      resolved.__entries = resolved.__entries.map((entry: any) => {
+        if (entry.kind === "expression" && entry.value) {
+          // Flatten expression entry to literal/value for printing
+          const val = this.evaluateExpressionNode(entry.value, ctx);
+          return { kind: "literal", value: val };
+        }
+        return entry;
+      });
+    }
+
     return resolved;
   }
 
@@ -433,6 +448,11 @@ export class Executor {
     }
     const value = this.evaluateExpressionNode(node.expression, ctx);
     ctx.set(node.target, value);
+  }
+
+  private execVar(node: VarNode, ctx: ExecutionContext) {
+    const value = this.evaluateExpressionNode(node.expression, ctx);
+    ctx.set(node.variable, value);
   }
 
   private execReturn(node: ReturnNode, ctx: ExecutionContext) {
