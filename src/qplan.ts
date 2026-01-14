@@ -11,6 +11,12 @@ import type {
 } from "./step/stepEvents.js";
 import type { StepEventInfo } from "./step/stepTypes.js";
 import { validateScript, QplanValidationResult } from "./core/qplanValidation.js";
+import {
+  ExecutionController,
+  ExecutionState,
+  type ExecutionSnapshot,
+  type ExecutionControllerOptions,
+} from "./core/executionController.js";
 
 export type StepLifecycleStatus =
   | "pending"
@@ -35,12 +41,13 @@ export interface QPlanOptions {
   registry?: ModuleRegistry;
 }
 
-export interface QPlanRunOptions {
+export interface QPlanRunOptions extends ExecutionControllerOptions {
   registry?: ModuleRegistry;
   stepEvents?: StepEventEmitter;
   env?: Record<string, any>;
   metadata?: Record<string, any>;
   runId?: string;
+  controller?: ExecutionController;
 }
 
 interface InternalStepState extends QPlanStepState {
@@ -54,6 +61,8 @@ export class QPlan {
   private resolution: StepResolution;
   private stepStates: Map<string, InternalStepState> = new Map();
   private defaultRegistry?: ModuleRegistry;
+  private controller?: ExecutionController;
+  private currentContext?: ExecutionContext;
 
   constructor(private script: string, options: QPlanOptions = {}) {
     this.defaultRegistry = options.registry;
@@ -81,6 +90,15 @@ export class QPlan {
       metadata: options.metadata,
       runId,
     });
+    this.currentContext = ctx;
+
+    // ExecutionController 생성 또는 사용
+    this.controller = options.controller ?? new ExecutionController({
+      timeout: options.timeout,
+      autoCheckpoint: options.autoCheckpoint,
+      maxSnapshots: options.maxSnapshots,
+    });
+
     const runContext: StepEventRunContext = {
       runId,
       script: this.script,
@@ -90,7 +108,7 @@ export class QPlan {
       metadata: options.metadata,
     };
     const executor = new Executor(registry, this.buildTrackingEmitter(options.stepEvents));
-    await executor.run(this.ast, ctx, runContext);
+    await executor.run(this.ast, ctx, runContext, this.controller);
     return ctx;
   }
 
@@ -179,6 +197,21 @@ export class QPlan {
       onStepJump: async (info: StepEventInfo, target: string, context?: StepEventRunContext) => {
         await forward("onStepJump", info, target, context as any);
       },
+      onAbort: async (context?: StepEventRunContext) => {
+        await forward("onAbort", context as any);
+      },
+      onPause: async (context?: StepEventRunContext) => {
+        await forward("onPause", context as any);
+      },
+      onResume: async (context?: StepEventRunContext) => {
+        await forward("onResume", context as any);
+      },
+      onTimeout: async (context?: StepEventRunContext) => {
+        await forward("onTimeout", context as any);
+      },
+      onStateChange: async (newState: ExecutionState, oldState: ExecutionState, context?: StepEventRunContext) => {
+        await forward("onStateChange", newState, oldState, context as any);
+      },
     };
   }
 
@@ -209,5 +242,105 @@ export class QPlan {
     if (!state) return;
     state.status = "retrying";
     state.error = error;
+  }
+
+  // ========================================
+  // Execution Control Methods
+  // ========================================
+
+  /**
+   * 실행 중지 (강제 종료)
+   */
+  abort(): void {
+    this.controller?.abort();
+  }
+
+  /**
+   * 일시중지
+   */
+  pause(): void {
+    this.controller?.pause();
+  }
+
+  /**
+   * 재개
+   */
+  resume(): void {
+    this.controller?.resume();
+  }
+
+  /**
+   * 실행 상태 조회
+   */
+  getState(): ExecutionState {
+    return this.controller?.state ?? ExecutionState.IDLE;
+  }
+
+  /**
+   * 실행 상태 상세 정보 조회
+   */
+  getStatus() {
+    return this.controller?.getStatus();
+  }
+
+  /**
+   * 경과 시간 조회 (밀리초)
+   */
+  getElapsedTime(): number {
+    return this.controller?.getElapsedTime() ?? 0;
+  }
+
+  // ========================================
+  // Checkpoint Methods
+  // ========================================
+
+  /**
+   * 현재 실행 상태의 체크포인트 생성
+   */
+  createCheckpoint(label?: string): ExecutionSnapshot | undefined {
+    if (!this.currentContext || !this.controller) {
+      return undefined;
+    }
+    return this.controller.createSnapshot(this.currentContext, label);
+  }
+
+  /**
+   * 체크포인트에서 복원
+   */
+  async restoreCheckpoint(snapshot: ExecutionSnapshot): Promise<ExecutionContext | undefined> {
+    if (!this.controller) {
+      return undefined;
+    }
+    const ctx = this.controller.restoreSnapshot(snapshot);
+    this.currentContext = ctx;
+    return ctx;
+  }
+
+  /**
+   * 모든 체크포인트 조회
+   */
+  getCheckpoints(): ExecutionSnapshot[] {
+    return this.controller?.getSnapshots() ?? [];
+  }
+
+  /**
+   * 특정 ID의 체크포인트 조회
+   */
+  getCheckpoint(snapshotId: string): ExecutionSnapshot | undefined {
+    return this.controller?.getSnapshot(snapshotId);
+  }
+
+  /**
+   * 가장 최근 체크포인트 조회
+   */
+  getLastCheckpoint(): ExecutionSnapshot | undefined {
+    return this.controller?.getLastSnapshot();
+  }
+
+  /**
+   * 모든 체크포인트 삭제
+   */
+  clearCheckpoints(): void {
+    this.controller?.clearSnapshots();
   }
 }

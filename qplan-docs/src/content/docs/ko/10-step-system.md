@@ -217,11 +217,20 @@ step id="cleanup" desc="마무리" {
 UI와 연동하기 위한 확장 이벤트:
 
 ```
-onStepStart(stepInfo)
-onStepEnd(stepInfo, result?)
-onStepError(stepInfo, error)
-onStepRetry(stepInfo, attempt, error)
-onStepJump(stepInfo, targetStepId)
+onPlanStart(plan, context?)
+onPlanEnd(plan, context?)
+onStepStart(stepInfo, context?)
+onStepEnd(stepInfo, result?, context?)
+onStepError(stepInfo, error, context?)
+onStepRetry(stepInfo, attempt, error, context?)
+onStepJump(stepInfo, targetStepId, context?)
+
+// Execution Control Events
+onAbort(context?)
+onPause(context?)
+onResume(context?)
+onTimeout(context?)
+onStateChange(newState, oldState, context?)
 ```
 
 ### stepInfo 예시:

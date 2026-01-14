@@ -127,8 +127,20 @@ export { defaultStepEventEmitter } from "./step/stepEvents.js";
 export type {
   StepEventEmitter,
   PlanEventInfo,
+  PlanStatus,
   StepEventRunContext,
 } from "./step/stepEvents.js";
 export type { StepEventInfo } from "./step/stepTypes.js";
 export type { PromptLanguage } from "./core/buildAIPlanPrompt.js";
 export { QPlan } from "./qplan.js";
+export {
+  ExecutionController,
+  ExecutionState,
+  AbortError,
+  TimeoutError,
+} from "./core/executionController.js";
+export type {
+  ExecutionSnapshot,
+  ExecutionControllerOptions,
+  BlockStackFrame,
+} from "./core/executionController.js";

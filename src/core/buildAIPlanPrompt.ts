@@ -45,14 +45,15 @@ QPlan은 Step 기반 워크플로우 언어로, 모든 Action은 반드시 step 
   - step 내부에 다른 step 을 중첩(Sub-step)하여 계층 구조를 만들 수 있음
   - 각 step 은 onError 정책으로 fail / continue / retry / jump 흐름을 제어
   - Step 결과는 기본적으로 Step ID에 저장되고(\`ctx[runId][stepId]\`), \`-> resultVar\` 를 지정하면 해당 namespace를 사용한다. Step 내부에서 생성한 action output 들이 객체 형태로 노출되며, 필요 시 \`return key=value ...\` 또는 \`return key value\` 축약형으로 명시적 구조를 지정할 수 있다.
-- 식별자 규칙: 모듈 이름, 변수/Action output, \`return\` key, \`set\` 대상 등은 유니코드 문자/숫자/언더스코어로 구성할 수 있으며, 첫 글자는 문자 또는 언더스코어여야 한다.
+  - step 블록 내에서 stop은 Plan 중단, skip은 Step 중단용으로 사용됨
+  - 식별자 규칙: 모듈 이름, 변수/Action output, \`return\` key, \`set\` 대상 등은 유니코드 문자/숫자/언더스코어로 구성할 수 있으며, 첫 글자는 문자 또는 언더스코어여야 한다.
 - Action 실행: moduleName key=value ... -> outVar 형태
   - 문자열은 "..." 로 감싸고, ctx 변수를 참조할 때는 해당 변수명을 그대로 value 로 적되 따옴표를 쓰지 않습니다.
   - 모든 Action은 반드시 step 블록 내부에 위치해야 하며, 독립 실행은 허용되지 않습니다.
 - \`var\` 모듈은 숫자/문자열/JSON 리터럴만 value 로 허용됩니다. \`var value=diff -> copy\` 처럼 기존 ctx 변수를 다른 이름으로 복사하려고 쓰면 오류가 나므로, 그런 경우에는 \`set copy = diff\` (선행 초기화 필요) 또는 다른 모듈을 사용하십시오.
 - If 조건문 (>, <, >=, <=, ==, !=, EXISTS, NOT_EXISTS) + and/or/not 조합, 괄호 우선순위 지원
 - Each 반복문 (each item in iterable { ... } / each (item, idx) in iterable { ... })
-- Each 반복문에서 stop/skip 제어
+- Each/While 반복문에서 break(루프 탈출)/continue(다음 반복) 제어.
 - Parallel 병렬 실행 (concurrency, ignoreErrors)
 - Future 생성
 - Join(Promise.all)

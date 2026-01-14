@@ -92,7 +92,7 @@ export interface ConditionClause {
   negated?: boolean;
   comparator: string;
   right: any;
-  rightType?: "identifier" | "string" | "number";
+  rightType?: "identifier" | "string" | "number" | "boolean" | "null";
   line: number;
 }
 
@@ -134,7 +134,18 @@ export interface WhileNode extends BaseNode {
 }
 
 /**
- * 반복 제어
+ * 루프 제어
+ */
+export interface BreakNode extends BaseNode {
+  type: "Break";
+}
+
+export interface ContinueNode extends BaseNode {
+  type: "Continue";
+}
+
+/**
+ * Plan/Step 제어
  */
 export interface StopNode extends BaseNode {
   type: "Stop";
@@ -150,6 +161,15 @@ export interface SkipNode extends BaseNode {
 export interface SetNode extends BaseNode {
   type: "Set";
   target: string;
+  expression: ExpressionNode;
+}
+
+/**
+ * var 문 (새 변수 선언/초기화 + 표현식 지원)
+ */
+export interface VarNode extends BaseNode {
+  type: "Var";
+  variable: string;
   expression: ExpressionNode;
 }
 
@@ -204,10 +224,13 @@ export type ASTNode =
   | WhileNode
   | ParallelNode
   | EachNode
+  | BreakNode
+  | ContinueNode
   | StopNode
   | SkipNode
   | ReturnNode
   | SetNode
+  | VarNode
   | BlockNode
   | StepNode
   | JumpNode;

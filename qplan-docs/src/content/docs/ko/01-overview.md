@@ -12,7 +12,7 @@ QPlan은 **AI가 설계하고 사람이 검증할 수 있는 Step 기반 워크�
 - **Deterministic & Observable**: Step order/path/event 로깅을 통해 언제든 재현/모니터링이 쉽다.
 - **Future-proof**: Future/Parallel/Join, dot-path 변수 참조 등 현대적 제어 흐름을 기본 지원한다.
 
-이 목표들의 배경 설명은 [`qplan-why.md`](qplan-why.md) 를 참고해 주세요.
+이 목표들의 배경 설명은 [`docs/ko/qplan-why.md`](docs/ko/qplan-why.md) 를 참고해 주세요.
 
 > **AI thinks, QPlan executes.**
 
@@ -51,11 +51,12 @@ await runQplan(script, {
 
 ## 🔄 제어 흐름 & 언어 기능
 - **If / While** — 조건식은 `> < >= <= == != EXISTS NOT_EXISTS` 와 `AND/OR/not` 및 괄호를 지원한다. While 은 동일한 조건 구문을 반복에 사용한다.
-- **Each** — `each item in iterable { ... }` 또는 `each (item, idx) in iterable { ... }` 로 배열을 순회한다. 내부에서 `stop`/`skip` 사용 가능.
+- **Each** — `each item in iterable { ... }` 또는 `each (item, idx) in iterable { ... }` 로 배열을 순회한다. 내부에서 `break`/`continue` 사용 가능.
 - **Parallel** — `parallel concurrency=3 ignoreErrors=true { ... }` 로 블록을 병렬 실행한다.
 - **Future & Join** — `future` 모듈은 Promise를 `__future` 래퍼에 담아 ctx에 저장하고, `join futures="f1,f2" -> list` 가 여러 Future를 합친다.
 - **Set & Return** — `set total = (total + delta) * 0.5` 처럼 산술 표현식을 기존 변수에 적용하고, `return key=value ...` 로 Step 출력 객체를 직접 구성한다.
-- **Stop / Skip** — Each, While 루프 안에서 탈출/건너뛰기를 제어한다.
+- **Break / Continue** — Each, While 루프 안에서 루프 탈출/다음 반복으로 이동.
+- **Stop / Skip** — Plan 전체 중단 또는 현재 Step 건너뛰기.
 - **ExecutionContext** — `ctx.get("order.summary.status")` 처럼 dot-path로 하위 값을 읽을 수 있고, `ctx.getEnv()`, `ctx.getMetadata()` 로 실행 시 전달한 컨텍스트에 접근할 수 있으며, `ctx.toJSON()` 으로 전체 상태를 덤프할 수 있다.
 - **문법 전체**는 `docs/02-grammar.md` 를 참고하면 된다. `buildAIGrammarSummary()` 는 해당 문법을 LLM용으로 요약한 버전을 자동 생성한다.
 

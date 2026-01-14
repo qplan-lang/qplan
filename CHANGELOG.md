@@ -7,6 +7,66 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.5.0] - 2026-01-12
+
+### Added
+- **New Control Flow Keywords**
+  - `break`: Exit from `each` or `while` loops (replaces old `stop` for loops)
+  - `continue`: Skip to next iteration in loops (replaces old `skip` for loops)
+  - `stop`: Terminate entire plan execution (NEW - stops all steps immediately)
+  - `skip`: Skip rest of current step and move to next step (NEW - step-level control)
+
+- **Execution Control System**
+  - `ExecutionController`: New class for managing plan execution lifecycle
+  - `abort()`: Force stop execution
+  - `pause()` / `resume()`: Pause and resume execution
+  - `timeout`: Set execution time limits
+  - `checkpoint`: Save and restore execution state
+  - State monitoring: Track execution state (idle/running/paused/completed/aborted/error)
+
+- **New Signal Types**
+  - `PlanStopSignal`: Signal for plan-wide termination
+  - `StepSkipSignal`: Signal for skipping current step
+  - `AbortError`: Error thrown when execution is aborted
+
+- **Execution Events (New)**
+  - `onAbort`: Triggered when execution is aborted
+  - `onPause` / `onResume`: Triggered on pause/resume
+  - `onTimeout`: Triggered when execution times out
+  - `onStateChange`: Triggered on any execution state change
+
+### Changed
+- **BREAKING**: Loop control keywords renamed for clarity
+  - `stop` → `break` (for loop exit)
+  - `skip` → `continue` (for next iteration)
+  - Old `stop`/`skip` in loops will cause parse errors
+  
+- **Enhanced**: `stop` and `skip` now have new meanings
+  - `stop`: Plan-level control (stops entire execution)
+  - `skip`: Step-level control (skips to next step)
+
+### Updated
+- All documentation updated to reflect new keywords
+  - `docs/02-grammar.md` (English)
+  - `docs/ko/02-grammar.md` (Korean)
+  - `docs/01-overview.md` (English)
+  - `docs/ko/01-overview.md` (Korean)
+  - `docs/12-execution-control.md` (NEW)
+  
+- Examples updated with new keywords
+  - `examples/07_exam_for.js`: Updated to use `break`/`continue`
+  - `examples/11_exam_while.js`: Updated to use `break`/`continue`
+  - `examples/23_exam_control_flow.js`: NEW - demonstrates all control flow keywords
+  - `examples/22_exam_execution_control.js`: NEW - demonstrates execution control features
+
+### Migration Guide
+**For existing QPlan scripts:**
+
+Replace `stop` with `break` in loops, `skip` with `continue` in loops.
+Use new `stop` for plan termination, new `skip` for step control.
+
+---
+
 ## [0.4.1] - 2026-01-07
 
 ### Added

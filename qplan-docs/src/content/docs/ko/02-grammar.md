@@ -144,7 +144,7 @@ each item in list {
 }
 ```
 `list` 는 ctx에 저장된 배열/이터러블이어야 한다. 값과 인덱스를 동시에 사용하려면 `each (value, idx) in list` 형태를 사용한다.
-루프 내부에서는 `stop` / `skip` 를 사용해 흐름을 제어할 수 있다 (while 에서도 동일하게 사용 가능).
+루프 내부에서는 `break` / `continue` 를 사용해 흐름을 제어할 수 있다 (while 에서도 동일하게 사용 가능).
 
 ## 2.9 While 반복문
 ```
@@ -153,7 +153,7 @@ while count < 10 {
 }
 ```
 If 문과 동일한 조건식을 사용하며, 조건이 true 인 동안 블록을 반복한다.  
-블록 안에서 `stop` / `skip` 으로 반복 제어가 가능하다.
+블록 안에서 `break` / `continue` 로 반복 제어가 가능하다.
 
 ## 2.10 Set 문
 ```
@@ -164,10 +164,18 @@ set config = {"limit":10}
 기존 ctx 변수만 수정할 수 있다(없으면 에러).  
 식(Expression)은 숫자/문자열/JSON literal/기존 변수/괄호/산술 연산(+,-,*,/)을 조합하여 작성할 수 있다.
 
-## 2.11 Jump / Stop / Skip
+## 2.11 제어 흐름
+
+### 루프 제어 (Loop Control)
+- `break` : each/while 루프 즉시 종료
+- `continue` : 현재 반복을 건너뛰고 다음 반복으로 이동
+
+### Plan/Step 제어
+- `stop` : Plan 전체 실행 중단 (모든 Step 즉시 종료)
+- `skip` : 현재 Step의 나머지 부분 건너뛰기 (다음 Step으로 이동)
+
+### Step 이동
 - `jump to="stepId"` : 동일/상위/하위 블록에 있는 다른 Step으로 즉시 이동. target은 Step ID여야 하며 문자열 또는 식별자로 작성 가능.
-- `stop` : each/while 루프 즉시 종료
-- `skip` : 현재 반복을 건너뛰고 다음 반복으로 이동
 
 ---
 
@@ -193,6 +201,8 @@ Statement       = Action
                 | WhileStmt
                 | ParallelStmt
                 | EachStmt
+                | BreakStmt
+                | ContinueStmt
                 | StopStmt
                 | SkipStmt
                 | SetStmt
@@ -232,6 +242,8 @@ ParallelOption  = "concurrency" , "=" , Number
                 | "ignoreErrors" , "=" , Boolean ;
 
 JumpStmt        = "jump" , "to" , "=" , (QuotedString | Identifier) ;
+BreakStmt       = "break" ;
+ContinueStmt    = "continue" ;
 StopStmt        = "stop" ;
 SkipStmt        = "skip" ;
 SetStmt         = "set" , Identifier , "=" , Expression ;

@@ -8,7 +8,7 @@
  *  - Identifier (단어)
  *  - String ("문자열")
  *  - Number (123, 12.5)
- *  - Keyword (IF, ELSE, END, PARALLEL, USING, EACH, AS, IN, STOP, SKIP, AND, OR, NOT, SET, WHILE)
+ *  - Keyword (IF, ELSE, END, PARALLEL, USING, EACH, AS, IN, BREAK, CONTINUE, STOP, SKIP, AND, OR, NOT, SET, WHILE)
  *  - Symbol (=, ->, :, ,, @)
  */
 
@@ -16,6 +16,8 @@ export enum TokenType {
   Identifier = "Identifier",
   String = "String",
   Number = "Number",
+  Boolean = "Boolean",
+  Null = "Null",
   Keyword = "Keyword",
   Symbol = "Symbol",
   EOF = "EOF",
@@ -38,6 +40,8 @@ const KEYWORDS = new Set([
   "IN",
   "STOP",
   "SKIP",
+  "BREAK",
+  "CONTINUE",
   "AND",
   "OR",
   "NOT",
@@ -142,7 +146,11 @@ export function tokenize(input: string): Token[] {
         word += input[i++];
       }
 
-      if (KEYWORDS.has(word.toUpperCase())) {
+      if (word === "true" || word === "false") {
+        tokens.push({ type: TokenType.Boolean, value: word, line });
+      } else if (word === "null") {
+        tokens.push({ type: TokenType.Null, value: "null", line });
+      } else if (KEYWORDS.has(word.toUpperCase())) {
         tokens.push({
           type: TokenType.Keyword,
           value: word.toUpperCase(),
@@ -165,7 +173,7 @@ export function tokenize(input: string): Token[] {
       i++;
       continue;
     }
-    
+
     // Braces/parentheses/brackets
     if (c === "{" || c === "}" || c === "(" || c === ")" || c === "[" || c === "]") {
       tokens.push({ type: TokenType.Symbol, value: c, line });

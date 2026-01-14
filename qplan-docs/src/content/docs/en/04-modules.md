@@ -25,7 +25,7 @@ export const echoModule = Object.assign(
 ```
 
 ## 2. Default modules (basicModules)
-Nine modules auto-register into the default registry via `src/modules/index.ts`:
+Eleven modules auto-register into the default registry via `src/modules/index.ts`:
 
 | Module | Description |
 | --- | --- |
@@ -38,6 +38,8 @@ Nine modules auto-register into the default registry via `src/modules/index.ts`:
 | `future` | Creates async work as `{ __future: Promise }`. |
 | `join` | `futures="a,b,c"` resolves registered futures via `Promise.all`. |
 | `json` | parse/stringify/get/set/keys/values/entries utilities. |
+| `time` | Returns the current time in multiple formats (defaults to `HH:mm:ss`). |
+| `date` | Returns the current date/time in multiple formats (defaults to `YYYY-MM-DD`). |
 
 `src/index.ts` auto-registers the default modules:
 ```ts

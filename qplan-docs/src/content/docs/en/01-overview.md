@@ -12,7 +12,7 @@ Core goals:
 - **Deterministic & Observable**: step order/path/event logging makes every run reproducible and traceable.
 - **Future-proof**: Future/Parallel/Join, dot-path variable references, and other modern controls are first-class.
 
-For the rationale behind these goals, see [`qplan-why.md`](qplan-why.md).
+If you want the "why" behind these goals, see [`docs/qplan-why.md`](docs/qplan-why.md).
 
 > **AI thinks, QPlan executes.**
 
@@ -51,11 +51,12 @@ await runQplan(script, {
 
 ## 🔄 Control flow & language features
 - **If / While**—conditions support `> < >= <= == != EXISTS NOT_EXISTS`, logical `AND/OR/not`, and parentheses. While loops reuse the same condition syntax.
-- **Each**—`each item in iterable { ... }` or `each (item, idx) in iterable { ... }` iterates arrays, with `stop`/`skip` available inside.
+- **Each**—`each item in iterable { ... }` or `each (item, idx) in iterable { ... }` iterates arrays, with `break`/`continue` available inside.
 - **Parallel**—`parallel concurrency=3 ignoreErrors=true { ... }` runs a block in parallel.
 - **Future & Join**—the `future` module stores a Promise in ctx under a `__future` wrapper, and `join futures="f1,f2" -> list` combines multiple futures.
 - **Set & Return**—`set total = (total + delta) * 0.5` applies arithmetic expressions to existing variables, and `return key=value ...` shapes step outputs manually.
-- **Stop / Skip**—control exit/continue in Each or While loops.
+- **Break / Continue**—exit loops or skip to the next iteration in Each or While loops.
+- **Stop / Skip**—terminate the entire plan or skip the rest of the current step.
 - **ExecutionContext**—`ctx.get("order.summary.status")` reads nested values via dot paths, `ctx.getEnv()` / `ctx.getMetadata()` expose per-run context, and `ctx.toJSON()` dumps the entire state.
 - **Full grammar** lives in `docs/02-grammar.md`; `buildAIGrammarSummary()` auto-generates a condensed, LLM-friendly version.
 

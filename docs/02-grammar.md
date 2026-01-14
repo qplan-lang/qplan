@@ -144,7 +144,7 @@ each item in list {
 }
 ```
 `list` must be an array/iterable in ctx. Use `each (value, idx) in list` to access value and index together.
-Inside the loop (and similarly in `while`) use `stop` / `skip` to control flow.
+Inside the loop (and similarly in `while`) use `break` / `continue` to control flow.
 
 ## 2.9 While loops
 ```
@@ -153,7 +153,7 @@ while count < 10 {
 }
 ```
 Shares the same condition syntax as `if`, repeating while the condition is true.  
-`stop` / `skip` are available to control the loop body.
+`break` / `continue` are available to control the loop body.
 
 ## 2.10 Set statements
 ```
@@ -164,10 +164,18 @@ set config = {"limit":10}
 Only existing ctx variables can be mutated (missing variables cause errors).  
 Expressions may combine numbers, strings, JSON literals, existing variables, parentheses, and arithmetic operators (+,-,*,/).
 
-## 2.11 Jump / Stop / Skip
+## 2.11 Control Flow
+
+### Loop Control
+- `break`: immediately terminate the current each/while loop.
+- `continue`: skip the current iteration and continue with the next one.
+
+### Plan/Step Control
+- `stop`: terminate the entire plan execution (all steps immediately stop).
+- `skip`: skip the rest of the current step (move to the next step).
+
+### Step Navigation
 - `jump to="stepId"`: instantly move to another step at the same/parent/child level. Targets must be step IDs, given as strings or identifiers.
-- `stop`: immediately terminate the current each/while loop.
-- `skip`: skip the current iteration and continue with the next one.
 
 ---
 
@@ -193,6 +201,8 @@ Statement       = Action
                 | WhileStmt
                 | ParallelStmt
                 | EachStmt
+                | BreakStmt
+                | ContinueStmt
                 | StopStmt
                 | SkipStmt
                 | SetStmt
@@ -232,6 +242,8 @@ ParallelOption  = "concurrency" , "=" , Number
                 | "ignoreErrors" , "=" , Boolean ;
 
 JumpStmt        = "jump" , "to" , "=" , (QuotedString | Identifier) ;
+BreakStmt       = "break" ;
+ContinueStmt    = "continue" ;
 StopStmt        = "stop" ;
 SkipStmt        = "skip" ;
 SetStmt         = "set" , Identifier , "=" , Expression ;
