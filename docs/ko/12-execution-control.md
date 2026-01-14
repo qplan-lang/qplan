@@ -272,9 +272,10 @@ clearInterval(progressBar);
 ## 주의사항
 
 1. **Abort는 즉시 중지되지 않을 수 있습니다**: 현재 실행 중인 모듈이 완료될 때까지 기다립니다.
-2. **Checkpoint는 메모리를 사용합니다**: `maxSnapshots` 옵션으로 제한하세요.
-3. **Timeout은 정확하지 않을 수 있습니다**: JavaScript의 타이머 정확도에 의존합니다.
-4. **Pause 중에도 현재 노드는 완료됩니다**: 다음 노드 실행 전에 일시중지됩니다.
+2. **모듈 내부 제어**: 긴 루프/대기 모듈은 `await ctx.checkControl()` 을 주기적으로 호출해 pause/abort 요청을 반영해야 합니다.
+3. **Checkpoint는 메모리를 사용합니다**: `maxSnapshots` 옵션으로 제한하세요.
+4. **Timeout은 정확하지 않을 수 있습니다**: JavaScript의 타이머 정확도에 의존합니다.
+5. **Pause 중에도 현재 노드는 완료됩니다**: 다음 노드 실행 전에 일시중지됩니다.
 
 ## 마이그레이션 가이드
 

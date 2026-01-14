@@ -79,6 +79,7 @@ registry.registerAll([htmlModule, aiModule]); // 여러 모듈 일괄 등록
 3. **입출력 검증** – 필요한 파라미터가 없으면 명시적으로 오류를 던져 Step의 onError 정책이 동작하도록 한다.
 4. **메타데이터** – `description/usage/inputs` 를 채우면 `buildAIPlanPrompt` 가 자연스럽게 사용법을 AI에게 전달한다.
 5. **상태 저장** – ActionModule은 Stateless로 구현하는 것을 권장한다. 실행 간 공유 상태가 필요하면 외부 클래스를 주입하거나 ExecutionContext를 활용한다.
+6. **실행 제어** – 긴 루프/대기 모듈은 `await ctx.checkControl()` 을 주기적으로 호출해 pause/abort 요청을 반영하고, 필요 시 `ctx.getExecutionState()` 로 상태를 확인한다.
 
 ## 6. 모듈 디버깅 & 테스트
 - **Examples** – `examples/` 디렉터리에 있는 `.qplan` 스크립트를 실행해 특정 모듈 동작을 검증할 수 있다.

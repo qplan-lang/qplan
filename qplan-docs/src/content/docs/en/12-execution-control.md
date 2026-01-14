@@ -272,9 +272,10 @@ clearInterval(progressBar);
 ## Caveats
 
 1. **Abort might not be immediate**: It waits for the currently running module to complete.
-2. **Checkpoints consume memory**: Limit them using the `maxSnapshots` option.
-3. **Timeout might not be exact**: It depends on the accuracy of JavaScript timers.
-4. **Current node completes during Pause**: Execution pauses before the *next* node starts.
+2. **Module-level control**: Modules that run long loops or waits should call `await ctx.checkControl()` periodically so pause/abort requests are honored inside the module.
+3. **Checkpoints consume memory**: Limit them using the `maxSnapshots` option.
+4. **Timeout might not be exact**: It depends on the accuracy of JavaScript timers.
+5. **Current node completes during Pause**: Execution pauses before the *next* node starts.
 
 ## Migration Guide
 

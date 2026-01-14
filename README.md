@@ -227,7 +227,7 @@ Structured workflow with sub-steps, jump policies, retry logic, and error handli
 You can optionally wrap a script in `plan { ... }` and add `@title`, `@summary`, `@version`, or `@since` for human-readable metadata.
 
 ### ExecutionContext
-Stores runtime variables, supports dot-path access (`stats.total`), and keeps per-run `env`/`metadata` values retrievable via `ctx.getEnv()` / `ctx.getMetadata()`.
+Stores runtime variables, supports dot-path access (`stats.total`), and keeps per-run `env`/`metadata` values retrievable via `ctx.getEnv()` / `ctx.getMetadata()`. Modules that perform long loops or waits should call `await ctx.checkControl()` periodically to honor pause/abort requests, and can read the current state via `ctx.getExecutionState()`.
 
 ### Flow Control
 Includes `if`, `while`, `each`, `parallel`, `future`, `join`, `jump`, `skip`, `stop`.

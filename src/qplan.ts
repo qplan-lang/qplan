@@ -85,19 +85,20 @@ export class QPlan {
     this.resetStepStates();
     const registry = options.registry ?? this.defaultRegistry ?? new ModuleRegistry();
     const runId = options.runId ?? `run-${Date.now()}-${++qplanRunCounter}`;
-    const ctx = new ExecutionContext({
-      env: options.env,
-      metadata: options.metadata,
-      runId,
-    });
-    this.currentContext = ctx;
-
     // ExecutionController 생성 또는 사용
     this.controller = options.controller ?? new ExecutionController({
       timeout: options.timeout,
       autoCheckpoint: options.autoCheckpoint,
       maxSnapshots: options.maxSnapshots,
     });
+
+    const ctx = new ExecutionContext({
+      env: options.env,
+      metadata: options.metadata,
+      runId,
+      control: this.controller,
+    });
+    this.currentContext = ctx;
 
     const runContext: StepEventRunContext = {
       runId,

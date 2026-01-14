@@ -13,7 +13,7 @@ const { currentLang, langUrls } = Astro.props;
             <a href="/" class="logo">
                 <span class="logo-text">QPlan</span>
             </a>
-            <div class="version-badge">v0.4.0</div>
+            <div class="version-badge">v0.5.0</div>
             
             <div class="nav-links">
                 <a href="/docs/en/11-qplan_quickstart_guide" class="link">Docs</a>
@@ -49,14 +49,14 @@ const { currentLang, langUrls } = Astro.props;
 	</div>
 </nav>
 
-<script>
+<script lang="ts">
     const themeToggle = document.getElementById('theme-toggle');
     const langSelector = document.getElementById('lang-selector');
     
-    function setTheme(theme) {
+    const setTheme = (theme: string) => {
         document.documentElement.setAttribute('data-theme', theme);
         localStorage.setItem('theme', theme);
-    }
+    };
 
     themeToggle?.addEventListener('click', () => {
         const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -65,8 +65,8 @@ const { currentLang, langUrls } = Astro.props;
     });
 
     langSelector?.addEventListener('change', (e) => {
-        const target = e.target;
-        if (target.value) {
+        const target = e.currentTarget;
+        if (target instanceof HTMLSelectElement && target.value) {
             window.location.href = target.value;
         }
     });
