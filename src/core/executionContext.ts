@@ -15,6 +15,20 @@ export interface ExecutionContextOptions {
   env?: Record<string, any>;
   metadata?: Record<string, any>;
   runId?: string;
+  control?: ExecutionControl;
+}
+
+export type ExecutionStateLike =
+  | "idle"
+  | "running"
+  | "paused"
+  | "completed"
+  | "aborted"
+  | "error";
+
+export interface ExecutionControl {
+  checkControl(): Promise<void>;
+  getState(): ExecutionStateLike;
 }
 
 export class ExecutionContext {
@@ -147,5 +161,15 @@ export class ExecutionContext {
 
   getMetadata<T = Record<string, any>>(): T | undefined {
     return this.options.metadata as T | undefined;
+  }
+
+  getExecutionState(): ExecutionStateLike | undefined {
+    return this.options.control?.getState();
+  }
+
+  async checkControl(): Promise<void> {
+    if (this.options.control) {
+      await this.options.control.checkControl();
+    }
   }
 }

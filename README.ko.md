@@ -262,6 +262,7 @@ step id="checkout" desc="결제" {
 - 각 Action/Step의 결과가 ctx에 저장되고, 이후 Step에서 재사용할 수 있습니다.
 - `ctx.getEnv()`, `ctx.getMetadata()` 로 runQplan 옵션에 전달한 사용자/세션 정보를 모듈에서 활용할 수 있습니다.
 - ctx 변수는 `stats.total` 처럼 점(.) 표기(dot-path)로 하위 필드를 읽을 수 있으므로, Step 결과나 JSON 객체를 그대로 저장해 두고 필요한 속성만 꺼내 쓸 수 있습니다.
+- 모듈이 긴 루프/대기를 수행한다면 `await ctx.checkControl()` 을 주기적으로 호출해 pause/abort 요청을 반영하고, 현재 상태는 `ctx.getExecutionState()` 로 확인할 수 있습니다.
 
 ### 8.5 Flow Control
 

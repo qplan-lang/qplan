@@ -79,6 +79,7 @@ registry.registerAll([htmlModule, aiModule]); // 여러 모듈 일괄 등록
 3. **I/O validation** – Throw explicit errors when required params are missing so the step’s onError policy engages.
 4. **Metadata** – Populate `description/usage/inputs` so `buildAIPlanPrompt` can communicate usage naturally to the AI.
 5. **State** – Prefer stateless modules. When shared state is needed, inject it externally or leverage the ExecutionContext.
+6. **Execution control** – Long-running loops or waits should call `await ctx.checkControl()` periodically so pause/abort requests take effect. Use `ctx.getExecutionState()` if you need to branch on current state.
 
 ## 6. Module debugging & testing
 - **Examples** – Run `.qplan` scripts under `examples/` to verify module behavior.

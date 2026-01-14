@@ -88,6 +88,10 @@ export class ExecutionController {
         return this._state;
     }
 
+    getState(): ExecutionState {
+        return this._state;
+    }
+
     setState(state: ExecutionState): void {
         const oldState = this._state;
         if (oldState !== state) {
@@ -298,6 +302,7 @@ export class ExecutionController {
     restoreSnapshot(snapshot: ExecutionSnapshot): ExecutionContext {
         const ctx = new ExecutionContext({
             runId: snapshot.runId,
+            control: this,
         });
 
         // 컨텍스트 복원

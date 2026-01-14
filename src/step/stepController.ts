@@ -1,7 +1,7 @@
 import { ExecutionContext } from "../core/executionContext.js";
 import { StepNode } from "../core/ast.js";
 import { StepResolution, StepInfo } from "./stepTypes.js";
-import { JumpSignal, StepReturnSignal } from "./stepSignals.js";
+import { AbortError, JumpSignal, StepReturnSignal } from "./stepSignals.js";
 import {
   StepEventEmitter,
   StepEventRunContext,
@@ -95,6 +95,10 @@ export class StepController {
             err.target.node.desc ??
             String(err.target.order);
           await this.events.onStepJump?.(eventInfo, jumpTargetId, this.runContext);
+          throw err;
+        }
+
+        if (err instanceof AbortError) {
           throw err;
         }
 
