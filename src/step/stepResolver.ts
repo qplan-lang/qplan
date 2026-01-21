@@ -3,6 +3,7 @@ import {
   StepNode,
   ASTNode,
   ActionNode,
+  VarNode,
   IfNode,
   WhileNode,
   ParallelNode,
@@ -81,6 +82,13 @@ function collectStepOutputs(block: BlockNode): string[] {
         const action = node as ActionNode;
         if (action.output) {
           outputs.add(action.output);
+        }
+        break;
+      }
+      case "Var": {
+        const variable = (node as VarNode).variable;
+        if (variable) {
+          outputs.add(variable);
         }
         break;
       }

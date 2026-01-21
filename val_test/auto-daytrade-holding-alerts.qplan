@@ -1,0 +1,52 @@
+plan {
+  @title "보유 종목 경고 루프"
+  @summary "보유 종목을 주기적으로 분석하고 경고 알림을 전송"
+  @since "자동거래 보유 경고 루프"
+
+  step id="market_guard" desc="장/휴장 확인" type="action" onError="continue" {
+    market_time_status -> marketTime
+    market_holiday_calendar -> holidays
+    var "" -> exitReason
+    if holidays.count > 0 {
+      set exitReason = "오늘은 휴장입니다."
+      jump to="summary"
+    }
+    if marketTime.isMarketHours == false {
+      set exitReason = "장 시간이 아닙니다."
+      jump to="summary"
+    }
+  }
+
+  step id="holding_alerts" desc="보유 경고 체크" type="action" onError="continue" {
+    auto_trade_positions_list -> positions
+    each pos in positions.items {
+      if pos.stockCode == null {
+        continue
+      }
+      auto_trade_prepare stockCode=pos.stockCode stockName=pos.name -> data
+      auto_trade_score chartData=data.chartData flows=data.flows -> score
+      if score.trendPct != null {
+        if score.trendPct <= -2 {
+          auto_trade_holding_alert stockCode=pos.stockCode message="보유 경고: 급락 (-2% 이상)" stockName=pos.name -> alert
+          if alert.sent == true {
+            chat_output text=alert.message
+          }
+        }
+        else if score.trendPct <= -1 {
+          if score.flowNet < 0 {
+            auto_trade_holding_alert stockCode=pos.stockCode message="보유 경고: 가격/수급 약세" stockName=pos.name -> alert
+            if alert.sent == true {
+              chat_output text=alert.message
+            }
+          }
+        }
+      }
+    }
+  }
+
+  step id="summary" desc="보유 경고 요약" type="action" onError="continue" {
+    if exitReason != "" {
+      chat_output text=exitReason
+    }
+  }
+}

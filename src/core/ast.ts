@@ -216,6 +216,7 @@ export interface PlanMeta {
   summary?: string;
   version?: string;
   since?: string;
+  params?: string;
 }
 
 export type ASTNode =

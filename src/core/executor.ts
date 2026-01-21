@@ -453,6 +453,8 @@ export class Executor {
   private execVar(node: VarNode, ctx: ExecutionContext) {
     const value = this.evaluateExpressionNode(node.expression, ctx);
     ctx.set(node.variable, value);
+    this.lastActionResult = value;
+    this.actionSequence++;
   }
 
   private execReturn(node: ReturnNode, ctx: ExecutionContext) {

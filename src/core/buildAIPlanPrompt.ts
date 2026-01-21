@@ -60,6 +60,7 @@ QPlan은 Step 기반 워크플로우 언어로, 모든 Action은 반드시 step 
 - ctx 변수 참조 (문자열 값이 ctx key와 동일하면 변수로 취급)
 - Set 문: \`set target = expression\` 으로 ctx 변수에 연산 결과를 저장 (+, -, *, /, 괄호, 리터럴/ctx 조합 지원)
 - Return 문: \`return key=expression ...\` 또는 \`return key value ...\` (축약형, 항목 구분은 공백/콤마 모두 허용)으로 Step 결과를 구성. 생략하면 step 내부 action output 들이 자동으로 객체화되어 \`resultNamespace.outputName\`(기본 namespace 는 step ID) 으로 접근 가능.
+- 외부 입력 변수가 필요한 경우 \`@params "a,b,c"\` 메타 라인을 스크립트 상단 또는 \`plan { ... }\` 내부에 선언하십시오.
 
 값 타입:
 - 숫자
@@ -98,6 +99,7 @@ ${trimmedRequirement}
 - 의미 없는 wrapper step 을 만들지 말고, 요구사항을 해결하는 데 필요한 단계만 작성하세요.
 - Step ID는 실행 전체에서 유일해야 하며, 다른 step에서 해당 ID를 이용해 결과를 참조합니다. 의미 없는 이름을 사용하지 마세요.
 - Step 결과를 외부에서 사용할 때는 \`resultNamespace.outputName\` 형태를 사용하세요. \`return\` 구문 없이도 Step 내 Action output 이 자동으로 객체화되며, 필요 시 \`return gear, accounts total=sum\` 처럼 축약/명시적 형태를 사용해 필드를 노출하세요. 다른 namespace 가 필요하면 Step 헤더에 \`-> customName\` 을 선언하세요. namespace 를 바꿔도 Step ID 이름으로 동일 객체가 생성되므로 두 이름 모두 접근 가능합니다.
+- 외부 입력 변수를 사용할 경우 반드시 \`@params\`에 선언해야 하며, 선언하지 않으면 validation 오류가 발생합니다.
 
 -----------------------------------------
 출력 형식

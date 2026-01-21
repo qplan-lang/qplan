@@ -28,19 +28,23 @@ step id="demo" desc="Simple sum" {
 - A root script may list **step statements only**. Actions/If/Set outside a step cause a parser error.
 - Optionally, wrap the script in a `plan { ... }` block to attach metadata that humans/tools can read.
   ```
-  plan {
-    @title "Onboarding Plan"
-    @summary "Create accounts and schedule training"
-    @version "0.1"
-    @since "2025-01-01"
+plan {
+  @title "Onboarding Plan"
+  @summary "Create accounts and schedule training"
+  @version "0.1"
+  @since "2025-01-01"
+  @params "keyword,item"
 
     step id="setup" {
       ...
     }
   }
   ```
-  - Supported meta keys: `title`, `summary`, `version`, `since`.
+  - Supported meta keys: `title`, `summary`, `version`, `since`, `params`.
   - Plan meta must appear at the top of the plan block (before any steps).
+  - Single-token meta values can omit quotes; use quotes for multi-word values.
+  - `@params` is a single line, comma-separated list (whitespace allowed). Missing params cause a runtime error.
+  - You can also omit the `plan { ... }` wrapper and place meta lines at the top of the script.
 - Step form:
   ```
   step ["desc"] id="stepId" [desc="Description"] [type="task"] [onError="retry=3"] {
@@ -110,6 +114,9 @@ if <left> <op> <right> [and/or <left> <op> <right> ...] {
 } else {
     ...
 }
+
+You can also omit the `plan { ... }` wrapper and place the `@title` / `@summary` / `@version` / `@since` / `@params`
+lines at the top of the script.
 ```
 Supported comparison operators: `> < >= <= == != EXISTS NOT_EXISTS`.  
 Combine conditions with `and`, `or`, `not`, and use parentheses `()` for precedence.  

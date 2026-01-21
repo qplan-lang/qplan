@@ -11,6 +11,7 @@ import type {
 } from "./step/stepEvents.js";
 import type { StepEventInfo } from "./step/stepTypes.js";
 import { validateScript, QplanValidationResult } from "./core/qplanValidation.js";
+import { parseParamsMeta } from "./core/semanticValidator.js";
 import {
   ExecutionController,
   ExecutionState,
@@ -46,6 +47,7 @@ export interface QPlanRunOptions extends ExecutionControllerOptions {
   stepEvents?: StepEventEmitter;
   env?: Record<string, any>;
   metadata?: Record<string, any>;
+  params?: Record<string, any>;
   runId?: string;
   controller?: ExecutionController;
 }
@@ -92,12 +94,28 @@ export class QPlan {
       maxSnapshots: options.maxSnapshots,
     });
 
+    const paramsMeta = parseParamsMeta(this.ast.planMeta?.params);
+    if (paramsMeta.hasEmpty || paramsMeta.invalid.length) {
+      throw new Error("Invalid @params declaration");
+    }
+    if (paramsMeta.names.length) {
+      const missing = paramsMeta.names.filter(name => !options.params || !(name in options.params));
+      if (missing.length) {
+        throw new Error(`Missing params: ${missing.join(", ")}`);
+      }
+    }
+
     const ctx = new ExecutionContext({
       env: options.env,
       metadata: options.metadata,
       runId,
       control: this.controller,
     });
+    if (options.params) {
+      for (const [key, value] of Object.entries(options.params)) {
+        ctx.set(key, value);
+      }
+    }
     this.currentContext = ctx;
 
     const runContext: StepEventRunContext = {
@@ -107,6 +125,7 @@ export class QPlan {
       registry,
       env: options.env,
       metadata: options.metadata,
+      params: options.params,
     };
     const executor = new Executor(registry, this.buildTrackingEmitter(options.stepEvents));
     await executor.run(this.ast, ctx, runContext, this.controller);

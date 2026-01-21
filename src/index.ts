@@ -26,7 +26,7 @@ import { ExecutionContext } from "./core/executionContext.js";
 import { ParserError } from "./core/parserError.js";
 import { ASTRoot } from "./core/ast.js";
 import type { StepEventEmitter, PlanEventInfo, StepEventRunContext } from "./step/stepEvents.js";
-import { validateSemantics } from "./core/semanticValidator.js";
+import { validateSemantics, parseParamsMeta } from "./core/semanticValidator.js";
 import type { SemanticIssue } from "./core/semanticValidator.js";
 import { buildAIPlanPrompt as buildPrompt } from "./core/buildAIPlanPrompt.js";
 import type { PromptLanguage } from "./core/buildAIPlanPrompt.js";
@@ -76,6 +76,7 @@ export interface RunQplanOptions {
   stepEvents?: StepEventEmitter;
   env?: Record<string, any>;
   metadata?: Record<string, any>;
+  params?: Record<string, any>;
   runId?: string;
 }
 
@@ -88,6 +89,16 @@ export async function runQplan(script: string, options: RunQplanOptions = {}) {
   // 2) Parse → AST
   const parser = new Parser(tokens);
   const ast = parser.parse();
+  const paramsMeta = parseParamsMeta(ast.planMeta?.params);
+  if (paramsMeta.hasEmpty || paramsMeta.invalid.length) {
+    throw new Error("Invalid @params declaration");
+  }
+  if (paramsMeta.names.length) {
+    const missing = paramsMeta.names.filter(name => !options.params || !(name in options.params));
+    if (missing.length) {
+      throw new Error(`Missing params: ${missing.join(", ")}`);
+    }
+  }
 
   const runId = options.runId ?? `run-${Date.now()}-${++runCounter}`;
   const execRegistry = options.registry ?? registry;
@@ -96,6 +107,11 @@ export async function runQplan(script: string, options: RunQplanOptions = {}) {
     metadata: options.metadata,
     runId,
   });
+  if (options.params) {
+    for (const [key, value] of Object.entries(options.params)) {
+      ctx.set(key, value);
+    }
+  }
   const executor = new Executor(execRegistry, options.stepEvents);
   const runContext: StepEventRunContext = {
     runId,
@@ -104,6 +120,7 @@ export async function runQplan(script: string, options: RunQplanOptions = {}) {
     registry: execRegistry,
     env: options.env,
     metadata: options.metadata,
+    params: options.params,
   };
 
   await executor.run(ast, ctx, runContext);

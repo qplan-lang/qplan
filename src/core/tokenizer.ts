@@ -117,14 +117,15 @@ export function tokenize(input: string): Token[] {
       }
     }
 
-    // String "..."
-    if (c === '"') {
+    // String "..." or '...'
+    if (c === '"' || c === "'") {
+      const quote = c;
       i++;
       let str = "";
-      while (i < input.length && input[i] !== '"') {
+      while (i < input.length && input[i] !== quote) {
         str += input[i++];
       }
-      i++; // closing "
+      i++; // closing quote
       tokens.push({ type: TokenType.String, value: str, line });
       continue;
     }

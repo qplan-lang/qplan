@@ -28,19 +28,23 @@ step id="demo" desc="간단 합계" {
 - 루트 스크립트는 **Step 문만** 나열할 수 있다. Step 밖에서 Action/If/Set 등을 작성하면 파서가 오류를 낸다.
 - 필요하면 `plan { ... }` 블록으로 스크립트를 감싸 메타정보를 붙일 수 있다.
   ```
-  plan {
-    @title "온보딩 플랜"
-    @summary "계정 생성부터 교육 예약까지"
-    @version "0.1"
-    @since "2025-01-01"
+plan {
+  @title "온보딩 플랜"
+  @summary "계정 생성부터 교육 예약까지"
+  @version "0.1"
+  @since "2025-01-01"
+  @params "keyword,item"
 
     step id="setup" {
       ...
     }
   }
   ```
-  - 지원 메타 키: `title`, `summary`, `version`, `since`
+  - 지원 메타 키: `title`, `summary`, `version`, `since`, `params`
   - 메타는 plan 블록의 시작 부분에만 선언해야 한다.
+  - 한 단어 값은 따옴표를 생략할 수 있으며, 공백이 포함되면 따옴표로 감싸야 한다.
+  - `@params` 는 한 줄에서 콤마로 구분하며 공백은 허용된다. 누락 시 런타임 오류가 발생한다.
+  - `plan { ... }` 래퍼를 생략하고 스크립트 상단에 메타 라인을 배치해도 된다.
 - Step 형태:
   ```
   step ["desc"] id="stepId" [desc="설명"] [type="task"] [onError="retry=3"] {
@@ -110,6 +114,9 @@ if <left> <op> <right> [and/or <left> <op> <right> ...] {
 } else {
     ...
 }
+
+`plan { ... }` 래퍼를 생략하고 스크립트 상단에 `@title` / `@summary` / `@version` / `@since` / `@params`
+메타 라인을 배치해도 됩니다.
 ```
 지원 비교 연산자: `> < >= <= == != EXISTS NOT_EXISTS`  
 `and`, `or`, `not` 으로 조건을 조합할 수 있고 괄호 `()` 로 우선순위를 지정 가능하다.  

@@ -5,7 +5,10 @@
  */
 import { QPlan, registry } from "../dist/index.js";
 
-const script = `
+const scripts = [
+  {
+    label: "plan block + quoted meta",
+    script: `
 plan {
   @title "Onboarding Plan"
   @summary "Create accounts and schedule training"
@@ -17,17 +20,65 @@ plan {
     return status=status
   }
 }
-`;
+`,
+  },
+  {
+    label: "top-level meta without plan block",
+    script: `
+@title Onboarding Plan
+@summary Create accounts and schedule training
+@version 0.1
+@since 2025-01-01
 
-const qplan = new QPlan(script, { registry });
+step id="setup" desc="Prep accounts" {
+  var "ok" -> status
+  return status=status
+}
+`,
+  },
+  {
+    label: "single quotes + params",
+    script: `
+plan {
+  @title 'Mini Plan'
+  @summary 'Quick test plan'
+  @params keyword,item
 
-console.log("Plan meta from QPlan:", qplan.getPlanMeta());
+  step id="setup" desc="Prep accounts" {
+    var "ok" -> status
+    return status=status
+  }
+}
+`,
+  },
+  {
+    label: "params used in step",
+    script: `
+@title Param Plan
+@summary Params flow into ctx
+@params keyword, item
 
-await qplan.run({
-  registry,
-  stepEvents: {
-    onPlanStart(plan) {
-      console.log("Plan start meta:", plan.planMeta);
+step id="use_params" {
+  print keyword
+  print item.aaa
+}
+`,
+    runOptions: {
+      params: { keyword: "foo", item: { aaa: 1 } },
     },
   },
-});
+];
+
+for (const { label, script, runOptions } of scripts) {
+  const qplan = new QPlan(script, { registry });
+  console.log(`Plan meta from QPlan (${label}):`, qplan.getPlanMeta());
+  await qplan.run({
+    registry,
+    ...(runOptions ?? {}),
+    stepEvents: {
+      onPlanStart(plan) {
+        console.log(`Plan start meta (${label}):`, plan.planMeta);
+      },
+    },
+  });
+}

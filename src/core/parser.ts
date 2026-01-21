@@ -142,6 +142,15 @@ export class Parser {
         planMeta: meta,
       };
     }
+    if (this.check(TokenType.Symbol, "@")) {
+      const meta = this.parsePlanMeta();
+      const block = this.parseBlock(false);
+      return {
+        type: "Root",
+        block,
+        planMeta: meta,
+      };
+    }
     const block = this.parseBlock(false);
     return {
       type: "Root",
@@ -181,7 +190,7 @@ export class Parser {
       }
       const key = this.consumeIdentifier();
       const normalized = key.toLowerCase();
-      if (!["title", "summary", "version", "since"].includes(normalized)) {
+      if (!["title", "summary", "version", "since", "params"].includes(normalized)) {
         throw new ParserError(`Unknown plan meta '@${key}'`, marker.line);
       }
       meta[normalized as keyof PlanMeta] = this.parsePlanMetaValue();
@@ -194,10 +203,59 @@ export class Parser {
     if (token.type === TokenType.String) {
       return this.consumeString();
     }
-    if (token.type === TokenType.Number) {
-      return this.consume(TokenType.Number).value;
+    return this.consumePlanMetaLine();
+  }
+
+  private consumePlanMetaLine(): string {
+    const start = this.peek();
+    const startLine = start.line;
+    const tokens: Token[] = [];
+
+    while (true) {
+      const token = this.peek();
+      if (token.type === TokenType.EOF) break;
+      if (token.line !== startLine) break;
+      if (token.type === TokenType.Symbol && token.value === "@") break;
+      tokens.push(token);
+      this.pos++;
     }
-    throw new ParserError(`Invalid plan meta value '${token.value}'`, token.line);
+
+    if (!tokens.length) {
+      throw new ParserError(`Invalid plan meta value '${start.value}'`, start.line);
+    }
+
+    const glueSymbols = new Set([".", "-", "_", ":", "/", "+", ","]);
+    let result = "";
+    let prevGlue = false;
+
+    for (const token of tokens) {
+      const text = this.planMetaTokenText(token);
+      const isGlue = token.type === TokenType.Symbol && glueSymbols.has(token.value);
+      if (result && !prevGlue && !isGlue) {
+        result += " ";
+      }
+      result += text;
+      prevGlue = isGlue;
+    }
+    return result;
+  }
+
+  private planMetaTokenText(token: Token): string {
+    switch (token.type) {
+      case TokenType.String:
+      case TokenType.Number:
+      case TokenType.Identifier:
+      case TokenType.Symbol:
+        return token.value;
+      case TokenType.Boolean:
+        return token.value === "true" ? "true" : "false";
+      case TokenType.Null:
+        return "null";
+      case TokenType.Keyword:
+        return token.value.toLowerCase();
+      default:
+        return token.value;
+    }
   }
 
   // ----------------------------------------------------------

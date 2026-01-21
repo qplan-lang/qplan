@@ -183,6 +183,7 @@ const ctx = await runQplan(aiScript, {
   registry,                       // 필요 시 커스텀 registry 주입
   env: { userId: "u-123" },      // 실행 컨텍스트 (ctx.getEnv() 로 접근)
   metadata: { sessionId: "s-456" },
+  params: { keyword: "foo", item: { aaa: 1 } },
   stepEvents: {
     async onPlanStart(plan, context) {
       console.log("plan start", plan.runId, plan.totalSteps, context?.env);
@@ -202,7 +203,7 @@ const ctx = await runQplan(aiScript, {
   }
 });
 ```
-stepEvents를 이용해 UI/CLI/로그와 연동해 진행률을 표시하거나, jump/retry/error 이벤트를 받을 수 있습니다. 각 이벤트는 실행 컨텍스트(`env`, `metadata`, `ctx`, `registry`)를 함께 전달하므로 별도 WeakMap 없이 사용자/세션 정보를 연결할 수 있습니다. `onStepRetry`, `onStepJump` 등의 기존 훅도 그대로 제공되며 동일한 `(info, ...args, context)` 형태로 호출됩니다.
+stepEvents를 이용해 UI/CLI/로그와 연동해 진행률을 표시하거나, jump/retry/error 이벤트를 받을 수 있습니다. 각 이벤트는 실행 컨텍스트(`env`, `metadata`, `ctx`, `registry`)를 함께 전달하므로 별도 WeakMap 없이 사용자/세션 정보를 연결할 수 있습니다. `onStepRetry`, `onStepJump` 등의 기존 훅도 그대로 제공되며 동일한 `(info, ...args, context)` 형태로 호출됩니다. `params` 는 실행 전에 ctx 변수로 주입되며 dot-path(`item.aaa`) 접근이 가능합니다. 외부 입력은 `@params` 한 줄에 콤마로 선언하고 공백은 허용되며, 누락되면 런타임 오류가 발생합니다.
 
 ---
 
@@ -254,7 +255,7 @@ step id="checkout" desc="결제" {
 - `return gear accounts total=sum` (또는 `return gear, accounts, total=sum`) 처럼 `=` 없이도 자동으로 `return gear=gear accounts=accounts total=sum` 으로 확장되며, `return` 을 생략하면 Step 내 Action output 들이 기본적으로 `stepId.outputName` 형태로 노출됩니다(필요하면 Step 헤더에 `-> resultVar` 를 붙여 namespace 를 변경할 수 있습니다).
 - Step 헤더에서 `-> resultVar` 로 namespace 를 바꿔도 엔진이 같은 객체를 Step ID 아래에도 복제하므로 `resultVar.field`, `stepId.field` 둘 다 동작합니다.
 - 모듈/변수/Action output/`return` key 등 대부분의 식별자는 유니코드 문자·숫자·`_` 를 포함할 수 있으며, 첫 글자는 문자 또는 `_` 이어야 하므로 `return 결과=값` 같은 한글 식별자도 허용됩니다.
-- 필요하면 스크립트를 `plan { ... }` 로 감싼 뒤 `@title`, `@summary`, `@version`, `@since` 메타정보를 붙여 사람/도구가 읽을 수 있게 할 수 있습니다.
+- 필요하면 스크립트를 `plan { ... }` 로 감싼 뒤 `@title`, `@summary`, `@version`, `@since`, `@params` 메타정보를 붙여 사람/도구가 읽을 수 있게 할 수 있습니다. `plan { ... }` 를 생략할 경우에도 스크립트 상단에 같은 메타 라인을 둘 수 있습니다. 한 단어 값은 따옴표를 생략할 수 있으며, 공백이 포함되면 따옴표로 감싸야 합니다. `@params` 는 한 줄에서 콤마로 구분하며 공백은 허용되고, 누락되면 런타임 오류가 발생합니다.
 
 ### 8.4 ExecutionContext
 

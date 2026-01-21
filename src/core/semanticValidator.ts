@@ -25,7 +25,46 @@ export interface SemanticIssue {
   hint?: string;
 }
 
-export function validateSemantics(root: ASTRoot): SemanticIssue[] {
+export interface SemanticValidationOptions {
+  initialVariables?: Iterable<string>;
+}
+
+export interface ParsedParamsMeta {
+  names: string[];
+  invalid: string[];
+  hasEmpty: boolean;
+}
+
+export function parseParamsMeta(paramsMeta?: string): ParsedParamsMeta {
+  if (!paramsMeta) {
+    return { names: [], invalid: [], hasEmpty: false };
+  }
+  const names: string[] = [];
+  const invalid: string[] = [];
+  let hasEmpty = false;
+  const seen = new Set<string>();
+  for (const entry of paramsMeta.split(",")) {
+    const trimmed = entry.trim();
+    if (!trimmed) {
+      hasEmpty = true;
+      continue;
+    }
+    if (!isValidIdentifier(trimmed)) {
+      invalid.push(trimmed);
+      continue;
+    }
+    if (!seen.has(trimmed)) {
+      seen.add(trimmed);
+      names.push(trimmed);
+    }
+  }
+  return { names, invalid, hasEmpty };
+}
+
+export function validateSemantics(
+  root: ASTRoot,
+  options: SemanticValidationOptions = {}
+): SemanticIssue[] {
   const issues: SemanticIssue[] = [];
   let stepIds: Set<string> = new Set();
   let resolution: StepResolution;
@@ -72,7 +111,26 @@ export function validateSemantics(root: ASTRoot): SemanticIssue[] {
     }
   }
 
-  const variableIssues = validateVariables(root.block, planLabel);
+  const paramsMeta = parseParamsMeta(root.planMeta?.params);
+  if (paramsMeta.hasEmpty) {
+    issues.push({
+      message: `${planLabel ? `plan '${planLabel}' ` : ""}@params contains an empty entry`,
+      hint: "Remove empty entries in @params (use comma-separated identifiers).",
+    });
+  }
+  if (paramsMeta.invalid.length) {
+    for (const name of paramsMeta.invalid) {
+      issues.push({
+        message: `${planLabel ? `plan '${planLabel}' ` : ""}@params contains invalid identifier '${name}'`,
+        hint: "Identifiers must start with a letter/underscore and contain only letters, digits, or underscores.",
+      });
+    }
+  }
+  const variableIssues = validateVariables(
+    root.block,
+    planLabel,
+    mergeInitialVariables(options.initialVariables, paramsMeta.names)
+  );
   issues.push(...variableIssues);
 
   return issues;
@@ -122,11 +180,45 @@ function visitNode(node: ASTNode, acc: JumpNode[]) {
   }
 }
 
-function validateVariables(block: BlockNode, planLabel?: string): SemanticIssue[] {
+function validateVariables(
+  block: BlockNode,
+  planLabel?: string,
+  initialVariables?: Iterable<string>
+): SemanticIssue[] {
   const issues: SemanticIssue[] = [];
   const available = new Set<string>();
+  if (initialVariables) {
+    for (const variable of initialVariables) {
+      available.add(variable);
+    }
+  }
   validateBlockVariables(block, available, issues, undefined, planLabel);
   return issues;
+}
+
+function mergeInitialVariables(
+  initialVariables?: Iterable<string>,
+  params?: Iterable<string>
+): string[] {
+  const merged = new Set<string>();
+  if (initialVariables) {
+    for (const variable of initialVariables) {
+      merged.add(variable);
+    }
+  }
+  if (params) {
+    for (const entry of params) {
+      merged.add(entry);
+    }
+  }
+  return Array.from(merged);
+}
+
+function isValidIdentifier(name: string): boolean {
+  if (!name) return false;
+  const first = name[0];
+  if (!/[\p{L}_]/u.test(first)) return false;
+  return /^[\p{L}\p{N}_]+$/u.test(name);
 }
 
 function validateBlockVariables(
@@ -301,6 +393,6 @@ function ensureReference(
   issues.push({
     message: `${label} is not defined`,
     line,
-    hint: `Create '${name}' before using it (store an action output, return a field, or fix the variable name).`,
+    hint: `Create '${name}' before using it (store an action output, return a field, or fix the variable name). If it's an external input, declare it in @params.`,
   });
 }

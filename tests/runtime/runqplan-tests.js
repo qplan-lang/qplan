@@ -217,8 +217,45 @@ step id="sum" {
   assert.strictEqual(total, 3);
 }
 
+async function testParamsSeedVariables() {
+  const script = `
+step id="seeded" {
+  print keyword
+  print item.aaa
+}
+`;
+
+  const ctx = await runQplan(script, {
+    params: { keyword: "foo", item: { aaa: 1 } },
+  });
+
+  assert.strictEqual(ctx.get("keyword"), "foo");
+  assert.deepStrictEqual(ctx.get("item"), { aaa: 1 });
+  assert.strictEqual(ctx.get("item.aaa"), 1);
+  assert.strictEqual(ctx.get("seeded"), 1);
+}
+
+async function testMissingParamsThrows() {
+  const script = `
+@params keyword, item
+step id="seeded" {
+  print keyword
+}
+`;
+  let threw = false;
+  try {
+    await runQplan(script, { params: { keyword: "foo" } });
+  } catch (err) {
+    threw = true;
+    assert.ok(String(err).includes("Missing params"), "Error should mention missing params");
+  }
+  assert.strictEqual(threw, true, "Missing params should throw");
+}
+
 await testEnvHooksAndPlanEvents();
 await testReturnShorthandAndStepNamespace();
 await testActionArgsResolveAgainstCtx();
 await testCommentsIgnoredDuringExecution();
+await testParamsSeedVariables();
+await testMissingParamsThrows();
 console.log("runtime runQplan-tests passed");

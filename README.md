@@ -148,6 +148,7 @@ const ctx = await runQplan(aiScript, {
   registry, // optional custom registry
   env: { userId: "u-123" },
   metadata: { sessionId: "s-456" },
+  params: { keyword: "foo", item: { aaa: 1 } },
   stepEvents: {
     onPlanStart(plan, context) {
       console.log("▶ plan started", plan.totalSteps, context.env?.userId);
@@ -178,6 +179,8 @@ const ctx = await runQplan(aiScript, {
 ### 6.6 Share Run Metadata with Modules
 
 Use `runQplan(script, { env, metadata })` to attach arbitrary objects (user, session, trace IDs, etc.).  
+Use `params` to seed runtime variables so scripts can reference them directly (dot-path supported, e.g., `item.aaa`).
+Declare external inputs with `@params` on a single line (comma-separated, whitespace allowed); missing params cause a runtime error.
 Modules can read them from the execution context:
 
 ```ts
@@ -224,7 +227,7 @@ Central place where modules are registered and exposed to AI/runtime. Module IDs
 
 ### Step System
 Structured workflow with sub-steps, jump policies, retry logic, and error handling. Return statements are optional: `return gear accounts total=sum` (or `return gear, accounts, total=sum`) automatically expands to `return gear=gear accounts=accounts total=sum`. If you omit `return`, every action output inside the step is exposed under the step’s result namespace (`stepId.outputName` by default, or a custom name when you add `-> resultVar` to the step header). Even when you override the namespace, the engine mirrors the same object under the original step ID, so both `resultVar.field` and `stepId.field` keep working. Identifiers (module names, variables, return keys, etc.) may include any Unicode letter/digit plus `_` so long as they start with a letter or underscore, meaning `return 결과=값` works alongside ASCII names.
-You can optionally wrap a script in `plan { ... }` and add `@title`, `@summary`, `@version`, or `@since` for human-readable metadata.
+You can optionally wrap a script in `plan { ... }` and add `@title`, `@summary`, `@version`, `@since`, or `@params` for human-readable metadata and declared inputs. When you skip the `plan { ... }` wrapper, you can still place `@title`/`@summary`/`@version`/`@since`/`@params` at the top of the script. Single-token meta values can omit quotes; use quotes for multi-word values. `@params` is single-line and comma-separated (whitespace ok), and any missing params cause a runtime error.
 
 ### ExecutionContext
 Stores runtime variables, supports dot-path access (`stats.total`), and keeps per-run `env`/`metadata` values retrievable via `ctx.getEnv()` / `ctx.getMetadata()`. Modules that perform long loops or waits should call `await ctx.checkControl()` periodically to honor pause/abort requests, and can read the current state via `ctx.getExecutionState()`.

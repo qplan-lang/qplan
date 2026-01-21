@@ -10,6 +10,7 @@ export interface StepEventRunContext {
   registry: ModuleRegistry;
   env?: Record<string, any>;
   metadata?: Record<string, any>;
+  params?: Record<string, any>;
 }
 
 export type PlanStatus = 'completed' | 'stopped' | 'aborted' | 'error';
