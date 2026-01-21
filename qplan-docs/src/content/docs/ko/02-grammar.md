@@ -28,11 +28,12 @@ step id="demo" desc="간단 합계" {
 - 루트 스크립트는 **Step 문만** 나열할 수 있다. Step 밖에서 Action/If/Set 등을 작성하면 파서가 오류를 낸다.
 - 필요하면 `plan { ... }` 블록으로 스크립트를 감싸 메타정보를 붙일 수 있다.
   ```
-  plan {
-    @title "온보딩 플랜"
-    @summary "계정 생성부터 교육 예약까지"
-    @version "0.1"
-    @since "2025-01-01"
+plan {
+  @title "온보딩 플랜"
+  @summary "계정 생성부터 교육 예약까지"
+  @version "0.1"
+  @since "2025-01-01"
+  @params "keyword,item"
 
     step id="setup" {
       ...
@@ -40,9 +41,10 @@ step id="demo" desc="간단 합계" {
   }
   ```
   - 지원 메타 키: `title`, `summary`, `version`, `since`, `params`
-  - 메타는 plan 블록의 시작 부분에만 선언해야 하며, plan 래퍼를 생략할 경우 스크립트 상단에 배치할 수 있다.
-  - 한 단어 값은 따옴표를 생략할 수 있고, 공백이 포함되면 따옴표로 감싼다.
+  - 메타는 plan 블록의 시작 부분에만 선언해야 한다.
+  - 한 단어 값은 따옴표를 생략할 수 있으며, 공백이 포함되면 따옴표로 감싸야 한다.
   - `@params` 는 한 줄에서 콤마로 구분하며 공백은 허용된다. 누락 시 런타임 오류가 발생한다.
+  - `plan { ... }` 래퍼를 생략하고 스크립트 상단에 메타 라인을 배치해도 된다.
 - Step 형태:
   ```
   step ["desc"] id="stepId" [desc="설명"] [type="task"] [onError="retry=3"] {
@@ -97,7 +99,7 @@ http get AND cache url="..." -> raw
 - 숫자
 - 문자열 "text"
 - JSON `[1,2,3]`, `{ "x":1 }`
-- ctx 값 참조 (문자열이 ctx 변수명 또는 `stats.total` 같은 dot-path와 일치하면 자동 대입됨)
+- ctx 값 참조 (문자열이 ctx 변수명, `stats.total` 같은 dot-path, `items[0]` 같은 배열 인덱스와 일치하면 자동 대입됨)
 
 예:
 ```
@@ -112,10 +114,14 @@ if <left> <op> <right> [and/or <left> <op> <right> ...] {
 } else {
     ...
 }
+
+`plan { ... }` 래퍼를 생략하고 스크립트 상단에 `@title` / `@summary` / `@version` / `@since` / `@params`
+메타 라인을 배치해도 됩니다.
 ```
 지원 비교 연산자: `> < >= <= == != EXISTS NOT_EXISTS`  
+`EXISTS`/`NOT_EXISTS`는 단항 연산자이며(예: `value EXISTS`), `undefined`/`null`/빈 문자열(`""`)을 존재하지 않는 것(False)으로 취급한다.  
 `and`, `or`, `not` 으로 조건을 조합할 수 있고 괄호 `()` 로 우선순위를 지정 가능하다.  
-왼쪽/오른쪽 피연산자는 ctx 변수명뿐 아니라 `stats.average` 처럼 점(dot) 경로를 그대로 사용할 수 있다.
+왼쪽/오른쪽 피연산자는 ctx 변수명, `stats.average` 같은 dot-path(없는 속성은 `undefined` 반환), `items[0]` 같은 배열 인덱스를 사용할 수 있다. 배열은 `.length`와 `.count`를 지원한다.
 
 ## 2.6 Parallel 병렬 실행
 ```
@@ -291,7 +297,7 @@ JsonArray       = "[" , [ JsonValue , { "," , JsonValue } ] , "]" ;
 
 ## 4.2 ctx 변수 해석 규칙
 - args 값이 문자열이고 동일한 변수가 ctx에 존재하면 ctx 값을 참조한다.
-- `stats.total`, `user.profile.name` 처럼 dot-path도 허용되며, ctx 객체를 따라가며 값을 찾는다.
+- `stats.total`, `user.profile.name` 같은 dot-path와 `items[0]` 같은 배열 인덱스를 허용하며, ctx 객체를 따라가며 값을 찾는다.
 - JSON 문자열은 자동으로 객체로 변환되지 않는다(모듈 내부에서 처리).
 
 ## 4.3 Future / Join 규칙
@@ -343,7 +349,7 @@ step id="sleepers" desc="병렬 작업" {
 - Step 강제 구조 (모든 Action/제어문은 Step 내부에만 존재)  
 - Step 은 onError(fail/continue/retry/jump)와 jump 로 흐름 제어  
 - Action = 모듈 이름 + 옵션(선택) + key=value arguments + optional output  
-- Arguments 는 숫자/문자열/JSON/dot-path 변수 참조 지원  
+- Arguments 는 숫자/문자열/JSON/dot-path/배열 인덱스 변수 참조 지원  
 - Future/Join/Parallel/Each/While/Set/Return/Jump 내장  
 - If 조건은 숫자/문자열 비교 + EXISTS/NOT_EXISTS + 괄호  
 

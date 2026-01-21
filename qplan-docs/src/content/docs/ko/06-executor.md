@@ -63,6 +63,8 @@ StepController는 또한 `onStepStart/End/Error/Retry/Jump` 이벤트뿐만 아�
 ## 5. ExecutionContext 상호작용
 - Executor는 `ctx.set(name, value)` 로 Action 결과를 저장하고, 이후 Action 인수에서 문자열이 ctx 변수와 일치하면 자동으로 해당 값을 대입한다.
 - dot-path(`order.detail.status`) 접근은 `ExecutionContext.resolvePath()` 가 처리한다.
+  - 없는 속성에 접근하면 에러를 내지 않고 `undefined`를 반환한다(안전한 접근).
+  - 배열일 경우 `.length`와 `.count` 속성을 통해 길이를 반환한다.
 - `ctx.toJSON()` 으로 전체 상태를 덤프해 디버깅에 활용할 수 있다.
 
 ## 6. Future + Join 실행 흐름

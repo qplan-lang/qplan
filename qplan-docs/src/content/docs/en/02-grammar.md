@@ -28,11 +28,12 @@ step id="demo" desc="Simple sum" {
 - A root script may list **step statements only**. Actions/If/Set outside a step cause a parser error.
 - Optionally, wrap the script in a `plan { ... }` block to attach metadata that humans/tools can read.
   ```
-  plan {
-    @title "Onboarding Plan"
-    @summary "Create accounts and schedule training"
-    @version "0.1"
-    @since "2025-01-01"
+plan {
+  @title "Onboarding Plan"
+  @summary "Create accounts and schedule training"
+  @version "0.1"
+  @since "2025-01-01"
+  @params "keyword,item"
 
     step id="setup" {
       ...
@@ -42,7 +43,8 @@ step id="demo" desc="Simple sum" {
   - Supported meta keys: `title`, `summary`, `version`, `since`, `params`.
   - Plan meta must appear at the top of the plan block (before any steps), or at the top of the script without the plan wrapper.
   - Single-token meta values can omit quotes; use quotes for multi-word values.
-  - `@params` is a single-line, comma-separated list (whitespace allowed). Missing params cause a runtime error.
+  - `@params` is a single line, comma-separated list (whitespace allowed). Missing params cause a runtime error.
+  - You can also omit the `plan { ... }` wrapper and place meta lines at the top of the script.
 - Step form:
   ```
   step ["desc"] id="stepId" [desc="Description"] [type="task"] [onError="retry=3"] {
@@ -97,7 +99,7 @@ Supported types:
 - Numbers
 - Strings `"text"`
 - JSON `[1,2,3]`, `{ "x":1 }`
-- ctx value references (if a string matches a ctx variable or a dot path like `stats.total`, it resolves automatically)
+- ctx value references (if a string matches a ctx variable, a dot path like `stats.total`, or a bracket index like `items[0]`, it resolves automatically)
 
 Example:
 ```
@@ -112,10 +114,14 @@ if <left> <op> <right> [and/or <left> <op> <right> ...] {
 } else {
     ...
 }
+
+You can also omit the `plan { ... }` wrapper and place the `@title` / `@summary` / `@version` / `@since` / `@params`
+lines at the top of the script.
 ```
 Supported comparison operators: `> < >= <= == != EXISTS NOT_EXISTS`.  
+`EXISTS` and `NOT_EXISTS` are unary operators (e.g., `if value EXISTS`); they treat `undefined`/`null`/`""` as False.  
 Combine conditions with `and`, `or`, `not`, and use parentheses `()` for precedence.  
-Operands may reference ctx variables or dot paths like `stats.average`.
+Operands may reference ctx variables, dot paths like `stats.average` (missing props return `undefined`), or bracket indices like `items[0]`. Arrays support `.length` and `.count`.
 
 ## 2.6 Parallel execution
 ```
@@ -343,7 +349,7 @@ step id="sleepers" desc="Parallel tasks" {
 - Step-enforced structure: every action/control statement lives inside a step.  
 - Steps control flow via onError (fail/continue/retry/jump) and `jump`.  
 - Action = module name + optional options + key=value arguments + optional output capture.  
-- Arguments support numbers/strings/JSON/dot-path variable references.  
+- Arguments support numbers/strings/JSON/dot-path or bracket-index variable references.  
 - Built-in Future/Join/Parallel/Each/While/Set/Return/Jump constructs.  
 - If conditions compare numbers/strings, support EXISTS/NOT_EXISTS, and allow parentheses.  
 
