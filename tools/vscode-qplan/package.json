@@ -15,6 +15,42 @@
     "Programming Languages"
   ],
   "contributes": {
+    "configurationDefaults": {
+      "editor.tokenColorCustomizations": {
+        "textMateRules": [
+          {
+            "scope": "keyword.control.flow.qplan",
+            "settings": {
+              "foreground": "#E9323C"
+            }
+          },
+          {
+            "scope": "support.function.qplan",
+            "settings": {
+              "foreground": "#599ed6"
+            }
+          },
+          {
+            "scope": "variable.other.readwrite.qplan",
+            "settings": {
+              "foreground": "#d8bd82"
+            }
+          },
+          {
+            "scope": "entity.other.attribute-name.qplan",
+            "settings": {
+              "foreground": "#D4D4D4"
+            }
+          },
+          {
+            "scope": "keyword.operator.assignment.qplan",
+            "settings": {
+              "foreground": "#808080"
+            }
+          }
+        ]
+      }
+    },
     "languages": [
       {
         "id": "qplan",

@@ -6,6 +6,9 @@
       "include": "#comments"
     },
     {
+      "include": "#params-directive"
+    },
+    {
       "include": "#meta"
     },
     {
@@ -27,6 +30,24 @@
       "include": "#support-modules"
     },
     {
+      "include": "#variable-assignment"
+    },
+    {
+      "include": "#variable-set"
+    },
+    {
+      "include": "#variable-property-access"
+    },
+    {
+      "include": "#variable-usage-heuristic"
+    },
+    {
+      "include": "#argument-usage"
+    },
+    {
+      "include": "#module-call"
+    },
+    {
       "include": "#operators"
     }
   ],
@@ -45,6 +66,30 @@
           "name": "comment.block.qplan",
           "begin": "/\\*",
           "end": "\\*/"
+        }
+      ]
+    },
+    "params-directive": {
+      "begin": "^\\s*(@)(params)\\b",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.directive.qplan"
+        },
+        "2": {
+          "name": "keyword.other.qplan"
+        }
+      },
+      "end": "$",
+      "patterns": [
+        {
+          "match": "\\b[a-zA-Z_]\\w*\\b",
+          "name": "variable.other.readwrite.qplan"
+        },
+        {
+          "include": "#strings"
+        },
+        {
+          "match": ","
         }
       ]
     },
@@ -97,7 +142,7 @@
           "match": "\\b(if|else|while|each|in|parallel|jump|to|stop|skip|continue|break|set|return)\\b"
         },
         {
-          "name": "keyword.other.qplan",
+          "name": "keyword.control.flow.qplan",
           "match": "\\b(plan|step)\\b"
         }
       ]
@@ -135,6 +180,106 @@
         {
           "name": "support.function.qplan",
           "match": "\\b(var|print|echo|sleep|file|math|future|join|json)\\b"
+        }
+      ]
+    },
+    "variable-assignment": {
+      "patterns": [
+        {
+          "match": "(->)\\s*([a-zA-Z_][\\w]*)",
+          "captures": {
+            "1": {
+              "name": "keyword.operator.qplan"
+            },
+            "2": {
+              "name": "variable.other.readwrite.qplan"
+            }
+          }
+        }
+      ]
+    },
+    "variable-set": {
+      "patterns": [
+        {
+          "match": "\\b(set)\\s+([a-zA-Z_][\\w]*)",
+          "captures": {
+            "1": {
+              "name": "keyword.control.qplan"
+            },
+            "2": {
+              "name": "variable.other.readwrite.qplan"
+            }
+          }
+        }
+      ]
+    },
+    "variable-property-access": {
+      "patterns": [
+        {
+          "match": "\\b([a-zA-Z_]\\w*)(\\.)([a-zA-Z_]\\w*)",
+          "captures": {
+            "1": {
+              "name": "variable.other.readwrite.qplan"
+            },
+            "2": {
+              "name": "punctuation.accessor.qplan"
+            },
+            "3": {
+              "name": "variable.other.property.qplan"
+            }
+          }
+        },
+        {
+          "match": "\\b([a-zA-Z_]\\w*)(\\[)",
+          "captures": {
+            "1": {
+              "name": "variable.other.readwrite.qplan"
+            },
+            "2": {
+              "name": "keyword.operator.qplan"
+            }
+          }
+        }
+      ]
+    },
+    "variable-usage-heuristic": {
+      "patterns": [
+        {
+          "match": "\\b(if|while|return)\\s+([a-zA-Z_]\\w*)",
+          "captures": {
+            "1": {
+              "name": "keyword.control.qplan"
+            },
+            "2": {
+              "name": "variable.other.readwrite.qplan"
+            }
+          }
+        }
+      ]
+    },
+    "argument-usage": {
+      "patterns": [
+        {
+          "match": "\\b([a-zA-Z0-9_]+)(=)([a-zA-Z_][\\w]*)",
+          "captures": {
+            "1": {
+              "name": "entity.other.attribute-name.qplan"
+            },
+            "2": {
+              "name": "keyword.operator.assignment.qplan"
+            },
+            "3": {
+              "name": "variable.other.readwrite.qplan"
+            }
+          }
+        }
+      ]
+    },
+    "module-call": {
+      "patterns": [
+        {
+          "name": "support.function.qplan",
+          "match": "^\\s*(?!(?:step|plan|if|else|while|each|in|parallel|jump|to|stop|skip|continue|break|set|return|var|print|echo|sleep|file|math|future|join|json)\\b)([a-zA-Z_][\\w]*)"
         }
       ]
     }
