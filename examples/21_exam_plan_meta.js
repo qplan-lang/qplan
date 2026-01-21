@@ -42,7 +42,6 @@ step id="setup" desc="Prep accounts" {
 plan {
   @title 'Mini Plan'
   @summary 'Quick test plan'
-  @params keyword,item
 
   step id="setup" desc="Prep accounts" {
     var "ok" -> status
