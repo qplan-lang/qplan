@@ -119,8 +119,9 @@ You can also omit the `plan { ... }` wrapper and place the `@title` / `@summary`
 lines at the top of the script.
 ```
 Supported comparison operators: `> < >= <= == != EXISTS NOT_EXISTS`.  
+`EXISTS` and `NOT_EXISTS` are unary operators (e.g., `if value EXISTS`); they treat `undefined`/`null`/`""` as False.  
 Combine conditions with `and`, `or`, `not`, and use parentheses `()` for precedence.  
-Operands may reference ctx variables, dot paths like `stats.average`, or bracket indices like `items[0]`.
+Operands may reference ctx variables, dot paths like `stats.average` (missing props return `undefined`), or bracket indices like `items[0]`. Arrays support `.length` and `.count`.
 
 ## 2.6 Parallel execution
 ```

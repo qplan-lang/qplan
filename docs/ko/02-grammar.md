@@ -119,8 +119,9 @@ if <left> <op> <right> [and/or <left> <op> <right> ...] {
 메타 라인을 배치해도 됩니다.
 ```
 지원 비교 연산자: `> < >= <= == != EXISTS NOT_EXISTS`  
+`EXISTS`/`NOT_EXISTS`는 단항 연산자이며(예: `value EXISTS`), `undefined`/`null`/빈 문자열(`""`)을 존재하지 않는 것(False)으로 취급한다.  
 `and`, `or`, `not` 으로 조건을 조합할 수 있고 괄호 `()` 로 우선순위를 지정 가능하다.  
-왼쪽/오른쪽 피연산자는 ctx 변수명뿐 아니라 `stats.average` 같은 dot-path나 `items[0]` 같은 배열 인덱스를 그대로 사용할 수 있다.
+왼쪽/오른쪽 피연산자는 ctx 변수명, `stats.average` 같은 dot-path(없는 속성은 `undefined` 반환), `items[0]` 같은 배열 인덱스를 사용할 수 있다. 배열은 `.length`와 `.count`를 지원한다.
 
 ## 2.6 Parallel 병렬 실행
 ```

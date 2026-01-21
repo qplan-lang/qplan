@@ -63,6 +63,8 @@ The controller also fires `onStepStart/End/Error/Retry/Jump` as well as plan-lev
 ## 5. ExecutionContext interaction
 - Store results via `ctx.set(name, value)`; later arguments that match ctx keys automatically resolve to those values.
 - Dot paths such as `order.detail.status` are resolved by `ExecutionContext.resolvePath()`.
+  - Missing properties return `undefined` (safe access) instead of error.
+  - Arrays support `.length` and `.count`.
 - `ctx.toJSON()` dumps the full state for debugging/logging.
 
 ## 6. Future + Join flow

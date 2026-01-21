@@ -53,7 +53,7 @@ var {"a":1} -> config
 
 ### 2.4 Dot-path 접근
 
-- Step 결과나 JSON 객체를 ctx에 저장해 두면 `stats.total`, `order.detail.status` 처럼 점(dot)으로 이어진 경로로 하위 필드를 직접 참조할 수 있다.
+- Step 결과나 JSON 객체를 ctx에 저장해 두면 `stats.total`, `order.detail.status` 처럼 점(dot)으로 이어진 경로로 하위 필드를 직접 참조할 수 있다(없는 속성은 `undefined` 반환). 배열은 `.length`, `.count` 를 지원한다.
 - Dot-path는 정적 문자열로 작성해야 하며, 실행 중 문자열을 조립하거나 `set` 으로 새 경로를 만들어 쓰는 방식은 허용되지 않는다.
 
 ---
@@ -112,7 +112,7 @@ while count < target { ... }
 ```
 
 - 오른쪽 피연산자가 문자열인데 ctx에 동일한 키가 있으면 해당 값을 읽어 비교한다.
-- `EXISTS`, `NOT_EXISTS`, `not`, 괄호 등 모든 비교 문법은 if/while 공통.
+- `EXISTS`, `NOT_EXISTS`(단항 연산자, `undefined`/`null`/`""`는 거짓), `not`, 괄호 등 모든 비교 문법은 if/while 공통.
 
 ---
 
