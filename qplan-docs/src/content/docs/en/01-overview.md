@@ -30,7 +30,7 @@ If you want the "why" behind these goals, see [`docs/qplan-why.md`](docs/qplan-w
 - Use `return key=value ...` inside a step to build an explicit result; otherwise, the last action result becomes the step result.
 - `jump to="stepId"` moves between steps. Targets must be step IDs, and the semantic validator ensures they exist.
 - Steps can nest (sub-steps). The resolver auto-assigns `order` (execution sequence) and `path` (e.g., `1.2.3`).
-- When calling `runQplan`, you can inject a `registry`, `env`, `metadata`, and `stepEvents` hooks to observe plan/step execution in real time.
+- When calling `runQplan`, you can inject a `registry`, `env`, `metadata`, `params`, and `stepEvents` hooks to observe plan/step execution in real time.
 
 ```ts
 import { runQplan, registry } from "qplan";
@@ -39,6 +39,7 @@ await runQplan(script, {
   registry,                        // optional custom ModuleRegistry
   env: { userId: "u-123" },       // forwarded to ctx.getEnv()
   metadata: { sessionId: "s-456" },
+  params: { keyword: "foo" },     // injected into ctx variables
   stepEvents: {
     onPlanStart(plan) { console.log("plan start", plan.runId, plan.totalSteps); },
     onStepStart(info, context) { console.log("▶", info.order, info.stepId, context?.env); },
@@ -57,7 +58,7 @@ await runQplan(script, {
 - **Set & Return**—`set total = (total + delta) * 0.5` applies arithmetic expressions to existing variables, and `return key=value ...` shapes step outputs manually.
 - **Break / Continue**—exit loops or skip to the next iteration in Each or While loops.
 - **Stop / Skip**—terminate the entire plan or skip the rest of the current step.
-- **ExecutionContext**—`ctx.get("order.summary.status")` reads nested values via dot paths, `ctx.getEnv()` / `ctx.getMetadata()` expose per-run context, and `ctx.toJSON()` dumps the entire state.
+- **ExecutionContext**—`ctx.get("order.summary.status")` reads nested values via dot paths, `ctx.get("items.0")` / `items[0]` style bracket indices are supported, `ctx.getEnv()` / `ctx.getMetadata()` expose per-run context, and `ctx.toJSON()` dumps the entire state.
 - **Full grammar** lives in `docs/02-grammar.md`; `buildAIGrammarSummary()` auto-generates a condensed, LLM-friendly version.
 
 ## 📦 Built-in modules (basicModules)

@@ -9,7 +9,7 @@ A 버전(기본 문법) + B 버전(전체 EBNF)을 모두 포함하므로 **이 
 # 1. QPlan Language 개요
 
 QPlan Language는 **모든 Action을 Step 블록 안에서만 실행**하는 Step 기반 워크플로우 언어다.  
-스크립트는 Tokenizer → Parser → AST → Executor 순서로 처리되며 ExecutionContext(ctx)에 저장된 값을 dot-path(`stats.total`)로 재사용할 수 있다.
+스크립트는 Tokenizer → Parser → AST → Executor 순서로 처리되며 ExecutionContext(ctx)에 저장된 값을 dot-path(`stats.total`)나 배열 인덱스(`items[0]`)로 재사용할 수 있다.
 
 최소 예제:
 ```
@@ -39,8 +39,10 @@ step id="demo" desc="간단 합계" {
     }
   }
   ```
-  - 지원 메타 키: `title`, `summary`, `version`, `since`
-  - 메타는 plan 블록의 시작 부분에만 선언해야 한다.
+  - 지원 메타 키: `title`, `summary`, `version`, `since`, `params`
+  - 메타는 plan 블록의 시작 부분에만 선언해야 하며, plan 래퍼를 생략할 경우 스크립트 상단에 배치할 수 있다.
+  - 한 단어 값은 따옴표를 생략할 수 있고, 공백이 포함되면 따옴표로 감싼다.
+  - `@params` 는 한 줄에서 콤마로 구분하며 공백은 허용된다. 누락 시 런타임 오류가 발생한다.
 - Step 형태:
   ```
   step ["desc"] id="stepId" [desc="설명"] [type="task"] [onError="retry=3"] {
