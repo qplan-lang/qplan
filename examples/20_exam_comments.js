@@ -1,7 +1,7 @@
 import { runQplan } from "../dist/index.js";
 
 /**
- * Example: Comment support (//, #, /* */)
+ * Example: Comment support //, #, /*
  * Demonstrates how comments are ignored by the tokenizer inside a QPlan script.
  */
 const script = `
@@ -18,7 +18,7 @@ step id="setup" desc="Initialize" {
 
 step id="report" desc="Use results" {
   // Comments can also be inside other steps
-  echo msg="Sum is ${setup.total}" -> message
+  print "Sum is " + setup.total
 }
 `;
 
