@@ -9,7 +9,7 @@ A 버전(기본 문법) + B 버전(전체 EBNF)을 모두 포함하므로 **이 
 # 1. QPlan Language 개요
 
 QPlan Language는 **모든 Action을 Step 블록 안에서만 실행**하는 Step 기반 워크플로우 언어다.  
-스크립트는 Tokenizer → Parser → AST → Executor 순서로 처리되며 ExecutionContext(ctx)에 저장된 값을 dot-path(`stats.total`)로 재사용할 수 있다.
+스크립트는 Tokenizer → Parser → AST → Executor 순서로 처리되며 ExecutionContext(ctx)에 저장된 값을 dot-path(`stats.total`)나 배열 인덱스(`items[0]`)로 재사용할 수 있다.
 
 최소 예제:
 ```
@@ -99,7 +99,7 @@ http get AND cache url="..." -> raw
 - 숫자
 - 문자열 "text"
 - JSON `[1,2,3]`, `{ "x":1 }`
-- ctx 값 참조 (문자열이 ctx 변수명 또는 `stats.total` 같은 dot-path와 일치하면 자동 대입됨)
+- ctx 값 참조 (문자열이 ctx 변수명, `stats.total` 같은 dot-path, `items[0]` 같은 배열 인덱스와 일치하면 자동 대입됨)
 
 예:
 ```
@@ -120,7 +120,7 @@ if <left> <op> <right> [and/or <left> <op> <right> ...] {
 ```
 지원 비교 연산자: `> < >= <= == != EXISTS NOT_EXISTS`  
 `and`, `or`, `not` 으로 조건을 조합할 수 있고 괄호 `()` 로 우선순위를 지정 가능하다.  
-왼쪽/오른쪽 피연산자는 ctx 변수명뿐 아니라 `stats.average` 처럼 점(dot) 경로를 그대로 사용할 수 있다.
+왼쪽/오른쪽 피연산자는 ctx 변수명뿐 아니라 `stats.average` 같은 dot-path나 `items[0]` 같은 배열 인덱스를 그대로 사용할 수 있다.
 
 ## 2.6 Parallel 병렬 실행
 ```
@@ -296,7 +296,7 @@ JsonArray       = "[" , [ JsonValue , { "," , JsonValue } ] , "]" ;
 
 ## 4.2 ctx 변수 해석 규칙
 - args 값이 문자열이고 동일한 변수가 ctx에 존재하면 ctx 값을 참조한다.
-- `stats.total`, `user.profile.name` 처럼 dot-path도 허용되며, ctx 객체를 따라가며 값을 찾는다.
+- `stats.total`, `user.profile.name` 같은 dot-path와 `items[0]` 같은 배열 인덱스를 허용하며, ctx 객체를 따라가며 값을 찾는다.
 - JSON 문자열은 자동으로 객체로 변환되지 않는다(모듈 내부에서 처리).
 
 ## 4.3 Future / Join 규칙
@@ -348,7 +348,7 @@ step id="sleepers" desc="병렬 작업" {
 - Step 강제 구조 (모든 Action/제어문은 Step 내부에만 존재)  
 - Step 은 onError(fail/continue/retry/jump)와 jump 로 흐름 제어  
 - Action = 모듈 이름 + 옵션(선택) + key=value arguments + optional output  
-- Arguments 는 숫자/문자열/JSON/dot-path 변수 참조 지원  
+- Arguments 는 숫자/문자열/JSON/dot-path/배열 인덱스 변수 참조 지원  
 - Future/Join/Parallel/Each/While/Set/Return/Jump 내장  
 - If 조건은 숫자/문자열 비교 + EXISTS/NOT_EXISTS + 괄호  
 

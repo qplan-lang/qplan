@@ -81,10 +81,31 @@ export class Parser {
 
   private consumeIdentifierPath(): string {
     let name = this.consumeIdentifier();
-    while (this.check(TokenType.Symbol, ".")) {
-      this.consume(TokenType.Symbol, ".");
-      const next = this.consumeIdentifier();
-      name += `.${next}`;
+    while (true) {
+      if (this.check(TokenType.Symbol, ".")) {
+        this.consume(TokenType.Symbol, ".");
+        const next = this.consumeIdentifier();
+        name += `.${next}`;
+        continue;
+      }
+      if (this.check(TokenType.Symbol, "[")) {
+        this.consume(TokenType.Symbol, "[");
+        const t = this.peek();
+        let next: string;
+        if (t.type === TokenType.Number) {
+          next = this.consume(TokenType.Number).value;
+        } else if (t.type === TokenType.Identifier) {
+          next = this.consume(TokenType.Identifier).value;
+        } else if (t.type === TokenType.String) {
+          next = this.consumeString();
+        } else {
+          throw new ParserError(`Invalid bracket access '${t.value}'`, t.line);
+        }
+        this.consume(TokenType.Symbol, "]");
+        name += `.${next}`;
+        continue;
+      }
+      break;
     }
     return name;
   }

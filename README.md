@@ -179,7 +179,7 @@ const ctx = await runQplan(aiScript, {
 ### 6.6 Share Run Metadata with Modules
 
 Use `runQplan(script, { env, metadata })` to attach arbitrary objects (user, session, trace IDs, etc.).  
-Use `params` to seed runtime variables so scripts can reference them directly (dot-path supported, e.g., `item.aaa`).
+Use `params` to seed runtime variables so scripts can reference them directly (dot-path and bracket index supported, e.g., `item.aaa`, `items[0]`).
 Declare external inputs with `@params` on a single line (comma-separated, whitespace allowed); missing params cause a runtime error.
 Modules can read them from the execution context:
 
@@ -230,7 +230,7 @@ Structured workflow with sub-steps, jump policies, retry logic, and error handli
 You can optionally wrap a script in `plan { ... }` and add `@title`, `@summary`, `@version`, `@since`, or `@params` for human-readable metadata and declared inputs. When you skip the `plan { ... }` wrapper, you can still place `@title`/`@summary`/`@version`/`@since`/`@params` at the top of the script. Single-token meta values can omit quotes; use quotes for multi-word values. `@params` is single-line and comma-separated (whitespace ok), and any missing params cause a runtime error.
 
 ### ExecutionContext
-Stores runtime variables, supports dot-path access (`stats.total`), and keeps per-run `env`/`metadata` values retrievable via `ctx.getEnv()` / `ctx.getMetadata()`. Modules that perform long loops or waits should call `await ctx.checkControl()` periodically to honor pause/abort requests, and can read the current state via `ctx.getExecutionState()`.
+Stores runtime variables, supports dot-path and bracket index access (`stats.total`, `items[0]`), and keeps per-run `env`/`metadata` values retrievable via `ctx.getEnv()` / `ctx.getMetadata()`. Modules that perform long loops or waits should call `await ctx.checkControl()` periodically to honor pause/abort requests, and can read the current state via `ctx.getExecutionState()`.
 
 ### Flow Control
 Includes `if`, `while`, `each`, `parallel`, `future`, `join`, `jump`, `skip`, `stop`.

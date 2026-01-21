@@ -194,6 +194,24 @@ step id="summarize" desc="요약 리포트 작성" {
   });
 }
 
+async function testBracketIndexAccess() {
+  const registry = new ModuleRegistry();
+  registry.register(captureInputsModule);
+
+  const script = `
+step id="seed" {
+  var [10, 20, 30] -> arr
+}
+
+step id="use" {
+  capture_inputs first=arr[0] second=arr[1] -> result
+}
+`;
+
+  const ctx = await runQplan(script, { registry });
+  assert.deepStrictEqual(ctx.get("result"), { first: 10, second: 20 });
+}
+
 async function testCommentsIgnoredDuringExecution() {
   const script = `
 // header comment
@@ -255,6 +273,7 @@ step id="seeded" {
 await testEnvHooksAndPlanEvents();
 await testReturnShorthandAndStepNamespace();
 await testActionArgsResolveAgainstCtx();
+await testBracketIndexAccess();
 await testCommentsIgnoredDuringExecution();
 await testParamsSeedVariables();
 await testMissingParamsThrows();

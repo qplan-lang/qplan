@@ -203,7 +203,7 @@ const ctx = await runQplan(aiScript, {
   }
 });
 ```
-stepEvents를 이용해 UI/CLI/로그와 연동해 진행률을 표시하거나, jump/retry/error 이벤트를 받을 수 있습니다. 각 이벤트는 실행 컨텍스트(`env`, `metadata`, `ctx`, `registry`)를 함께 전달하므로 별도 WeakMap 없이 사용자/세션 정보를 연결할 수 있습니다. `onStepRetry`, `onStepJump` 등의 기존 훅도 그대로 제공되며 동일한 `(info, ...args, context)` 형태로 호출됩니다. `params` 는 실행 전에 ctx 변수로 주입되며 dot-path(`item.aaa`) 접근이 가능합니다. 외부 입력은 `@params` 한 줄에 콤마로 선언하고 공백은 허용되며, 누락되면 런타임 오류가 발생합니다.
+stepEvents를 이용해 UI/CLI/로그와 연동해 진행률을 표시하거나, jump/retry/error 이벤트를 받을 수 있습니다. 각 이벤트는 실행 컨텍스트(`env`, `metadata`, `ctx`, `registry`)를 함께 전달하므로 별도 WeakMap 없이 사용자/세션 정보를 연결할 수 있습니다. `onStepRetry`, `onStepJump` 등의 기존 훅도 그대로 제공되며 동일한 `(info, ...args, context)` 형태로 호출됩니다. `params` 는 실행 전에 ctx 변수로 주입되며 dot-path(`item.aaa`)와 배열 인덱스(`items[0]`) 접근이 가능합니다. 외부 입력은 `@params` 한 줄에 콤마로 선언하고 공백은 허용되며, 누락되면 런타임 오류가 발생합니다.
 
 ---
 

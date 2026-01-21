@@ -9,7 +9,7 @@ It contains both Version A (core grammar) and Version B (full EBNF), so **this f
 # 1. QPlan Language overview
 
 QPlan Language is a step-based workflow language where **every action runs inside a step block**.  
-Scripts flow through Tokenizer → Parser → AST → Executor, and values stored in the ExecutionContext (ctx) can be reused via dot paths like `stats.total`.
+Scripts flow through Tokenizer → Parser → AST → Executor, and values stored in the ExecutionContext (ctx) can be reused via dot paths like `stats.total` and bracket indices like `items[0]`.
 
 Minimal example:
 ```
@@ -99,7 +99,7 @@ Supported types:
 - Numbers
 - Strings `"text"`
 - JSON `[1,2,3]`, `{ "x":1 }`
-- ctx value references (if a string matches a ctx variable or a dot path like `stats.total`, it resolves automatically)
+- ctx value references (if a string matches a ctx variable, a dot path like `stats.total`, or a bracket index like `items[0]`, it resolves automatically)
 
 Example:
 ```
@@ -120,7 +120,7 @@ lines at the top of the script.
 ```
 Supported comparison operators: `> < >= <= == != EXISTS NOT_EXISTS`.  
 Combine conditions with `and`, `or`, `not`, and use parentheses `()` for precedence.  
-Operands may reference ctx variables or dot paths like `stats.average`.
+Operands may reference ctx variables, dot paths like `stats.average`, or bracket indices like `items[0]`.
 
 ## 2.6 Parallel execution
 ```
@@ -348,7 +348,7 @@ step id="sleepers" desc="Parallel tasks" {
 - Step-enforced structure: every action/control statement lives inside a step.  
 - Steps control flow via onError (fail/continue/retry/jump) and `jump`.  
 - Action = module name + optional options + key=value arguments + optional output capture.  
-- Arguments support numbers/strings/JSON/dot-path variable references.  
+- Arguments support numbers/strings/JSON/dot-path or bracket-index variable references.  
 - Built-in Future/Join/Parallel/Each/While/Set/Return/Jump constructs.  
 - If conditions compare numbers/strings, support EXISTS/NOT_EXISTS, and allow parentheses.  
 
