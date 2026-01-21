@@ -203,7 +203,7 @@ const ctx = await runQplan(aiScript, {
   }
 });
 ```
-stepEvents를 이용해 UI/CLI/로그와 연동해 진행률을 표시하거나, jump/retry/error 이벤트를 받을 수 있습니다. 각 이벤트는 실행 컨텍스트(`env`, `metadata`, `ctx`, `registry`)를 함께 전달하므로 별도 WeakMap 없이 사용자/세션 정보를 연결할 수 있습니다. `onStepRetry`, `onStepJump` 등의 기존 훅도 그대로 제공되며 동일한 `(info, ...args, context)` 형태로 호출됩니다. `params` 는 실행 전에 ctx 변수로 주입되며 dot-path(`item.aaa`)와 배열 인덱스(`items[0]`) 접근이 가능합니다. 외부 입력은 `@params` 한 줄에 콤마로 선언하고 공백은 허용되며, 누락되면 런타임 오류가 발생합니다.
+stepEvents를 이용해 UI/CLI/로그와 연동해 진행률을 표시하거나, jump/retry/error 이벤트를 받을 수 있습니다. 각 이벤트는 실행 컨텍스트(`env`, `metadata`, `ctx`, `registry`)를 함께 전달하므로 별도 WeakMap 없이 사용자/세션 정보를 연결할 수 있습니다. `onStepRetry`, `onStepJump` 등의 기존 훅도 그대로 제공되며 동일한 `(info, ...args, context)` 형태로 호출됩니다. `params` 는 실행 전에 ctx 변수로 주입되며 dot-path(`item.aaa`)와 배열 인덱스(`items[0]`) 접근이 가능합니다(배열은 `.length`/`.count` 지원). 외부 입력은 `@params` 한 줄에 콤마로 선언하고 공백은 허용되며, 누락되면 런타임 오류가 발생합니다.
 
 ---
 
@@ -373,7 +373,7 @@ await runQplan(aiScript, { registry });
   `step id="stepId" desc="설명" [-> resultVar] { ... }`
 
 - **조건 / 반복**:  
-  `if`, `while`, `each`
+  `if`, `while`, `each` (EXISTS 단항 연산자 지원)
 
 - **병렬 / 비동기**:  
   `parallel`, `future`, `join`
@@ -381,7 +381,7 @@ await runQplan(aiScript, { registry });
 - **제어**:  
   `stop`, `skip`, `jump`, `onError` 정책
 - **컨텍스트 접근**:  
-  ctx 변수 및 Step 결과는 `stats.total`, `order.detail.status` 처럼 점(dot) 표기로 하위 필드를 직접 참조할 수 있음
+  ctx 변수 및 Step 결과는 `stats.total`, `items[0]` 처럼 점(dot)/괄호 표기로 하위 필드를 직접 참조할 수 있음 (없는 값은 `undefined` 반환, 배열 `.length` 지원)
 
 자세한 문법은 별도의 grammar 문서를 참고할 수 있습니다.
 
