@@ -9,6 +9,11 @@ const script = `
 step id="each_test" {
   json parse data="[1,2,3,4]" -> nums
 
+  print "--- array.length is same array.count ---"
+  print "length:" nums.length
+  print "count:" nums.count
+  print "------------"
+
   # Basic each — sum every value
   math add a=0 b=0 -> basicTotal
   each value in nums {
