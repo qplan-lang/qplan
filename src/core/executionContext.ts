@@ -124,11 +124,6 @@ export class ExecutionContext {
       if (typeof current !== "object") {
         return { found: false, value: undefined };
       }
-      // Support .count or .length as alias on Arrays
-      if (Array.isArray(current) && (segment === "count" || segment === "length")) {
-        current = current.length;
-        continue;
-      }
       if (!(segment in current)) {
         return { found: false, value: undefined };
       }
