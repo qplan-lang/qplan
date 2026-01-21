@@ -7,6 +7,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.6.0] - 2026-01-21
+
+### Added
+- `@params` plan metadata for declaring external inputs (single line, comma-separated, whitespace allowed).
+- `params` runtime option for `runQplan`/`qplan.run` to seed ctx variables, with missing-param runtime errors.
+- Bracket index access for ctx variables (e.g., `items[0]`, `arr[0].foo`).
+- New examples/tests covering params, top-level meta, and bracket access.
+
+### Changed
+- Plan meta can now appear at the top of scripts without a `plan { ... }` wrapper.
+- Plan meta values accept unquoted single-line text (quotes still supported; single quotes allowed).
+- Step results now include `var` outputs when no explicit return is provided.
+- Semantic validation rejects invalid `@params` identifiers and reports them with actionable hints.
+
+### Updated
+- Documentation and prompt guidance for `@params` and bracket indexing across core docs and site.
+
+---
+
 ## [0.5.0] - 2026-01-12
 
 ### Added
