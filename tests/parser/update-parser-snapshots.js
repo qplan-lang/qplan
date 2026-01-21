@@ -69,7 +69,11 @@ async function main() {
   }
 
   const extraQplans = [
-    { name: "dot_access", file: "tests/parser/dot_access.qplan" }
+    { name: "dot_access", file: "tests/parser/dot_access.qplan" },
+    { name: "unicode_identifiers", file: "tests/parser/unicode_identifiers.qplan" },
+    { name: "comments", file: "tests/parser/comments.qplan" },
+    { name: "plan_meta", file: "tests/parser/plan_meta.qplan" },
+    { name: "expr_comprehensive", file: "tests/parser/expr_comprehensive.qplan" }
   ];
 
   for (const extra of extraQplans) {

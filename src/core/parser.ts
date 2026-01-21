@@ -124,7 +124,8 @@ export class Parser {
     | { value: any; kind: "identifier" }
     | { value: any; kind: "boolean" }
     | { value: any; kind: "json" }
-    | { value: any; kind: "null" } {
+    | { value: any; kind: "null" }
+    | { value: any; kind: "expression" } {
     const t = this.peek();
     if (t.type === TokenType.Boolean) {
       return { value: this.consume(TokenType.Boolean).value === "true", kind: "boolean" };
@@ -147,6 +148,11 @@ export class Parser {
     }
     if (t.type === TokenType.Symbol && (t.value === "[" || t.value === "{")) {
       return { value: this.parseJsonLiteralValue(), kind: "json" };
+    }
+    // Support parenthesized expressions in arguments: key=(a + b)
+    if (t.type === TokenType.Symbol && t.value === "(") {
+      const expr = this.parseExpression();
+      return { value: expr, kind: "expression" };
     }
     throw new ParserError(`Unexpected value '${t.value}'`, t.line);
   }
@@ -1023,8 +1029,47 @@ export class Parser {
     return expr;
   }
 
+  private hasComparisonInParen(): boolean {
+    let pos = this.pos + 1; // start after '('
+    let depth = 0;
+    const len = this.tokens.length;
+
+    while (pos < len) {
+      const t = this.tokens[pos];
+      if (t.type === TokenType.Symbol && t.value === "(") {
+        depth++;
+      } else if (t.type === TokenType.Symbol && t.value === ")") {
+        if (depth === 0) return false; // End of paren, no comparator found
+        depth--;
+      } else {
+        // Check for comparators at ANY depth
+        if (t.type === TokenType.Symbol) {
+          const val = t.value;
+          if (
+            val === ">" ||
+            val === "<" ||
+            val === ">=" ||
+            val === "<=" ||
+            val === "==" ||
+            val === "!="
+          )
+            return true;
+        } else if (t.type === TokenType.Identifier) {
+          const val = t.value.toUpperCase();
+          if (val === "EXISTS" || val === "NOT_EXISTS") return true;
+        } else if (t.type === TokenType.Keyword) {
+          const val = t.value.toUpperCase();
+          if (val === "AND" || val === "OR" || val === "NOT") return true;
+        }
+      }
+      pos++;
+    }
+    return false;
+  }
+
   private parseConditionPrimary(): ConditionExpression {
-    if (this.match(TokenType.Symbol, "(")) {
+    // Check for paren group around condition like IF (a > b)
+    if (this.check(TokenType.Symbol, "(") && this.hasComparisonInParen()) {
       this.consume(TokenType.Symbol, "(");
       const expr = this.parseConditionExpression();
       this.consume(TokenType.Symbol, ")");
@@ -1041,7 +1086,9 @@ export class Parser {
     }
 
     const line = this.peek().line;
-    const left = this.consumeIdentifierPath();
+
+    // Parse left side as expression
+    const left = this.parseExpression();
 
     const opToken = this.peek();
     let comparator: string;
@@ -1066,39 +1113,13 @@ export class Parser {
       );
     }
 
-    let rt = this.peek();
-    let isNegative = false;
-    if (rt.type === TokenType.Symbol && rt.value === "-") {
-      this.consume(TokenType.Symbol, "-");
-      isNegative = true;
-      rt = this.peek();
-    }
-
-    let right: any;
-    let rightType: "identifier" | "string" | "number" | "boolean" | "null";
-    if (rt.type === TokenType.Number) {
-      right = Number(this.consume(TokenType.Number).value);
-      if (isNegative) right = -right;
-      rightType = "number";
-    } else if (rt.type === TokenType.String) {
-      if (isNegative) throw new ParserError("Cannot negate a string", rt.line);
-      right = this.consumeString();
-      rightType = "string";
-    } else if (rt.type === TokenType.Identifier) {
-      if (isNegative) throw new ParserError("Cannot negate an identifier in simple condition", rt.line);
-      right = this.consumeIdentifierPath();
-      rightType = "identifier";
-    } else if (rt.type === TokenType.Boolean) {
-      if (isNegative) throw new ParserError("Cannot negate a boolean", rt.line);
-      right = this.consume(TokenType.Boolean).value === "true";
-      rightType = "boolean";
-    } else if (rt.type === TokenType.Null) {
-      if (isNegative) throw new ParserError("Cannot negate null", rt.line);
-      this.consume(TokenType.Null);
-      right = null;
-      rightType = "null";
+    // Parse right side as expression (for EXISTS/NOT_EXISTS, create a dummy literal)
+    let right: ExpressionNode;
+    if (comparator === "EXISTS" || comparator === "NOT_EXISTS") {
+      // For EXISTS/NOT_EXISTS, right side is not needed
+      right = { type: "Literal", value: undefined };
     } else {
-      throw new ParserError(`Invalid right operand '${rt.value}'`, rt.line);
+      right = this.parseExpression();
     }
 
     return {
@@ -1106,7 +1127,6 @@ export class Parser {
       left,
       comparator,
       right,
-      rightType,
       negated,
       line,
     };

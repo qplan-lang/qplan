@@ -102,6 +102,10 @@ const TEST_CASES = [
     name: "plan_meta",
     file: "tests/parser/plan_meta.qplan",
   },
+  {
+    name: "expr_comprehensive",
+    file: "tests/parser/expr_comprehensive.qplan",
+  },
 ];
 
 async function runTestCase(test) {

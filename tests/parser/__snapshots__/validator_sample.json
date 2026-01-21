@@ -11,21 +11,26 @@
           "type": "Block",
           "statements": [
             {
-              "type": "Action",
-              "module": "var",
-              "args": {
+              "type": "Var",
+              "variable": "count",
+              "expression": {
+                "type": "Literal",
                 "value": 0
-              },
-              "output": "count"
+              }
             },
             {
               "type": "While",
               "condition": {
                 "type": "Simple",
-                "left": "count",
+                "left": {
+                  "type": "Identifier",
+                  "name": "count"
+                },
                 "comparator": "<",
-                "right": 3,
-                "rightType": "number",
+                "right": {
+                  "type": "Literal",
+                  "value": 3
+                },
                 "negated": false
               },
               "block": {
@@ -56,8 +61,11 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "identifier",
-                    "name": "count"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Identifier",
+                      "name": "count"
+                    }
                   }
                 ],
                 "__suppressStore": true

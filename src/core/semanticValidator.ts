@@ -351,10 +351,14 @@ function validateConditionExpression(
     validateConditionExpression(expr.right, available, issues, stepId, planLabel);
     return;
   }
-  ensureReference(expr.left, expr.line, available, issues, undefined, stepId, planLabel);
-  if (expr.rightType === "identifier" && typeof expr.right === "string") {
-    ensureReference(expr.right, expr.line, available, issues, undefined, stepId, planLabel);
-  }
+  // Validate left and right expressions
+  const leftRefs = new Set<string>();
+  collectExpressionRefs(expr.left, leftRefs);
+  leftRefs.forEach(ref => ensureReference(ref, expr.line, available, issues, undefined, stepId, planLabel));
+  
+  const rightRefs = new Set<string>();
+  collectExpressionRefs(expr.right, rightRefs);
+  rightRefs.forEach(ref => ensureReference(ref, expr.line, available, issues, undefined, stepId, planLabel));
 }
 
 function collectExpressionRefs(expr: ExpressionNode, refs: Set<string>) {

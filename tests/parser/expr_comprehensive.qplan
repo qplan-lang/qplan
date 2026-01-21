@@ -1,0 +1,64 @@
+plan {
+    @title "Comprehensive Expression Support Test"
+    @summary "Tests for IF conditions with parentheses, mixed arithmetic, strings, and logical operators"
+
+    step id="test_var_expr" desc="Test VAR and String Expressions" {
+        # 1. VAR expressions
+        var "Count: " + 123 -> var_str_num
+        var 99 + " Problems" -> var_num_str
+        var ((1+2) * 3) -> var_param_calc
+        
+        # 2. Print with expressions
+        print "9.1 " + var_str_num
+        print "9.2 " + var_num_str
+        print "9.3 Result=" + var_param_calc
+    }
+
+    step id="test_if_edge_cases" desc="Test IF Edge Cases" {
+        var 600 -> num
+        var 1 -> const_val
+
+        # 3.1 Multiple parentheses around condition
+        # e.g. IF (((num > 500)))
+        if (((num > 500))) {
+            print "8.1 Multiple parentheses OK"
+        }
+
+        # 3.2 Mixed arithmetic and comparison parentheses
+        # e.g. IF ((num + 1) > (500 * 1))
+        if ((num + 1) > (500 * const_val)) {
+            print "8.2 Mixed arithmetic/comparison OK"
+        }
+
+        # 3.3 Logic operator with parentheses and arithmetic
+        if (num > 500) AND (1+1 == 2) {
+            print "8.3 Logic operator OK"
+        }
+
+        # 3.4 Complex arithmetic comparison
+        if ((1+2)*3 < (10/const_val)) {
+            print "8.4 Complex arithmetic OK"
+        }
+    }
+
+    step id="test_module_args" desc="Test Module Arguments" {
+        var 10 -> val
+        
+        # 4.1 Module arg mixed types (must use outer parens)
+        # We use 'util_const' or similar dummy module implicitly tested by parser
+        # Here we assume 'print' or generic module parsing logic.
+        # Note: 'print' uses collectPrintEntries so it's a bit special.
+        # But for parser testing (AST structure), we can use any module name.
+        
+        dummy_mod msg=("Mix: " + 123 + " + " + "Text") -> mod_res_1
+        
+        # 4.2 Module arg with nested calculation
+        dummy_mod msg=("Calc: " + (val * 10)) -> mod_res_2
+    }
+
+    step id="test_undefined_prop" desc="Test Optional Property Access" {
+        var {} -> emptyObj
+        # Should result in "undefined" string concatenation without error
+        print "Access: " + emptyObj.count
+    }
+}

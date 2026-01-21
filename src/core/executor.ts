@@ -260,6 +260,17 @@ export class Executor {
 
     const resolved: Record<string, any> = {};
     for (const [key, value] of Object.entries(args)) {
+      // Check if value is an ExpressionNode (from parenthesized expressions)
+      if (value && typeof value === "object" && "type" in value) {
+        const nodeType = (value as any).type;
+        if (nodeType === "Literal" || nodeType === "Identifier" ||
+          nodeType === "BinaryExpression" || nodeType === "UnaryExpression") {
+          // It's an ExpressionNode, evaluate it
+          resolved[key] = this.evaluateExpressionNode(value, ctx);
+          continue;
+        }
+      }
+
       if (typeof value === "string" && ctx.has(value)) {
         resolved[key] = ctx.get(value);
       } else {
@@ -307,25 +318,53 @@ export class Executor {
   }
 
   private evaluateClause(clause: ConditionClause, ctx: ExecutionContext): boolean {
-    const left = ctx.get(clause.left);
-    let right = clause.right;
-    if (clause.rightType === "identifier" && typeof right === "string") {
-      right = ctx.get(right);
-    } else if (typeof right === "string" && ctx.has(right)) {
-      right = ctx.get(right);
+    // Special handling for EXISTS: allow missing simple identifiers
+    let left: any;
+
+    if (
+      (clause.comparator === "EXISTS" || clause.comparator === "NOT_EXISTS") &&
+      clause.left.type === "Identifier" &&
+      !clause.left.name.includes(".")
+    ) {
+      // If identifier is missing, treat as undefined (don't throw)
+      left = ctx.has(clause.left.name) ? ctx.get(clause.left.name) : undefined;
+    } else {
+      left = this.evaluateExpressionNode(clause.left, ctx);
     }
+
+    // Right operand is optional (for unary operators like EXISTS)
+    const right = clause.right
+      ? this.evaluateExpressionNode(clause.right, ctx)
+      : undefined;
 
     let result: boolean;
     switch (clause.comparator) {
-      case ">": result = left > right; break;
-      case "<": result = left < right; break;
-      case ">=": result = left >= right; break;
-      case "<=": result = left <= right; break;
-      case "==": result = left == right; break;
-      case "!=": result = left != right; break;
-      case "EXISTS": result = left !== undefined; break;
-      case "NOT_EXISTS": result = left === undefined; break;
-      default: throw new Error(`Unknown comparator: ${clause.comparator}`);
+      case ">":
+        result = left > right;
+        break;
+      case "<":
+        result = left < right;
+        break;
+      case ">=":
+        result = left >= right;
+        break;
+      case "<=":
+        result = left <= right;
+        break;
+      case "==":
+        result = left == right;
+        break;
+      case "!=":
+        result = left != right;
+        break;
+      case "EXISTS":
+        result = left !== undefined && left !== null && left !== "";
+        break;
+      case "NOT_EXISTS":
+        result = left === undefined || left === null || left === "";
+        break;
+      default:
+        throw new Error(`Unknown comparator: ${clause.comparator}`);
     }
 
     return clause.negated ? !result : result;
@@ -529,6 +568,27 @@ export class Executor {
       case "Literal":
         return expr.value;
       case "Identifier":
+        // Support 'undefined' as a value
+        if (expr.name === "undefined") {
+          return undefined;
+        }
+
+        // Dot notation: allow undefined if base object exists (like optional chaining)
+        if (expr.name.includes(".")) {
+          const val = ctx.get(expr.name);
+          if (val !== undefined) return val;
+
+          // If val is undefined, verify if the base identifier exists.
+          // If base missing -> Error. If base exists -> return undefined.
+          const baseKey = expr.name.split(".")[0];
+          if (!ctx.has(baseKey)) {
+            throw new Error(
+              `Unknown identifier '${baseKey}' (part of '${expr.name}')`
+            );
+          }
+          return undefined;
+        }
+
         if (!ctx.has(expr.name)) {
           throw new Error(`Unknown identifier '${expr.name}' in set expression`);
         }

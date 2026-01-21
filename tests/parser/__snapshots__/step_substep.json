@@ -11,52 +11,52 @@
           "type": "Block",
           "statements": [
             {
-              "type": "Action",
-              "module": "var",
-              "args": {
+              "type": "Var",
+              "variable": "prepareResult",
+              "expression": {
+                "type": "Literal",
                 "value": {
                   "numbers": []
                 }
-              },
-              "output": "prepareResult"
+              }
             },
             {
-              "type": "Action",
-              "module": "var",
-              "args": {
+              "type": "Var",
+              "variable": "aggregateResult",
+              "expression": {
+                "type": "Literal",
                 "value": {
                   "sum": 0
                 }
-              },
-              "output": "aggregateResult"
+              }
             },
             {
-              "type": "Action",
-              "module": "var",
-              "args": {
+              "type": "Var",
+              "variable": "reportResult",
+              "expression": {
+                "type": "Literal",
                 "value": {
                   "message": "pending"
                 }
-              },
-              "output": "reportResult"
+              }
             },
             {
-              "type": "Action",
-              "module": "var",
-              "args": {
+              "type": "Var",
+              "variable": "finalizeResult",
+              "expression": {
+                "type": "Literal",
                 "value": {
                   "status": "pending"
                 }
-              },
-              "output": "finalizeResult"
+              }
             },
             {
-              "type": "Action",
-              "module": "var",
-              "args": {
+              "type": "Var",
+              "variable": "total",
+              "expression": {
+                "type": "Literal",
                 "value": 0
-              },
-              "output": "total"
+              }
             },
             {
               "type": "Step",
@@ -66,15 +66,15 @@
                 "type": "Block",
                 "statements": [
                   {
-                    "type": "Action",
-                    "module": "var",
-                    "args": {
+                    "type": "Var",
+                    "variable": "numbers",
+                    "expression": {
+                      "type": "Literal",
                       "value": [
                         1,
                         2
                       ]
-                    },
-                    "output": "numbers"
+                    }
                   },
                   {
                     "type": "Set",
@@ -130,10 +130,15 @@
                           "type": "If",
                           "condition": {
                             "type": "Simple",
-                            "left": "total",
+                            "left": {
+                              "type": "Identifier",
+                              "name": "total"
+                            },
                             "comparator": ">",
-                            "right": 6,
-                            "rightType": "number",
+                            "right": {
+                              "type": "Literal",
+                              "value": 6
+                            },
                             "negated": false
                           },
                           "thenBlock": {
@@ -197,10 +202,15 @@
                     "type": "If",
                     "condition": {
                       "type": "Simple",
-                      "left": "total",
+                      "left": {
+                        "type": "Identifier",
+                        "name": "total"
+                      },
                       "comparator": "<",
-                      "right": 6,
-                      "rightType": "number",
+                      "right": {
+                        "type": "Literal",
+                        "value": 6
+                      },
                       "negated": false
                     },
                     "thenBlock": {
@@ -212,8 +222,11 @@
                           "args": {
                             "__entries": [
                               {
-                                "kind": "literal",
-                                "value": "Total too small, restarting"
+                                "kind": "expression",
+                                "value": {
+                                  "type": "Literal",
+                                  "value": "Total too small, restarting"
+                                }
                               }
                             ],
                             "__suppressStore": true
@@ -221,17 +234,17 @@
                           "output": "__print_dummy_0"
                         },
                         {
-                          "type": "Action",
-                          "module": "var",
-                          "args": {
+                          "type": "Var",
+                          "variable": "expanded",
+                          "expression": {
+                            "type": "Literal",
                             "value": [
                               1,
                               2,
                               3,
                               4
                             ]
-                          },
-                          "output": "expanded"
+                          }
                         },
                         {
                           "type": "Set",
@@ -272,12 +285,18 @@
                     "args": {
                       "__entries": [
                         {
-                          "kind": "literal",
-                          "value": "Total sum:"
+                          "kind": "expression",
+                          "value": {
+                            "type": "Literal",
+                            "value": "Total sum:"
+                          }
                         },
                         {
-                          "kind": "identifier",
-                          "name": "total"
+                          "kind": "expression",
+                          "value": {
+                            "type": "Identifier",
+                            "name": "total"
+                          }
                         }
                       ],
                       "__suppressStore": true
@@ -312,12 +331,18 @@
                     "args": {
                       "__entries": [
                         {
-                          "kind": "literal",
-                          "value": "Final total:"
+                          "kind": "expression",
+                          "value": {
+                            "type": "Literal",
+                            "value": "Final total:"
+                          }
                         },
                         {
-                          "kind": "identifier",
-                          "name": "total"
+                          "kind": "expression",
+                          "value": {
+                            "type": "Identifier",
+                            "name": "total"
+                          }
                         }
                       ],
                       "__suppressStore": true
@@ -408,12 +433,18 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "pipeline:"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "pipeline:"
+                    }
                   },
                   {
-                    "kind": "identifier",
-                    "name": "pipeline"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Identifier",
+                      "name": "pipeline"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -426,12 +457,18 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "prepare:"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "prepare:"
+                    }
                   },
                   {
-                    "kind": "identifier",
-                    "name": "pipeline.prepared"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Identifier",
+                      "name": "pipeline.prepared"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -444,12 +481,18 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "aggregate:"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "aggregate:"
+                    }
                   },
                   {
-                    "kind": "identifier",
-                    "name": "pipeline.aggregate"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Identifier",
+                      "name": "pipeline.aggregate"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -462,12 +505,18 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "report:"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "report:"
+                    }
                   },
                   {
-                    "kind": "identifier",
-                    "name": "pipeline.report"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Identifier",
+                      "name": "pipeline.report"
+                    }
                   }
                 ],
                 "__suppressStore": true

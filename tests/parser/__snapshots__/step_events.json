@@ -11,24 +11,24 @@
           "type": "Block",
           "statements": [
             {
-              "type": "Action",
-              "module": "var",
-              "args": {
+              "type": "Var",
+              "variable": "total",
+              "expression": {
+                "type": "Literal",
                 "value": 0
-              },
-              "output": "total"
+              }
             },
             {
-              "type": "Action",
-              "module": "var",
-              "args": {
+              "type": "Var",
+              "variable": "nums",
+              "expression": {
+                "type": "Literal",
                 "value": [
                   1,
                   2,
                   3
                 ]
-              },
-              "output": "nums"
+              }
             }
           ]
         }
@@ -77,10 +77,15 @@
               "type": "If",
               "condition": {
                 "type": "Simple",
-                "left": "total",
+                "left": {
+                  "type": "Identifier",
+                  "name": "total"
+                },
                 "comparator": ">=",
-                "right": 3,
-                "rightType": "number",
+                "right": {
+                  "type": "Literal",
+                  "value": 3
+                },
                 "negated": false
               },
               "thenBlock": {
@@ -99,8 +104,11 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "branch continued"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "branch continued"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -123,8 +131,11 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "identifier",
-                    "name": "total"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Identifier",
+                      "name": "total"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -137,8 +148,11 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "identifier",
-                    "name": "sum"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Identifier",
+                      "name": "sum"
+                    }
                   }
                 ],
                 "__suppressStore": true

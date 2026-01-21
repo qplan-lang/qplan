@@ -11,12 +11,12 @@
           "type": "Block",
           "statements": [
             {
-              "type": "Action",
-              "module": "var",
-              "args": {
+              "type": "Var",
+              "variable": "retryCounter",
+              "expression": {
+                "type": "Literal",
                 "value": 0
-              },
-              "output": "retryCounter"
+              }
             },
             {
               "type": "Action",
@@ -24,8 +24,11 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "Init complete"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "Init complete"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -49,8 +52,11 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "Fail example start"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "Fail example start"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -76,8 +82,11 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "This line never runs"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "This line never runs"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -101,8 +110,11 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "Continue example start"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "Continue example start"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -128,8 +140,11 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "Continue example end"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "Continue example end"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -153,12 +168,18 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "Retry example, current counter ="
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "Retry example, current counter ="
+                    }
                   },
                   {
-                    "kind": "identifier",
-                    "name": "retryCounter"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Identifier",
+                      "name": "retryCounter"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -169,10 +190,15 @@
               "type": "If",
               "condition": {
                 "type": "Simple",
-                "left": "retryCounter",
+                "left": {
+                  "type": "Identifier",
+                  "name": "retryCounter"
+                },
                 "comparator": "<",
-                "right": 1,
-                "rightType": "number",
+                "right": {
+                  "type": "Literal",
+                  "value": 1
+                },
                 "negated": false
               },
               "thenBlock": {
@@ -259,8 +285,11 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "Jump example start"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "Jump example start"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -296,8 +325,11 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "Running recovery step"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "Running recovery step"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -332,12 +364,18 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "retry result:"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "retry result:"
+                    }
                   },
                   {
-                    "kind": "identifier",
-                    "name": "retryExample"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Identifier",
+                      "name": "retryExample"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -350,12 +388,18 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "recovery result:"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "recovery result:"
+                    }
                   },
                   {
-                    "kind": "identifier",
-                    "name": "recovery"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Identifier",
+                      "name": "recovery"
+                    }
                   }
                 ],
                 "__suppressStore": true

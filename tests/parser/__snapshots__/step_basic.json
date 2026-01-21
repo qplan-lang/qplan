@@ -11,24 +11,24 @@
           "type": "Block",
           "statements": [
             {
-              "type": "Action",
-              "module": "var",
-              "args": {
+              "type": "Var",
+              "variable": "total",
+              "expression": {
+                "type": "Literal",
                 "value": 0
-              },
-              "output": "total"
+              }
             },
             {
-              "type": "Action",
-              "module": "var",
-              "args": {
+              "type": "Var",
+              "variable": "nums",
+              "expression": {
+                "type": "Literal",
                 "value": [
                   1,
                   2,
                   3
                 ]
-              },
-              "output": "nums"
+              }
             },
             {
               "type": "Action",
@@ -36,8 +36,11 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "init done"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "init done"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -80,8 +83,11 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "loop start"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "loop start"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -118,12 +124,18 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "loop end"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "loop end"
+                    }
                   },
                   {
-                    "kind": "identifier",
-                    "name": "total"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Identifier",
+                      "name": "total"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -157,10 +169,15 @@
               "type": "If",
               "condition": {
                 "type": "Simple",
-                "left": "total",
+                "left": {
+                  "type": "Identifier",
+                  "name": "total"
+                },
                 "comparator": "<=",
-                "right": 6,
-                "rightType": "number",
+                "right": {
+                  "type": "Literal",
+                  "value": 6
+                },
                 "negated": false
               },
               "thenBlock": {
@@ -179,8 +196,11 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "continue"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "continue"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -203,8 +223,11 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "=== finalize ==="
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "=== finalize ==="
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -217,12 +240,18 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "total:"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "total:"
+                    }
                   },
                   {
-                    "kind": "identifier",
-                    "name": "total"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Identifier",
+                      "name": "total"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -235,12 +264,18 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "initResult:"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "initResult:"
+                    }
                   },
                   {
-                    "kind": "identifier",
-                    "name": "init"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Identifier",
+                      "name": "init"
+                    }
                   }
                 ],
                 "__suppressStore": true
@@ -253,12 +288,18 @@
               "args": {
                 "__entries": [
                   {
-                    "kind": "literal",
-                    "value": "loopResult:"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Literal",
+                      "value": "loopResult:"
+                    }
                   },
                   {
-                    "kind": "identifier",
-                    "name": "loop"
+                    "kind": "expression",
+                    "value": {
+                      "type": "Identifier",
+                      "name": "loop"
+                    }
                   }
                 ],
                 "__suppressStore": true

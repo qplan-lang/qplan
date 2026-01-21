@@ -11,12 +11,12 @@
           "type": "Block",
           "statements": [
             {
-              "type": "Action",
-              "module": "var",
-              "args": {
+              "type": "Var",
+              "variable": "초기값",
+              "expression": {
+                "type": "Literal",
                 "value": 1
-              },
-              "output": "초기값"
+              }
             },
             {
               "type": "Action",

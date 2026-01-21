@@ -11,9 +11,10 @@
           "type": "Block",
           "statements": [
             {
-              "type": "Action",
-              "module": "var",
-              "args": {
+              "type": "Var",
+              "variable": "info",
+              "expression": {
+                "type": "Literal",
                 "value": {
                   "total": 28,
                   "average": 4,
@@ -21,8 +22,7 @@
                     "status": "ok"
                   }
                 }
-              },
-              "output": "info"
+              }
             },
             {
               "type": "Return",
@@ -74,10 +74,15 @@
               "type": "If",
               "condition": {
                 "type": "Simple",
-                "left": "calc.average",
+                "left": {
+                  "type": "Identifier",
+                  "name": "calc.average"
+                },
                 "comparator": ">=",
-                "right": 4,
-                "rightType": "number",
+                "right": {
+                  "type": "Literal",
+                  "value": 4
+                },
                 "negated": false
               },
               "thenBlock": {
@@ -89,8 +94,11 @@
                     "args": {
                       "__entries": [
                         {
-                          "kind": "literal",
-                          "value": "ok"
+                          "kind": "expression",
+                          "value": {
+                            "type": "Literal",
+                            "value": "ok"
+                          }
                         }
                       ],
                       "__suppressStore": true
@@ -108,8 +116,11 @@
                     "args": {
                       "__entries": [
                         {
-                          "kind": "literal",
-                          "value": "low"
+                          "kind": "expression",
+                          "value": {
+                            "type": "Literal",
+                            "value": "low"
+                          }
                         }
                       ],
                       "__suppressStore": true

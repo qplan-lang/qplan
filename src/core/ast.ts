@@ -88,11 +88,10 @@ export type ConditionExpression = ConditionClause | ConditionBinary;
 
 export interface ConditionClause {
   type: "Simple";
-  left: string;
+  left: ExpressionNode;
   negated?: boolean;
   comparator: string;
-  right: any;
-  rightType?: "identifier" | "string" | "number" | "boolean" | "null";
+  right: ExpressionNode;
   line: number;
 }
 

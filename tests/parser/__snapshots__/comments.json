@@ -10,20 +10,20 @@
           "type": "Block",
           "statements": [
             {
-              "type": "Action",
-              "module": "var",
-              "args": {
+              "type": "Var",
+              "variable": "first",
+              "expression": {
+                "type": "Literal",
                 "value": 1
-              },
-              "output": "first"
+              }
             },
             {
-              "type": "Action",
-              "module": "var",
-              "args": {
+              "type": "Var",
+              "variable": "second",
+              "expression": {
+                "type": "Literal",
                 "value": 2
-              },
-              "output": "second"
+              }
             },
             {
               "type": "Action",

@@ -10,12 +10,12 @@
           "type": "Block",
           "statements": [
             {
-              "type": "Action",
-              "module": "var",
-              "args": {
+              "type": "Var",
+              "variable": "x",
+              "expression": {
+                "type": "Literal",
                 "value": 1
-              },
-              "output": "x"
+              }
             },
             {
               "type": "Return",

@@ -30,10 +30,17 @@ if (total > 60 and count > 3) or (total > 50 and count == 4) {
 }
 
 # 4) EXISTS / NOT_EXISTS
-if value EXISTS dummy or nothing NOT_EXISTS dummy2 {
+if value EXISTS or nothing NOT_EXISTS {
   echo msg="exists branch" -> msg4
 } else {
   echo msg="not exists" -> msg4
+}
+
+var "" -> value2
+if value2 not_exists {
+  echo msg="value2 not exists" -> msg4_1
+} else {
+  echo msg="value2 exists" -> msg4_1
 }
 
 # 5) Boolean Literals (true/false)

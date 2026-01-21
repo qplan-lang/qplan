@@ -1,0 +1,519 @@
+{
+  "type": "Root",
+  "block": {
+    "type": "Block",
+    "statements": [
+      {
+        "type": "Step",
+        "id": "test_var_expr",
+        "desc": "Test VAR and String Expressions",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Var",
+              "variable": "var_str_num",
+              "expression": {
+                "type": "BinaryExpression",
+                "operator": "+",
+                "left": {
+                  "type": "Literal",
+                  "value": "Count: "
+                },
+                "right": {
+                  "type": "Literal",
+                  "value": 123
+                }
+              }
+            },
+            {
+              "type": "Var",
+              "variable": "var_num_str",
+              "expression": {
+                "type": "BinaryExpression",
+                "operator": "+",
+                "left": {
+                  "type": "Literal",
+                  "value": 99
+                },
+                "right": {
+                  "type": "Literal",
+                  "value": " Problems"
+                }
+              }
+            },
+            {
+              "type": "Var",
+              "variable": "var_param_calc",
+              "expression": {
+                "type": "BinaryExpression",
+                "operator": "*",
+                "left": {
+                  "type": "BinaryExpression",
+                  "operator": "+",
+                  "left": {
+                    "type": "Literal",
+                    "value": 1
+                  },
+                  "right": {
+                    "type": "Literal",
+                    "value": 2
+                  }
+                },
+                "right": {
+                  "type": "Literal",
+                  "value": 3
+                }
+              }
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "expression",
+                    "value": {
+                      "type": "BinaryExpression",
+                      "operator": "+",
+                      "left": {
+                        "type": "Literal",
+                        "value": "9.1 "
+                      },
+                      "right": {
+                        "type": "Identifier",
+                        "name": "var_str_num"
+                      }
+                    }
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_0"
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "expression",
+                    "value": {
+                      "type": "BinaryExpression",
+                      "operator": "+",
+                      "left": {
+                        "type": "Literal",
+                        "value": "9.2 "
+                      },
+                      "right": {
+                        "type": "Identifier",
+                        "name": "var_num_str"
+                      }
+                    }
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_1"
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "expression",
+                    "value": {
+                      "type": "BinaryExpression",
+                      "operator": "+",
+                      "left": {
+                        "type": "Literal",
+                        "value": "9.3 Result="
+                      },
+                      "right": {
+                        "type": "Identifier",
+                        "name": "var_param_calc"
+                      }
+                    }
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_2"
+            }
+          ]
+        }
+      },
+      {
+        "type": "Step",
+        "id": "test_if_edge_cases",
+        "desc": "Test IF Edge Cases",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Var",
+              "variable": "num",
+              "expression": {
+                "type": "Literal",
+                "value": 600
+              }
+            },
+            {
+              "type": "Var",
+              "variable": "const_val",
+              "expression": {
+                "type": "Literal",
+                "value": 1
+              }
+            },
+            {
+              "type": "If",
+              "condition": {
+                "type": "Simple",
+                "left": {
+                  "type": "Identifier",
+                  "name": "num"
+                },
+                "comparator": ">",
+                "right": {
+                  "type": "Literal",
+                  "value": 500
+                },
+                "negated": false
+              },
+              "thenBlock": {
+                "type": "Block",
+                "statements": [
+                  {
+                    "type": "Action",
+                    "module": "print",
+                    "args": {
+                      "__entries": [
+                        {
+                          "kind": "expression",
+                          "value": {
+                            "type": "Literal",
+                            "value": "8.1 Multiple parentheses OK"
+                          }
+                        }
+                      ],
+                      "__suppressStore": true
+                    },
+                    "output": "__print_dummy_3"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "If",
+              "condition": {
+                "type": "Simple",
+                "left": {
+                  "type": "BinaryExpression",
+                  "operator": "+",
+                  "left": {
+                    "type": "Identifier",
+                    "name": "num"
+                  },
+                  "right": {
+                    "type": "Literal",
+                    "value": 1
+                  }
+                },
+                "comparator": ">",
+                "right": {
+                  "type": "BinaryExpression",
+                  "operator": "*",
+                  "left": {
+                    "type": "Literal",
+                    "value": 500
+                  },
+                  "right": {
+                    "type": "Identifier",
+                    "name": "const_val"
+                  }
+                },
+                "negated": false
+              },
+              "thenBlock": {
+                "type": "Block",
+                "statements": [
+                  {
+                    "type": "Action",
+                    "module": "print",
+                    "args": {
+                      "__entries": [
+                        {
+                          "kind": "expression",
+                          "value": {
+                            "type": "Literal",
+                            "value": "8.2 Mixed arithmetic/comparison OK"
+                          }
+                        }
+                      ],
+                      "__suppressStore": true
+                    },
+                    "output": "__print_dummy_4"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "If",
+              "condition": {
+                "type": "Binary",
+                "operator": "AND",
+                "left": {
+                  "type": "Simple",
+                  "left": {
+                    "type": "Identifier",
+                    "name": "num"
+                  },
+                  "comparator": ">",
+                  "right": {
+                    "type": "Literal",
+                    "value": 500
+                  },
+                  "negated": false
+                },
+                "right": {
+                  "type": "Simple",
+                  "left": {
+                    "type": "BinaryExpression",
+                    "operator": "+",
+                    "left": {
+                      "type": "Literal",
+                      "value": 1
+                    },
+                    "right": {
+                      "type": "Literal",
+                      "value": 1
+                    }
+                  },
+                  "comparator": "==",
+                  "right": {
+                    "type": "Literal",
+                    "value": 2
+                  },
+                  "negated": false
+                }
+              },
+              "thenBlock": {
+                "type": "Block",
+                "statements": [
+                  {
+                    "type": "Action",
+                    "module": "print",
+                    "args": {
+                      "__entries": [
+                        {
+                          "kind": "expression",
+                          "value": {
+                            "type": "Literal",
+                            "value": "8.3 Logic operator OK"
+                          }
+                        }
+                      ],
+                      "__suppressStore": true
+                    },
+                    "output": "__print_dummy_5"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "If",
+              "condition": {
+                "type": "Simple",
+                "left": {
+                  "type": "BinaryExpression",
+                  "operator": "*",
+                  "left": {
+                    "type": "BinaryExpression",
+                    "operator": "+",
+                    "left": {
+                      "type": "Literal",
+                      "value": 1
+                    },
+                    "right": {
+                      "type": "Literal",
+                      "value": 2
+                    }
+                  },
+                  "right": {
+                    "type": "Literal",
+                    "value": 3
+                  }
+                },
+                "comparator": "<",
+                "right": {
+                  "type": "BinaryExpression",
+                  "operator": "/",
+                  "left": {
+                    "type": "Literal",
+                    "value": 10
+                  },
+                  "right": {
+                    "type": "Identifier",
+                    "name": "const_val"
+                  }
+                },
+                "negated": false
+              },
+              "thenBlock": {
+                "type": "Block",
+                "statements": [
+                  {
+                    "type": "Action",
+                    "module": "print",
+                    "args": {
+                      "__entries": [
+                        {
+                          "kind": "expression",
+                          "value": {
+                            "type": "Literal",
+                            "value": "8.4 Complex arithmetic OK"
+                          }
+                        }
+                      ],
+                      "__suppressStore": true
+                    },
+                    "output": "__print_dummy_6"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        "type": "Step",
+        "id": "test_module_args",
+        "desc": "Test Module Arguments",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Var",
+              "variable": "val",
+              "expression": {
+                "type": "Literal",
+                "value": 10
+              }
+            },
+            {
+              "type": "Action",
+              "module": "dummy_mod",
+              "args": {
+                "msg": {
+                  "type": "BinaryExpression",
+                  "operator": "+",
+                  "left": {
+                    "type": "BinaryExpression",
+                    "operator": "+",
+                    "left": {
+                      "type": "BinaryExpression",
+                      "operator": "+",
+                      "left": {
+                        "type": "Literal",
+                        "value": "Mix: "
+                      },
+                      "right": {
+                        "type": "Literal",
+                        "value": 123
+                      }
+                    },
+                    "right": {
+                      "type": "Literal",
+                      "value": " + "
+                    }
+                  },
+                  "right": {
+                    "type": "Literal",
+                    "value": "Text"
+                  }
+                }
+              },
+              "output": "mod_res_1"
+            },
+            {
+              "type": "Action",
+              "module": "dummy_mod",
+              "args": {
+                "msg": {
+                  "type": "BinaryExpression",
+                  "operator": "+",
+                  "left": {
+                    "type": "Literal",
+                    "value": "Calc: "
+                  },
+                  "right": {
+                    "type": "BinaryExpression",
+                    "operator": "*",
+                    "left": {
+                      "type": "Identifier",
+                      "name": "val"
+                    },
+                    "right": {
+                      "type": "Literal",
+                      "value": 10
+                    }
+                  }
+                }
+              },
+              "output": "mod_res_2"
+            }
+          ]
+        }
+      },
+      {
+        "type": "Step",
+        "id": "test_undefined_prop",
+        "desc": "Test Optional Property Access",
+        "block": {
+          "type": "Block",
+          "statements": [
+            {
+              "type": "Var",
+              "variable": "emptyObj",
+              "expression": {
+                "type": "Literal",
+                "value": {}
+              }
+            },
+            {
+              "type": "Action",
+              "module": "print",
+              "args": {
+                "__entries": [
+                  {
+                    "kind": "expression",
+                    "value": {
+                      "type": "BinaryExpression",
+                      "operator": "+",
+                      "left": {
+                        "type": "Literal",
+                        "value": "Access: "
+                      },
+                      "right": {
+                        "type": "Identifier",
+                        "name": "emptyObj.count"
+                      }
+                    }
+                  }
+                ],
+                "__suppressStore": true
+              },
+              "output": "__print_dummy_7"
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "planMeta": {
+    "title": "Comprehensive Expression Support Test",
+    "summary": "Tests for IF conditions with parentheses, mixed arithmetic, strings, and logical operators"
+  }
+}
