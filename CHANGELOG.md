@@ -7,6 +7,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.6.1] - 2026-01-21
+
+### Added
+- Array properties `.length` and `.count` support for measuring array size in expressions.
+- `null` literal support in variable assignment (e.g., `var null -> x`).
+
+### Changed
+- `EXISTS` and `NOT_EXISTS` operators are now strictly unary and treat `undefined`, `null`, and empty strings (`""`) as false (non-existent).
+- Object property access via dot-notation now returns `undefined` for missing properties instead of throwing an error (Safe Access).
+
+### Fixed
+- Parser error when using parentheses in `IF` conditions (e.g., `if ((a + 3) > b)`).
+- "Unknown identifier" runtime error when using `EXISTS` on undefined variables.
+
 ## [0.6.0] - 2026-01-21
 
 ### Added
