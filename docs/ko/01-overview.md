@@ -20,7 +20,7 @@ QPlan은 **AI가 설계하고 사람이 검증할 수 있는 Step 기반 워크�
 1. **Tokenizer & Parser** — `src/core/tokenizer.ts`, `parser.ts` 구성. 스크립트를 토큰화 후 AST(Action/If/Parallel/Each/Step/JUMP 등)로 변환한다. Parser가 Step 내부 여부를 엄격히 검사하므로 Action/제어문은 Step 밖에서 사용할 수 없다.
 2. **Semantic Validator & Step Resolver** — `semanticValidator.ts` 는 jump/onError 대상 Step을 검증하고 경고 리스트를 반환한다. `stepResolver.ts` 는 Step 트리를 분석해 order/path/parent 관계를 만든다.
 3. **Executor & StepController** — `executor.ts` 는 AST를 순차/병렬 실행하고, Future/Join/Parallel/Each/While/Jump/Return/Set 을 모두 다룬다. `stepController.ts` 는 Step의 onError(fail/continue/retry/jump) 정책, retry 루프, Step 이벤트 방출을 담당한다.
-4. **ExecutionContext(ctx)** — `executionContext.ts` 는 `set/get/has/toJSON` 을 제공하는 런타임 저장소다. `stats.total` 처럼 dot-path 접근을 지원하며, 실행 옵션으로 전달한 `env`, `metadata` 를 `ctx.getEnv()`, `ctx.getMetadata()` 로 읽어 모듈에서 사용자/세션 정보를 활용할 수 있다.
+4. **ExecutionContext(ctx)** — `executionContext.ts` 는 `set/get/has/toJSON` 을 제공하는 런타임 저장소다. `stats.total` 같은 dot-path나 `items[0]` 같은 배열 인덱스 접근을 지원하며, 실행 옵션으로 전달한 `env`, `metadata` 를 `ctx.getEnv()`, `ctx.getMetadata()` 로 읽어 모듈에서 사용자/세션 정보를 활용할 수 있다.
 5. **ModuleRegistry & ActionModule** — `moduleRegistry.ts` 는 모듈 등록/조회/메타데이터 추출을 관리한다. ActionModule 은 함수형이나 `execute()` 메서드를 가진 객체형 모두 지원하며 `id/description/usage/inputs` 메타데이터를 포함할 수 있다. `src/index.ts` 에서 `registry` 를 export 하며 `basicModules` 를 자동 등록한다.
 6. **Prompt Builders** — `buildAIPlanPrompt`, `buildQplanSuperPrompt`, `buildAIGrammarSummary` 가 registry에 등록된 모듈과 문법 요약을 묶어 LLM에 전달할 시스템/사용자 프롬프트를 동적으로 만들어 준다.
 
@@ -30,7 +30,7 @@ QPlan은 **AI가 설계하고 사람이 검증할 수 있는 Step 기반 워크�
 - Step 내부에서 `return key=value ...` 를 사용하면 Step 결과를 명시적으로 구성하고, 없으면 마지막 Action 결과가 Step 결과가 된다.
 - `jump to="stepId"` 문으로 Step 간 이동이 가능하다. Jump 대상은 Step ID여야 하며, semantic validator가 존재 여부를 검사한다.
 - Step 은 중첩(Sub-step) 가능하며, Step 트리는 `order`(실행 순번)와 `path`(예: `1.2.3`)가 자동 부여된다.
-- `runQplan(script, { registry, env, metadata, stepEvents })` 형태로 registry 주입 및 실행 컨텍스트를 전달하고, Step/Plan 이벤트를 관찰할 수 있다.
+- `runQplan(script, { registry, env, metadata, params, stepEvents })` 형태로 registry 주입 및 실행 컨텍스트를 전달하고, Step/Plan 이벤트를 관찰할 수 있다.
 
 ```ts
 import { runQplan, registry } from "qplan";
@@ -39,6 +39,7 @@ await runQplan(script, {
   registry,
   env: { userId: "u-123" },
   metadata: { sessionId: "s-456" },
+  params: { keyword: "foo" },
   stepEvents: {
     onPlanStart(plan) { console.log("플랜 시작", plan.runId, plan.totalSteps); },
     onStepStart(info, context) { console.log("▶", info.order, info.stepId, context?.env); },
@@ -57,7 +58,7 @@ await runQplan(script, {
 - **Set & Return** — `set total = (total + delta) * 0.5` 처럼 산술 표현식을 기존 변수에 적용하고, `return key=value ...` 로 Step 출력 객체를 직접 구성한다.
 - **Break / Continue** — Each, While 루프 안에서 루프 탈출/다음 반복으로 이동.
 - **Stop / Skip** — Plan 전체 중단 또는 현재 Step 건너뛰기.
-- **ExecutionContext** — `ctx.get("order.summary.status")` 처럼 dot-path로 하위 값을 읽을 수 있고, `ctx.getEnv()`, `ctx.getMetadata()` 로 실행 시 전달한 컨텍스트에 접근할 수 있으며, `ctx.toJSON()` 으로 전체 상태를 덤프할 수 있다.
+- **ExecutionContext** — `ctx.get("order.summary.status")` 같은 dot-path나 `items[0]` 같은 배열 인덱스로 하위 값을 읽을 수 있고, `ctx.getEnv()`, `ctx.getMetadata()` 로 실행 시 전달한 컨텍스트에 접근할 수 있으며, `ctx.toJSON()` 으로 전체 상태를 덤프할 수 있다.
 - **문법 전체**는 `docs/02-grammar.md` 를 참고하면 된다. `buildAIGrammarSummary()` 는 해당 문법을 LLM용으로 요약한 버전을 자동 생성한다.
 
 ## 📦 기본 제공 모듈 (basicModules)

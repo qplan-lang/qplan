@@ -21,6 +21,7 @@ const ctx = await runQplan(aiScript, {
   registry,
   env: { tenant: "acme" },
   metadata: { requestId: "req-42" },
+  params: { keyword: "foo" },
 });
 console.log(ctx.toJSON());
 ```
@@ -28,9 +29,10 @@ console.log(ctx.toJSON());
 1. QPlan overview and key rules (e.g., actions only inside steps).
 2. AI-friendly grammar summary from `buildAIGrammarSummary()`.
 3. Module metadata from `registry.list()` (including `usage`).
-4. Execution rules/output format covering onError, jumps, dot paths, etc.
+4. Execution rules/output format covering onError, jumps, dot paths, params, etc.
 
 With this prompt, the LLM outputs step-based QPlan scripts only.
+If external inputs are required, instruct the LLM to declare them via `@params` (single line, comma-separated) so validation passes.
 
 ## 4. buildQplanSuperPrompt()
 Use `buildQplanSuperPrompt(registry)` for long-lived system prompts. It packs QPlan philosophy, engine structure, grammar summary, and module lists into a “super prompt.” Longer than `buildAIPlanPrompt`, but ideal for multi-turn or agent setups.

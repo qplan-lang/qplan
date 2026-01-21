@@ -119,6 +119,7 @@ const ctx = await runQplan(qplanScript, {
   registry, // optional custom ModuleRegistry
   env: { userId: session.userId },
   metadata: { requestId: trace.id },
+  params: { keyword: "foo" },
   stepEvents: {
     onPlanStart(plan) { ui.showPlanStart(plan); },
     onStepStart(info, context) { ui.showStepStart(info, context?.env); },
@@ -129,7 +130,7 @@ const ctx = await runQplan(qplanScript, {
 });
 ```
 
-QPlan runs each step sequentially, invoking your modules and emitting step events for UIs/logging/alerts.
+QPlan runs each step sequentially, invoking your modules and emitting step events for UIs/logging/alerts. If the script needs external inputs, declare them via `@params` in the script and pass values through `params`.
 
 Need to render the step tree before or during execution? Wrap the script in the `QPlan` object instead:
 

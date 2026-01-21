@@ -23,7 +23,7 @@ ExecutionContext (variables, futures, step outputs)
 | Semantic Validator | Pre-checks duplicate step IDs, ensures onError="jump" targets and `jump to` targets exist, and returns issues. | `src/core/semanticValidator.ts` |
 | Step Resolver / Controller | Computes order/path/parent relationships for the step tree and, during execution, manages onError policies (fail/continue/retry/jump) plus plan/step events (`onPlanStart/End`, `onStepStart/End/Error/Retry/Jump`). | `src/step/stepResolver.ts`, `src/step/stepController.ts`, `src/step/stepEvents.ts` |
 | Executor | Runs the AST sequentially/parallel, handling If/While/Each/Parallel/Jump/Set/Return/Future/Join/Stop/Skip and updating the ExecutionContext. | `src/core/executor.ts` |
-| ExecutionContext | Runtime store offering ctx.set/get/has/toJSON plus `ctx.getEnv()` / `ctx.getMetadata()` for per-run context. Supports dot-path access (`stats.total`) and bracket indices (`items[0]`) so sub-fields of step outputs can be reused. | `src/core/executionContext.ts` |
+| ExecutionContext | Runtime store offering ctx.set/get/has/toJSON plus `ctx.getEnv()` / `ctx.getMetadata()` for per-run context. Supports dot-path access (`stats.total`) so sub-fields of step outputs can be reused. | `src/core/executionContext.ts` |
 | QPlan wrapper | Optional object that pre-parses/validates a script, exposes step metadata via `getStepList()`, and runs with built-in lifecycle tracking while forwarding custom stepEvents. Useful when UIs need a plan overview before execution. | `src/qplan.ts`, `examples/19_exam_qplan_object.js` |
 | ModuleRegistry | Manages ActionModule registration/lookup/metadata exposure. Each `ModuleRegistry` seeds the default basic modules (unless `{ seedBasicModules: false }` is passed). | `src/core/moduleRegistry.ts`, `src/index.ts` |
 | ActionModule | Function-style or `{ execute(inputs, ctx) {} }` modules. Metadata `id/description/usage/inputs` powers docs and LLM prompts. | `src/core/actionModule.ts` |
@@ -58,7 +58,7 @@ ExecutionContext (variables, futures, step outputs)
 ## 7. Tooling & validation
 - **validateQplanScript(script)** – Returns tokenize/parse/semantic-validation results; `{ ok: true, ast }` on success, `{ ok: false, error, line, issues? }` on failure.
 - **CLI** – `npm run validate -- <file>` (backed by `src/tools/validateScript.ts`) checks files or stdin for CI/editor integrations.
-- **Step events** – `runQplan(script, { env, metadata, params, stepEvents })` 또는 `qplan.run({ ... })` 를 사용하면 플랜 시작/종료와 Step 진행 상황을 UI/로그/모니터링에 전달하면서 실행 컨텍스트(env/metadata/params)를 공유할 수 있다.
+- **Step events** – Using `runQplan(script, { env, metadata, params, stepEvents })` or `qplan.run({ ... })` allows forwarding plan start/end and step progress to UI/logs/monitoring while sharing the execution context (env/metadata/params).
 
 ## 8. Extension & integration points
 1. **Add modules** – Implement an ActionModule and call `registry.register(customModule)`. With metadata filled in, prompt builders automatically include usage info.

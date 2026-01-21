@@ -128,6 +128,7 @@ const ctx = await runQplan(qplanScript, {
   registry, // 필요 시 커스텀 registry 전달
   env: { userId: session.userId },
   metadata: { requestId: trace.id },
+  params: { keyword: "foo" },
   stepEvents: {
     onPlanStart(plan) { ui.showPlanStart(plan); },
     onStepStart(info, context) { ui.showStepStart(info, context?.env); },
@@ -141,6 +142,9 @@ const ctx = await runQplan(qplanScript, {
 QPlan은 각 Step을 순차적으로 실행하며
 개발자가 만든 모듈을 호출하고,
 각 단계의 상태를 이벤트로 전달합니다.
+
+외부 입력이 필요하면 스크립트에 `@params` 를 선언하고,
+실행 시 `params` 로 값을 주입하세요.
 
 UI, 로그 기록, 알림 시스템 등은
 이 stepEvents를 활용하여 구성할 수 있습니다.

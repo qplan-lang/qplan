@@ -9,7 +9,7 @@ It contains both Version A (core grammar) and Version B (full EBNF), so **this f
 # 1. QPlan Language overview
 
 QPlan Language is a step-based workflow language where **every action runs inside a step block**.  
-Scripts flow through Tokenizer → Parser → AST → Executor, and values stored in the ExecutionContext (ctx) can be reused via dot paths like `stats.total` and bracket indices like `items[0]`.
+Scripts flow through Tokenizer → Parser → AST → Executor, and values stored in the ExecutionContext (ctx) can be reused via dot paths like `stats.total` or bracket indices like `items[0]`.
 
 Minimal example:
 ```
@@ -41,7 +41,7 @@ plan {
   }
   ```
   - Supported meta keys: `title`, `summary`, `version`, `since`, `params`.
-  - Plan meta must appear at the top of the plan block (before any steps).
+  - Plan meta must appear at the top of the plan block (before any steps), or at the top of the script without the plan wrapper.
   - Single-token meta values can omit quotes; use quotes for multi-word values.
   - `@params` is a single line, comma-separated list (whitespace allowed). Missing params cause a runtime error.
   - You can also omit the `plan { ... }` wrapper and place meta lines at the top of the script.

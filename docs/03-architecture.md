@@ -58,7 +58,7 @@ ExecutionContext (variables, futures, step outputs)
 ## 7. Tooling & validation
 - **validateQplanScript(script)** – Returns tokenize/parse/semantic-validation results; `{ ok: true, ast }` on success, `{ ok: false, error, line, issues? }` on failure.
 - **CLI** – `npm run validate -- <file>` (backed by `src/tools/validateScript.ts`) checks files or stdin for CI/editor integrations.
-- **Step events** – `runQplan(script, { env, metadata, stepEvents })` 또는 `qplan.run({ ... })` 를 사용하면 플랜 시작/종료와 Step 진행 상황을 UI/로그/모니터링에 전달하면서 실행 컨텍스트(env/metadata)를 공유할 수 있다.
+- **Step events** – Using `runQplan(script, { env, metadata, params, stepEvents })` or `qplan.run({ ... })` allows forwarding plan start/end and step progress to UI/logs/monitoring while sharing the execution context (env/metadata/params).
 
 ## 8. Extension & integration points
 1. **Add modules** – Implement an ActionModule and call `registry.register(customModule)`. With metadata filled in, prompt builders automatically include usage info.
