@@ -3,17 +3,28 @@
   "displayName": "QPlan Language",
   "description": "Syntax highlighting for QPlan scripts",
   "publisher": "local",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qplan-lang/qplan.git"
+  },
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.70.0"
   },
-  "categories": ["Programming Languages"],
+  "categories": [
+    "Programming Languages"
+  ],
   "contributes": {
     "languages": [
       {
         "id": "qplan",
-        "aliases": ["QPlan", "qplan"],
-        "extensions": [".qplan"],
+        "aliases": [
+          "QPlan",
+          "qplan"
+        ],
+        "extensions": [
+          ".qplan"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],

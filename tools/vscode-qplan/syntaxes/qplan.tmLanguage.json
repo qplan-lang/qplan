@@ -2,14 +2,33 @@
   "scopeName": "source.qplan",
   "name": "QPlan",
   "patterns": [
-    {"include": "#comments"},
-    {"include": "#meta"},
-    {"include": "#strings"},
-    {"include": "#numbers"},
-    {"include": "#keywords"},
-    {"include": "#constants"},
-    {"include": "#attributes"},
-    {"include": "#operators"}
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#meta"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#constants"
+    },
+    {
+      "include": "#attributes"
+    },
+    {
+      "include": "#support-modules"
+    },
+    {
+      "include": "#operators"
+    }
   ],
   "repository": {
     "comments": {
@@ -35,13 +54,22 @@
           "name": "meta.directive.qplan",
           "begin": "^\\s*@",
           "beginCaptures": {
-            "0": {"name": "punctuation.definition.directive.qplan"}
+            "0": {
+              "name": "punctuation.definition.directive.qplan"
+            }
           },
           "end": "$",
           "patterns": [
-            {"name": "keyword.other.qplan", "match": "\\b(title|summary|version|since)\\b"},
-            {"include": "#strings"},
-            {"include": "#numbers"}
+            {
+              "name": "keyword.other.qplan",
+              "match": "\\b(title|summary|version|since|params)\\b"
+            },
+            {
+              "include": "#strings"
+            },
+            {
+              "include": "#numbers"
+            }
           ]
         }
       ]
@@ -56,7 +84,10 @@
     },
     "numbers": {
       "patterns": [
-        {"name": "constant.numeric.qplan", "match": "\\b\\d+(?:\\.\\d+)?\\b"}
+        {
+          "name": "constant.numeric.qplan",
+          "match": "\\b\\d+(?:\\.\\d+)?\\b"
+        }
       ]
     },
     "keywords": {
@@ -75,7 +106,7 @@
       "patterns": [
         {
           "name": "constant.language.boolean.qplan",
-          "match": "\\b(true|false)\\b"
+          "match": "\\b(true|false|undefined|null)\\b"
         },
         {
           "name": "keyword.operator.logical.qplan",
@@ -95,7 +126,15 @@
       "patterns": [
         {
           "name": "keyword.operator.qplan",
-          "match": "->|==|!=|>=|<=|=|>|<"
+          "match": "->|==|!=|>=|<=|=|>|<|\\+|-|\\*|/|\\(|\\)"
+        }
+      ]
+    },
+    "support-modules": {
+      "patterns": [
+        {
+          "name": "support.function.qplan",
+          "match": "\\b(var|print|echo|sleep|file|math|future|join|json)\\b"
         }
       ]
     }
