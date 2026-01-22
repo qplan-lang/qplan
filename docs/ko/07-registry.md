@@ -8,7 +8,7 @@
 | `register(module)` | 단일 모듈 등록. `module.id` 가 없으면 경고만 출력하고 무시한다. |
 | `registerAll(modules)` | 여러 모듈을 순서대로 등록. 내부적으로 `register()` 를 호출한다. |
 | `get(id)` | 실행 시 Executor가 모듈을 조회할 때 사용. 없으면 `undefined`. |
-| `list()` | AI 프롬프트/문서화를 위한 메타데이터 배열을 반환. `{ id, description, usage, inputs }` 구조. |
+| `list()` | AI 프롬프트/문서화를 위한 메타데이터 배열을 반환. `{ id, description, usage, inputs, inputType, outputType }` 구조. |
 
 `new ModuleRegistry()` 를 호출하면 기본 모듈(basicModules)이 자동으로 등록되므로, 커스텀 인스턴스를 만들어도 동일한 기본 기능을 바로 사용할 수 있다. 완전히 비어 있는 registry가 필요하면 `new ModuleRegistry({ seedBasicModules: false })` 를 사용하거나, `seedModules` 옵션에 초기 모듈 배열을 전달하면 된다.
 
@@ -31,13 +31,13 @@ registry.registerAll([htmlModule, aiModule]);
 const modules = registry.list();
 /*
 [
-  { id: "file", description: "파일 읽기/쓰기", usage: "file read path=...", inputs: ["op","path","data"] },
+  { id: "file", description: "파일 읽기/쓰기", usage: "file read path=...", inputs: ["op","path","data"], inputType: { ... }, outputType: { ... } },
   ...
 ]
 */
 ```
 
-메타데이터를 잘 작성할수록 AI가 올바른 QPlan 명령을 생성할 확률이 높아진다. 특히 `description` 과 `usage` 는 Prompt Builder가 그대로 프롬프트에 삽입한다.
+메타데이터를 잘 작성할수록 AI가 올바른 QPlan 명령을 생성할 확률이 높아진다. 특히 `description` 과 `usage` 는 Prompt Builder가 그대로 프롬프트에 삽입한다. `inputType`/`outputType` 을 추가하면 모듈 입출력 구조까지 LLM에 전달할 수 있다.
 
 ## 4. 실행 시 ModuleRegistry 활용 흐름
 1. `runQplan(script, { registry })` 를 호출하면 Parser가 AST를 만든 뒤 Executor가 전달된 registry(없으면 기본 registry)로 Step을 실행한다.
@@ -49,7 +49,7 @@ const modules = registry.list();
 - **커스텀 모듈 추가**: ActionModule을 작성한 뒤 `registry.register(customModule)` 을 호출한다.
 - **테스트 / 샌드박스용 모듈**: 임시 모듈을 넣을 때도 id를 부여해 두면 AI/문서화에 노출시킬 수 있다. id가 없으면 registry에 등록되지 않는다.
 - **복수 registry 사용**: 새로운 `ModuleRegistry` 인스턴스를 만들면 기본 모듈이 자동 포함되며, 추가 모듈만 등록해서 `runQplan(script, { registry: customRegistry })`, `buildAIPlanPrompt(requirement, { registry: customRegistry })` 에 넘기면 된다. 완전히 빈 registry가 필요하면 `new ModuleRegistry({ seedBasicModules: false })` 를 사용한다.
-- **metadata 업데이트**: Module 객체의 `description/usage/inputs` 를 수정하면 `registry.list()` 반환값에도 즉시 반영된다.
+- **metadata 업데이트**: Module 객체의 `description/usage/inputs/inputType/outputType` 를 수정하면 `registry.list()` 반환값에도 즉시 반영된다.
 
 ## 6. 모듈 관리 베스트 프랙티스
 - 모듈 id는 소문자/간결한 이름을 권장한다 (`search`, `payment`).

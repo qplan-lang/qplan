@@ -100,6 +100,8 @@ export const searchModule = {
   id: "search",
   description: "Search products",
   inputs: ["keyword"],
+  inputType: { keyword: "string" },
+  outputType: { items: [{ id: "string", title: "string" }] },
   async execute({ keyword }, ctx) {
     const locale = ctx.get("userLocale"); // ctx/env metadata passed via runQplan options
     return await searchDB(keyword, { locale });
@@ -220,7 +222,7 @@ step id="checkout" desc="Payment" {
 ## 8. Concepts Overview
 
 ### ActionModule
-Functional or object-based modules used by AI to generate valid plans.
+Functional or object-based modules used by AI to generate valid plans. Include `inputType`/`outputType` metadata to describe I/O shapes in AI prompts.
 
 ### ModuleRegistry
 Central place where modules are registered and exposed to AI/runtime. Module IDs may include any Unicode letter/digit plus underscores (e.g., `my_module`, `분석작업`), but must start with a letter/underscore. You can pass a custom registry to `runQplan` or `buildAIPlanPrompt`, and call `listRegisteredModules(registry)` to expose metadata to UIs or prompt builders. Every `new ModuleRegistry()` automatically seeds the default `basicModules`; pass `new ModuleRegistry({ seedBasicModules: false })` if you need an empty registry, or use `seedModules` to preload a custom set.

@@ -127,6 +127,8 @@ export const searchModule = {
   id: "search",
   description: "상품 검색",
   inputs: ["keyword"],
+  inputType: { keyword: "string" },
+  outputType: { items: [{ id: "string", title: "string" }] },
   async execute({ keyword }, ctx) {
     const locale = ctx.get("userLocale"); // runQplan 옵션으로 전달된 ctx/env 메타데이터
     return await searchDB(keyword, { locale });
@@ -237,7 +239,7 @@ step id="checkout" desc="결제" {
 ### 8.1 ActionModule
 
 - 기능 단위(검색/필터/결제 등)를 표현하는 모듈입니다.  
-- AI는 `id`, `description`, `inputs` 정보를 보고 이 모듈을 사용하는 QPlan 코드를 생성합니다.
+- AI는 `id`, `description`, `inputs` 정보를 보고 이 모듈을 사용하는 QPlan 코드를 생성합니다. `inputType`/`outputType` 을 추가하면 입출력 구조까지 전달할 수 있습니다.
 
 ### 8.2 ModuleRegistry
 

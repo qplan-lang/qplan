@@ -7,6 +7,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.6.2] - 2026-01-21
+
+### Added
+- `inputType`/`outputType` module metadata to describe I/O schemas for AI prompts.
+- New runtime test covering module type metadata exposure.
+- Example showcasing module input/output type metadata.
+
+### Changed
+- `stop` now ends steps via `onStepEnd` (no `onStepError`) and marks the plan `stopped` while keeping execution state in a completed flow.
+- `skip` now ends the current step and continues to the next step instead of terminating the plan.
+- `runQplan()` and `qplan.run()` return normally on `stop`/`abort` so plan control no longer bubbles as unhandled exceptions.
+- AI prompt builders now include module input/output type metadata.
+
+### Updated
+- Control-flow examples and execution-control examples to reflect `stop`/`skip` behavior changes.
+- Documentation in `docs/` and `docs/ko/` to align loop control guidance with `break`/`continue` and clarify `stop`/`skip` semantics.
+- Module docs/README updates covering `inputType`/`outputType` usage.
+
 ## [0.6.1] - 2026-01-21
 
 ### Added

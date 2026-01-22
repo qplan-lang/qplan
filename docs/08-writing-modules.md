@@ -37,8 +37,28 @@ export const fileModule = {
 - `description`: concise explanation shown verbatim in prompts.
 - `usage`: actual QPlan snippet (multi-line allowed).
 - `inputs`: list of supported parameter names to guide the AI.
+- `inputType`: input schema in JSON form. Example: `{ name: "string", options: { limit: "number" } }`.
+- `outputType`: output schema in JSON form. Example: `{ title: "string", items: [{ id: "string" }] }`.
 
 Both styles share the same metadata schema, surfaced via `registry.list()`.
+
+```ts
+export const profileModule = {
+  id: "profile",
+  description: "Build a profile object",
+  usage: `profile name="kim" age=20 -> out`,
+  inputs: ["name", "age"],
+  inputType: { name: "string", age: "number" },
+  outputType: {
+    title_a: "string",
+    gndType: "number",
+    arr: [{ obj1: "any", obj2: "any" }],
+  },
+  execute(inputs) {
+    return { title_a: inputs.name, gndType: inputs.age, arr: [] };
+  },
+};
+```
 
 ## 3. Handling inputs & ctx
 - If a string argument matches a ctx variable, the executor auto-injects its value. Modules can also call `ctx.has/ctx.get`.

@@ -16,17 +16,27 @@ export interface ModuleMeta {
   description?: string;        // AI가 사용법 파악할 설명
   usage?: string;              // 호출 예시
   inputs?: string[];           // 파라미터 이름 목록
+  inputType?: Record<string, any>; // 입력 타입/스키마 설명
+  outputType?: Record<string, any>; // 반환 타입/스키마 설명
 }
 
-export type ActionModule =
+export type ModuleInputs = Record<string, any>;
+
+export type ModuleResult<TOutput = unknown> = TOutput | Promise<TOutput>;
+
+export type ModuleExecute<
+  TInputs extends ModuleInputs = ModuleInputs,
+  TOutput = unknown
+> = (inputs: TInputs, ctx: ExecutionContext) => ModuleResult<TOutput>;
+
+export type ActionModule<
+  TInputs extends ModuleInputs = ModuleInputs,
+  TOutput = unknown
+> =
   // 함수형 모듈
-  ((inputs: Record<string, any>, ctx: ExecutionContext) => any | Promise<any>) &
-    ModuleMeta
+  (ModuleExecute<TInputs, TOutput> & ModuleMeta)
   |
   // 객체형/클래스형 모듈
   (ModuleMeta & {
-    execute(
-      inputs: Record<string, any>,
-      ctx: ExecutionContext
-    ): any | Promise<any>;
+    execute: ModuleExecute<TInputs, TOutput>;
   });

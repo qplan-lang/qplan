@@ -18,7 +18,13 @@ export function buildAIPlanPrompt(
     .map(m => {
       const usageTxt = m.usage ? `\n  예시:\n${indent(m.usage.trim(), 4)}` : "";
       const inputsTxt = m.inputs ? `\n  입력값: ${m.inputs.join(", ")}` : "";
-      return `- ${m.id}: ${m.description ?? ""}${inputsTxt}${usageTxt}`;
+      const inputTypeTxt = m.inputType
+        ? `\n  입력타입: ${formatType(m.inputType)}`
+        : "";
+      const outputTypeTxt = m.outputType
+        ? `\n  출력타입: ${formatType(m.outputType)}`
+        : "";
+      return `- ${m.id}: ${m.description ?? ""}${inputsTxt}${inputTypeTxt}${outputTypeTxt}${usageTxt}`;
     })
     .join("\n\n");
 
@@ -119,4 +125,12 @@ function indent(text: string, spaces: number): string {
     .split("\n")
     .map(line => pad + line)
     .join("\n");
+}
+
+function formatType(typeValue: Record<string, any>): string {
+  try {
+    return JSON.stringify(typeValue);
+  } catch {
+    return String(typeValue);
+  }
 }

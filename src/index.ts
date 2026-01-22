@@ -163,6 +163,13 @@ export type { StepEventInfo } from "./step/stepTypes.js";
 export type { PromptLanguage } from "./core/buildAIPlanPrompt.js";
 export { QPlan } from "./qplan.js";
 export { ModuleRegistry } from "./core/moduleRegistry.js";
+export type {
+  ActionModule,
+  ModuleMeta,
+  ModuleInputs,
+  ModuleResult,
+  ModuleExecute,
+} from "./core/actionModule.js";
 export { ExecutionContext } from "./core/executionContext.js";
 export {
   ExecutionController,

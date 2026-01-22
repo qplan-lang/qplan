@@ -73,7 +73,9 @@ export class ModuleRegistry {
       id: m.id,
       description: m.description,
       usage: m.usage,
-      inputs: m.inputs
+      inputs: m.inputs,
+      inputType: m.inputType,
+      outputType: m.outputType
     }));
   }
 }

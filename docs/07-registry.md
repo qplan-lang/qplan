@@ -8,7 +8,7 @@ The `ModuleRegistry` centrally manages every ActionModule QPlan can execute. Imp
 | `register(module)` | Register a single module. Without `module.id`, it warns and skips. |
 | `registerAll(modules)` | Register modules sequentially; internally calls `register()`. |
 | `get(id)` | Used by the executor to fetch modules; returns `undefined` if missing. |
-| `list()` | Returns `{ id, description, usage, inputs }[]` metadata for AI/docs. |
+| `list()` | Returns `{ id, description, usage, inputs, inputType, outputType }[]` metadata for AI/docs. |
 
 Every `new ModuleRegistry()` auto-registers the default `basicModules`, so even custom instances start with the standard toolset. Pass `new ModuleRegistry({ seedBasicModules: false })` when you want a blank registry, or use `seedModules` to preload your own list.
 
@@ -31,13 +31,13 @@ registry.registerAll([htmlModule, aiModule]);
 const modules = registry.list();
 /*
 [
-  { id: "file", description: "파일 읽기/쓰기", usage: "file read path=...", inputs: ["op","path","data"] },
+  { id: "file", description: "파일 읽기/쓰기", usage: "file read path=...", inputs: ["op","path","data"], inputType: { ... }, outputType: { ... } },
   ...
 ]
 */
 ```
 
-The better the metadata, the more accurately the AI produces QPlan commands. `description` and `usage` are injected verbatim into prompts.
+The better the metadata, the more accurately the AI produces QPlan commands. `description` and `usage` are injected verbatim into prompts. Adding `inputType/outputType` helps the LLM understand module I/O shapes.
 
 ## 4. How the registry participates in execution
 1. `runQplan(script, { registry })` parses to AST, then the executor runs steps using the provided registry (defaults to the shared singleton).
@@ -48,7 +48,7 @@ The better the metadata, the more accurately the AI produces QPlan commands. `de
 - **Add custom modules**: implement an ActionModule and call `registry.register(customModule)`.
 - **Temp/sandbox modules**: still assign IDs so AI/docs can see them; otherwise registration is skipped.
 - **Multiple registries**: instantiate `const custom = new ModuleRegistry()` (basic modules included automatically), register extra modules, and pass it to both `runQplan(script, { registry: custom })` and `buildAIPlanPrompt(requirement, { registry: custom })`. To start empty, use `new ModuleRegistry({ seedBasicModules: false })`.
-- **Updating metadata**: modifying `description/usage/inputs` updates the `registry.list()` output immediately.
+- **Updating metadata**: modifying `description/usage/inputs/inputType/outputType` updates the `registry.list()` output immediately.
 
 ## 6. Module management best practices
 - Use lowercase, concise IDs (`search`, `payment`).

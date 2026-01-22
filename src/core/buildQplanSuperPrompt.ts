@@ -26,7 +26,9 @@ export function buildQplanSuperPrompt(registry: ModuleRegistry): string {
       .map(m => {
          const usage = m.usage ? `\n  예시:\n${indent(m.usage.trim(), 4)}` : "";
          const inputs = m.inputs ? `\n  입력값: ${m.inputs.join(", ")}` : "";
-         return `- ${m.id}: ${m.description ?? ""}${inputs}${usage}`;
+         const inputType = m.inputType ? `\n  입력타입: ${formatType(m.inputType)}` : "";
+         const outputType = m.outputType ? `\n  출력타입: ${formatType(m.outputType)}` : "";
+         return `- ${m.id}: ${m.description ?? ""}${inputs}${inputType}${outputType}${usage}`;
       })
       .join("\n\n");
 
@@ -114,4 +116,12 @@ function indent(text: string, spaces: number): string {
       .split("\n")
       .map(line => " ".repeat(spaces) + line)
       .join("\n");
+}
+
+function formatType(typeValue: Record<string, any>): string {
+   try {
+      return JSON.stringify(typeValue);
+   } catch {
+      return String(typeValue);
+   }
 }
