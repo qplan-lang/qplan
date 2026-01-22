@@ -1,7 +1,7 @@
 import { ExecutionContext } from "../core/executionContext.js";
 import { StepNode } from "../core/ast.js";
 import { StepResolution, StepInfo } from "./stepTypes.js";
-import { AbortError, JumpSignal, StepReturnSignal } from "./stepSignals.js";
+import { AbortError, JumpSignal, PlanStopSignal, StepReturnSignal, StepSkipSignal } from "./stepSignals.js";
 import {
   StepEventEmitter,
   StepEventRunContext,
@@ -54,6 +54,9 @@ export class StepController {
           this.setStepResultWithAlias(ctx, resultKey, stepId, err.value);
           return;
         }
+        if (err instanceof StepSkipSignal) {
+          return;
+        }
         throw err;
       }
       return;
@@ -98,7 +101,16 @@ export class StepController {
           throw err;
         }
 
+        if (err instanceof StepSkipSignal) {
+          await this.events.onStepEnd?.(eventInfo, undefined, this.runContext);
+          return;
+        }
+
         if (err instanceof AbortError) {
+          throw err;
+        }
+        if (err instanceof PlanStopSignal) {
+          await this.events.onStepEnd?.(eventInfo, undefined, this.runContext);
           throw err;
         }
 

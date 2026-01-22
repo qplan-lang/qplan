@@ -270,6 +270,187 @@ step id="seeded" {
   assert.strictEqual(threw, true, "Missing params should throw");
 }
 
+async function testStopReturnsContextAndEmitsPlanEnd() {
+  const script = `
+step id="start" {
+  print "before stop"
+  stop
+  print "after stop"
+}
+`;
+
+  const planEvents = [];
+  const ctx = await runQplan(script, {
+    stepEvents: {
+      async onPlanStart(plan) {
+        planEvents.push({ type: "start", plan });
+      },
+      async onPlanEnd(plan) {
+        planEvents.push({ type: "end", plan });
+      },
+    },
+  });
+
+  assert.ok(ctx, "Context should be returned when stop occurs");
+  assert.strictEqual(planEvents.length, 2, "plan start/end should fire");
+  assert.strictEqual(planEvents[0].type, "start");
+  assert.strictEqual(planEvents[1].type, "end");
+  assert.strictEqual(planEvents[1].plan.status, "stopped");
+}
+
+async function testStopSkipsFollowingSteps() {
+  const script = `
+step id="first" {
+  var "started" -> marker
+  stop
+}
+
+step id="second" {
+  var "should-not-run" -> marker2
+}
+`;
+  const ctx = await runQplan(script);
+  assert.strictEqual(ctx.get("marker"), "started");
+  assert.strictEqual(ctx.get("marker2"), undefined);
+}
+
+async function testStopInsideEachLoop() {
+  const script = `
+step id="loop" {
+  var 0 -> sum
+  json parse data="[1,2,3,4]" -> nums
+  each value in nums {
+    if value == 3 {
+      stop
+    }
+    math add a=sum b=value -> sum
+  }
+}
+`;
+  const ctx = await runQplan(script);
+  assert.strictEqual(ctx.get("sum"), 3);
+}
+
+async function testStopInsideWhileLoop() {
+  const script = `
+step id="loop" {
+  var 0 -> sum
+  var 0 -> i
+  while i < 10 {
+    math add a=i b=1 -> i
+    if i == 4 {
+      stop
+    }
+    math add a=sum b=i -> sum
+  }
+}
+`;
+  const ctx = await runQplan(script);
+  assert.strictEqual(ctx.get("sum"), 1 + 2 + 3);
+}
+
+async function testStopInNestedBlock() {
+  const script = `
+step id="nested" {
+  var 1 -> value
+  if value == 1 {
+    stop
+  }
+  var 2 -> value2
+}
+`;
+  const ctx = await runQplan(script);
+  assert.strictEqual(ctx.get("value"), 1);
+  assert.strictEqual(ctx.get("value2"), undefined);
+}
+
+async function testStopUsesStepEndEvent() {
+  const script = `
+step id="err_guard" {
+  stop
+}
+`;
+  let stepErrorFired = false;
+  let stepEndFired = false;
+  await runQplan(script, {
+    stepEvents: {
+      async onStepError() {
+        stepErrorFired = true;
+      },
+      async onStepEnd() {
+        stepEndFired = true;
+      },
+    },
+  });
+  assert.strictEqual(stepErrorFired, false);
+  assert.strictEqual(stepEndFired, true);
+}
+
+async function testStopStepStatusInEvents() {
+  const script = `
+step id="one" {
+  stop
+}
+`;
+  const planEvents = [];
+  await runQplan(script, {
+    stepEvents: {
+      async onPlanEnd(plan) {
+        planEvents.push(plan);
+      },
+    },
+  });
+  assert.strictEqual(planEvents.length, 1);
+  assert.strictEqual(planEvents[0].status, "stopped");
+}
+
+async function testStopInsideParallel() {
+  const script = `
+step id="parent" {
+  parallel {
+    step id="p1" {
+      print "p1"
+    }
+    step id="p2" {
+      stop
+    }
+  }
+  var "after" -> afterParallel
+}
+`;
+  const ctx = await runQplan(script);
+  assert.strictEqual(ctx.get("afterParallel"), undefined);
+}
+
+async function testStopInsideStepWithReturnIsNotExecuted() {
+  const script = `
+step id="returns" {
+  stop
+  return result="after-stop"
+}
+`;
+  const ctx = await runQplan(script);
+  assert.strictEqual(ctx.get("returns.result"), undefined);
+}
+
+async function testSkipContinuesToNextStep() {
+  const script = `
+step id="first" {
+  var "started" -> marker
+  skip
+  var "after-skip" -> marker2
+}
+
+step id="second" {
+  var "next-step" -> marker3
+}
+`;
+  const ctx = await runQplan(script);
+  assert.strictEqual(ctx.get("marker"), "started");
+  assert.strictEqual(ctx.get("marker2"), undefined);
+  assert.strictEqual(ctx.get("marker3"), "next-step");
+}
+
 await testEnvHooksAndPlanEvents();
 await testReturnShorthandAndStepNamespace();
 await testActionArgsResolveAgainstCtx();
@@ -277,4 +458,14 @@ await testBracketIndexAccess();
 await testCommentsIgnoredDuringExecution();
 await testParamsSeedVariables();
 await testMissingParamsThrows();
+await testStopReturnsContextAndEmitsPlanEnd();
+await testStopSkipsFollowingSteps();
+await testStopInsideEachLoop();
+await testStopInsideWhileLoop();
+await testStopInNestedBlock();
+await testStopUsesStepEndEvent();
+await testStopStepStatusInEvents();
+await testStopInsideParallel();
+await testStopInsideStepWithReturnIsNotExecuted();
+await testSkipContinuesToNextStep();
 console.log("runtime runQplan-tests passed");

@@ -26,6 +26,8 @@ import { ExecutionContext } from "./core/executionContext.js";
 import { ParserError } from "./core/parserError.js";
 import { ASTRoot } from "./core/ast.js";
 import type { StepEventEmitter, PlanEventInfo, StepEventRunContext } from "./step/stepEvents.js";
+import { PlanStopSignal } from "./step/stepSignals.js";
+import { AbortError as ExecutionAbortError } from "./core/executionController.js";
 import { validateSemantics, parseParamsMeta } from "./core/semanticValidator.js";
 import type { SemanticIssue } from "./core/semanticValidator.js";
 import { buildAIPlanPrompt as buildPrompt } from "./core/buildAIPlanPrompt.js";
@@ -123,7 +125,17 @@ export async function runQplan(script: string, options: RunQplanOptions = {}) {
     params: options.params,
   };
 
-  await executor.run(ast, ctx, runContext);
+  try {
+    await executor.run(ast, ctx, runContext);
+  } catch (err) {
+    if (err instanceof PlanStopSignal) {
+      return ctx;
+    }
+    if (err instanceof ExecutionAbortError || (err instanceof Error && err.name === "AbortError")) {
+      return ctx;
+    }
+    throw err;
+  }
   return ctx;
 }
 

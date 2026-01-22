@@ -12,9 +12,11 @@ import type {
 import type { StepEventInfo } from "./step/stepTypes.js";
 import { validateScript, QplanValidationResult } from "./core/qplanValidation.js";
 import { parseParamsMeta } from "./core/semanticValidator.js";
+import { AbortError as SignalAbortError, PlanStopSignal } from "./step/stepSignals.js";
 import {
   ExecutionController,
   ExecutionState,
+  AbortError as ExecutionAbortError,
   type ExecutionSnapshot,
   type ExecutionControllerOptions,
 } from "./core/executionController.js";
@@ -128,7 +130,21 @@ export class QPlan {
       params: options.params,
     };
     const executor = new Executor(registry, this.buildTrackingEmitter(options.stepEvents));
-    await executor.run(this.ast, ctx, runContext, this.controller);
+    try {
+      await executor.run(this.ast, ctx, runContext, this.controller);
+    } catch (err) {
+      if (err instanceof PlanStopSignal) {
+        return ctx;
+      }
+      if (
+        err instanceof ExecutionAbortError ||
+        err instanceof SignalAbortError ||
+        (err instanceof Error && err.name === "AbortError")
+      ) {
+        return ctx;
+      }
+      throw err;
+    }
     return ctx;
   }
 

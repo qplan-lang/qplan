@@ -70,12 +70,16 @@ step id="step3" {
   `;
 
   const qplan = new QPlan(script);
+  let planStatus = "unknown";
 
-  try {
-    await qplan.run();
-  } catch (err) {
-    console.log("✓ Plan stopped:", err.message);
-  }
+  await qplan.run({
+    stepEvents: {
+      onPlanEnd(plan) {
+        planStatus = plan.status ?? "unknown";
+      },
+    },
+  });
+  console.log("✓ Plan ended with status:", planStatus);
 }
 
 // ========================================
@@ -103,11 +107,13 @@ step id="step3" {
 
   const qplan = new QPlan(script);
 
-  try {
-    await qplan.run();
-  } catch (err) {
-    console.log("Step skipped:", err.message);
-  }
+  await qplan.run({
+    stepEvents: {
+      onPlanEnd(plan) {
+        console.log("✓ Plan ended with status:", plan.status);
+      },
+    },
+  });
 }
 
 // ========================================

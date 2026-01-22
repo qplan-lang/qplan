@@ -8,7 +8,7 @@
  * - Checkpoint
  */
 
-import { QPlan, ExecutionState, AbortError } from "../dist/index.js";
+import { QPlan, ExecutionState, runQplan } from "../dist/index.js";
 
 // ========================================
 // 1. Abort Example
@@ -37,6 +37,7 @@ step id="step3" {
   `;
 
   const qplan = new QPlan(script);
+  let planStatus = "unknown";
 
   // Abort after 1s
   setTimeout(() => {
@@ -44,17 +45,15 @@ step id="step3" {
     qplan.abort();
   }, 1000);
 
-  try {
-    await qplan.run();
-    console.log("✅ Completed");
-  } catch (err) {
-    if (err instanceof AbortError) {
-      console.log("❌ Execution aborted:", err.message);
-      console.log("Final state:", qplan.getState());
-    } else {
-      throw err;
-    }
-  }
+  await qplan.run({
+    stepEvents: {
+      onPlanEnd(plan) {
+        planStatus = plan.status ?? "unknown";
+      },
+    },
+  });
+  console.log("Plan status:", planStatus);
+  console.log("Final state:", qplan.getState());
 }
 
 // ========================================
@@ -128,20 +127,18 @@ step id="long_running" {
 
   const qplan = new QPlan(script);
 
-  try {
-    await qplan.run({
-      timeout: 2000  // 2 seconds timeout
-    });
-    console.log("✅ Completed");
-  } catch (err) {
-    if (err instanceof AbortError) {
-      console.log("❌ Execution timed out");
-      console.log("State:", qplan.getState());
-      console.log("Elapsed:", qplan.getElapsedTime(), "ms");
-    } else {
-      throw err;
-    }
-  }
+  let planStatus = "unknown";
+  await qplan.run({
+    timeout: 2000, // 2 seconds timeout
+    stepEvents: {
+      onPlanEnd(plan) {
+        planStatus = plan.status ?? "unknown";
+      },
+    },
+  });
+  console.log("Plan status:", planStatus);
+  console.log("State:", qplan.getState());
+  console.log("Elapsed:", qplan.getElapsedTime(), "ms");
 }
 
 // ========================================
@@ -228,6 +225,38 @@ step id="step3" {
 }
 
 // ========================================
+// 6. Stop Example
+// ========================================
+async function exampleStop() {
+  console.log("\n=== 6. Stop Example ===");
+
+  const script = `
+step id="step1" {
+  print msg="Step 1 started"
+  stop
+  print msg="Step 1 after stop (not executed)"
+}
+
+step id="step2" {
+  print msg="Step 2 (not executed)"
+}
+  `;
+
+  const planEvents = [];
+  const ctx = await runQplan(script, {
+    stepEvents: {
+      async onPlanEnd(plan) {
+        planEvents.push(plan);
+      },
+    },
+  });
+
+  console.log("Plan status:", planEvents[0]?.status);
+  console.log("Context keys:", Object.keys(ctx.toJSON()));
+  console.log("✅ Program continues after stop");
+}
+
+// ========================================
 // Main
 // ========================================
 async function main() {
@@ -240,6 +269,7 @@ async function main() {
     await exampleTimeout();
     await exampleCheckpoint();
     await exampleStateMonitoring();
+    await exampleStop();
   } catch (err) {
     console.error("Error:", err);
   }

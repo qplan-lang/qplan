@@ -125,15 +125,23 @@ export class Executor {
 
       return ctx;
     } catch (err) {
+      const isStopSignal = err instanceof PlanStopSignal;
+      const isAbortError =
+        err instanceof AbortError || (err instanceof Error && err.name === "AbortError");
+
       // 에러 발생 - status 판별
       if (this.controller) {
-        this.controller.error();
+        if (isStopSignal) {
+          this.controller.complete();
+        } else if (!isAbortError) {
+          this.controller.error();
+        }
       }
 
       // 에러 타입에 따라 status 설정
-      if (err instanceof PlanStopSignal) {
+      if (isStopSignal) {
         planInfo.status = 'stopped';
-      } else if (err instanceof AbortError) {
+      } else if (isAbortError) {
         planInfo.status = 'aborted';
       } else {
         planInfo.status = 'error';
