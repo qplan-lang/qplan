@@ -12,6 +12,8 @@ plan {
     print item.bar
     print "item.obj1.foo:" + item.obj1.foo
     print arr[0].txt
+    print 'arr.count: ' + arr.count
+    print 'arr.length: ' + arr.length
   }
 }
 `;
@@ -29,4 +31,4 @@ const ctx = await qplan.run({
   },
 });
 
-console.log(ctx.toJSON());
+// console.log(ctx.toJSON());
