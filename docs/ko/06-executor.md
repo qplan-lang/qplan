@@ -30,12 +30,12 @@ Executor.run(ast, ctx)
 - 비교 연산자: `> < >= <= == != EXISTS NOT_EXISTS`
 - 논리 연산: `AND`, `OR`, `not`, 괄호 우선순위 지원
 - 왼쪽/오른쪽 피연산자는 ctx 변수 또는 `stats.total` 같은 dot-path 모두 허용된다.
-- While 은 If와 동일한 조건식을 반복에 사용하고, 내부에서 `stop`/`skip` 가능하다.
+- While 은 If와 동일한 조건식을 반복에 사용하고, 내부에서 `break`/`continue` 사용이 가능하다.
 
 ### Each
 - 문법: `each item in iterable { ... }` 또는 `each (item, idx) in iterable { ... }`
 - iterable 은 ctx에 존재해야 하며 배열/이터러블이면 된다.
-- 반복 도중 `stop` 은 루프 탈출, `skip` 은 다음 반복으로 이동한다.
+- 반복 제어는 `break`/`continue`를 사용하며, `stop`은 Plan 종료, `skip`은 현재 Step 종료를 의미한다.
 
 ### Parallel
 - 문법: `parallel { ... } concurrency=2 ignoreErrors=true`

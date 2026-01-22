@@ -67,24 +67,24 @@ step id="skip" desc="Next step" {
 - You can place `concurrency` and `ignoreErrors` before or after the block.
 - Jumps always target step IDs.
 
-## 5. Each loop with stop/skip
+## 5. Each loop with break/continue
 ```qplan
 step id="loop" desc="Loop example" {
   var 0 -> total
   json parse data="[1,2,3,4]" -> nums
   each (n, idx) in nums {
     if n == 3 {
-      stop
+      break
     }
     if idx == 0 {
-      skip
+      continue
     }
     math add a=total b=n -> total
   }
   return count=nums.length total=total
 }
 ```
-- Inside `each`, `stop` exits the loop and `skip` jumps to the next iteration.
+- Inside `each`, use `break` to exit the loop and `continue` to jump to the next iteration.
 - Dot-path access such as `nums.length` is resolved by the ExecutionContext.
 
 ## 6. Counter updates with While + Set

@@ -179,7 +179,7 @@ Expressions may combine numbers, strings, JSON literals, existing variables, par
 - `continue`: skip the current iteration and continue with the next one.
 
 ### Plan/Step Control
-- `stop`: terminate the entire plan execution (all steps immediately stop).
+- `stop`: terminate the entire plan execution with status `stopped` (normal completion).
 - `skip`: skip the rest of the current step (move to the next step).
 
 ### Step Navigation

@@ -57,7 +57,7 @@ await runQplan(script, {
 - **Future & Join**—the `future` module stores a Promise in ctx under a `__future` wrapper, and `join futures="f1,f2" -> list` combines multiple futures.
 - **Set & Return**—`set total = (total + delta) * 0.5` applies arithmetic expressions to existing variables, and `return key=value ...` shapes step outputs manually.
 - **Break / Continue**—exit loops or skip to the next iteration in Each or While loops.
-- **Stop / Skip**—terminate the entire plan or skip the rest of the current step.
+- **Stop / Skip**—stop ends the plan with status `stopped` (treated as normal completion), skip ends the current step and continues to the next.
 - **ExecutionContext**—`ctx.get("order.summary.status")` reads nested values via dot paths, `ctx.get("items.0")` / `items[0]` style bracket indices are supported (arrays also support `.length`/`.count`), `ctx.getEnv()` / `ctx.getMetadata()` expose per-run context, and `ctx.toJSON()` dumps the entire state.
 - **Full grammar** lives in `docs/02-grammar.md`; `buildAIGrammarSummary()` auto-generates a condensed, LLM-friendly version.
 

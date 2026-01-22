@@ -57,7 +57,7 @@ await runQplan(script, {
 - **Future & Join** — `future` 모듈은 Promise를 `__future` 래퍼에 담아 ctx에 저장하고, `join futures="f1,f2" -> list` 가 여러 Future를 합친다.
 - **Set & Return** — `set total = (total + delta) * 0.5` 처럼 산술 표현식을 기존 변수에 적용하고, `return key=value ...` 로 Step 출력 객체를 직접 구성한다.
 - **Break / Continue** — Each, While 루프 안에서 루프 탈출/다음 반복으로 이동.
-- **Stop / Skip** — Plan 전체 중단 또는 현재 Step 건너뛰기.
+- **Stop / Skip** — stop은 Plan을 `stopped` 상태로 정상 종료, skip은 현재 Step만 종료하고 다음 Step으로 이동.
 - **ExecutionContext** — `ctx.get("order.summary.status")` 같은 dot-path나 `items[0]` 같은 배열 인덱스로 하위 값을 읽을 수 있고(배열은 `.length`/`.count` 지원), `ctx.getEnv()`, `ctx.getMetadata()` 로 실행 시 전달한 컨텍스트에 접근할 수 있으며, `ctx.toJSON()` 으로 전체 상태를 덤프할 수 있다.
 - **문법 전체**는 `docs/02-grammar.md` 를 참고하면 된다. `buildAIGrammarSummary()` 는 해당 문법을 LLM용으로 요약한 버전을 자동 생성한다.
 

@@ -179,7 +179,7 @@ set config = {"limit":10}
 - `continue` : 현재 반복을 건너뛰고 다음 반복으로 이동
 
 ### Plan/Step 제어
-- `stop` : Plan 전체 실행 중단 (모든 Step 즉시 종료)
+- `stop` : Plan 전체 실행 중단 (status=`stopped`로 정상 종료)
 - `skip` : 현재 Step의 나머지 부분 건너뛰기 (다음 Step으로 이동)
 
 ### Step 이동

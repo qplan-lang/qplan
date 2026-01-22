@@ -102,7 +102,7 @@ set config = {"limit": 10}
 
 - `each (item, idx) in list` – `item`, `idx` 는 루프 스코프 변수. 반복마다 엔진이 덮어쓴다.
 - `while condition { ... }` – 자동 변수는 없으므로 외부에서 만든 변수를 `set` 으로 업데이트.
-- 둘 다 `stop` / `skip` 으로 흐름 제어 가능.
+- 반복 제어는 `break` / `continue` 로 처리한다.
 
 ### 조건문 / 반복문에서의 비교
 
