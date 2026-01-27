@@ -28,12 +28,12 @@ step id="demo" desc="Simple sum" {
 - A root script may list **step statements only**. Actions/If/Set outside a step cause a parser error.
 - Optionally, wrap the script in a `plan { ... }` block to attach metadata that humans/tools can read.
   ```
-plan {
-  @title "Onboarding Plan"
-  @summary "Create accounts and schedule training"
-  @version "0.1"
-  @since "2025-01-01"
-  @params "keyword,item"
+  plan {
+    @title "Onboarding Plan"
+    @summary "Create accounts and schedule training"
+    @version "0.1"
+    @since "2025-01-01"
+    @params "keyword,item"
 
     step id="setup" {
       ...
@@ -118,9 +118,6 @@ if <left> <op> <right> [and/or <left> <op> <right> ...] {
 } else {
     ...
 }
-
-You can also omit the `plan { ... }` wrapper and place the `@title` / `@summary` / `@version` / `@since` / `@params`
-lines at the top of the script.
 ```
 Supported comparison operators: `> < >= <= == != EXISTS NOT_EXISTS`.  
 `EXISTS` and `NOT_EXISTS` are unary operators (e.g., `if value EXISTS`); they treat `undefined`/`null`/`""` as False.  

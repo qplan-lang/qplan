@@ -28,12 +28,12 @@ step id="demo" desc="간단 합계" {
 - 루트 스크립트는 **Step 문만** 나열할 수 있다. Step 밖에서 Action/If/Set 등을 작성하면 파서가 오류를 낸다.
 - 필요하면 `plan { ... }` 블록으로 스크립트를 감싸 메타정보를 붙일 수 있다.
   ```
-plan {
-  @title "온보딩 플랜"
-  @summary "계정 생성부터 교육 예약까지"
-  @version "0.1"
-  @since "2025-01-01"
-  @params "keyword,item"
+  plan {
+    @title "온보딩 플랜"
+    @summary "계정 생성부터 교육 예약까지"
+    @version "0.1"
+    @since "2025-01-01"
+    @params "keyword,item"
 
     step id="setup" {
       ...
