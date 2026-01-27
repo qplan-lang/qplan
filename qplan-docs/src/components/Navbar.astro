@@ -26,7 +26,7 @@ const baseUrl = import.meta.env.BASE_URL;
 		<div class="right">
             {langUrls && (
                 <div class="lang-select-container">
-                    <select id="lang-selector" class="lang-select">
+                    <select id="lang-selector" class="lang-select" onchange="if (this.value) window.location.href = this.value;">
                         <option value={langUrls.en} selected={currentLang === 'en'}>🇺🇸 English</option>
                         <option value={langUrls.ko} selected={currentLang === 'ko'}>🇰🇷 한국어</option>
                     </select>

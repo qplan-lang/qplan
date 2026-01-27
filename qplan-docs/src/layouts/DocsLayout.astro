@@ -12,8 +12,17 @@ interface Props {
 const { title, headings, entries, currentSlug } = Astro.props;
 const baseUrl = import.meta.env.BASE_URL;
 
-// Determine current language from slug
-const currentLang = currentSlug.startsWith('ko/') ? 'ko' : 'en';
+// Determine current language/doc path from URL (more reliable on static hosts)
+const rawPath = Astro.url.pathname;
+const normalizedPath = rawPath.startsWith(baseUrl)
+    ? rawPath.slice(baseUrl.length)
+    : rawPath;
+const pathParts = normalizedPath.split('/').filter(Boolean);
+const urlLang = pathParts[1] === 'ko' ? 'ko' : 'en';
+const urlDocPath = pathParts.slice(2).join('/');
+
+const currentLang = urlLang;
+const currentDocSlug = urlDocPath ? `${currentLang}/${urlDocPath}` : currentSlug;
 
 // Helper to format sidebar titles
 function formatTitle(slug: string) {
@@ -25,11 +34,7 @@ function formatTitle(slug: string) {
 
 // Helper to get URL for a specific language
 function getUrlForLang(targetLang: string) {
-    const parts = currentSlug.split('/');
-    // parts is likely ['en', '01-overview'] or ['ko', '01-overview']
-    // If slug starts with lang code, remove it.
-    // Astro content slugs: 'en/01-overview'
-    const docPath = parts.slice(1).join('/');
+    const docPath = urlDocPath || currentSlug.split('/').slice(1).join('/');
     return `${baseUrl}docs/${targetLang}/${docPath}`;
 }
 
@@ -59,7 +64,7 @@ const currentLangEntries = entries.filter(entry => entry.slug.startsWith(current
                             <li>
                                 <a 
                                     href={`${baseUrl}docs/${entry.slug}`} 
-                                    class={currentSlug === entry.slug ? 'active' : ''}
+                                    class={currentDocSlug === entry.slug ? 'active' : ''}
                                 >
                                     {entry.data.title || formatTitle(entry.slug)}
                                 </a>
