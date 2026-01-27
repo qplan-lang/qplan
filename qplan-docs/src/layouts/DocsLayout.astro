@@ -106,7 +106,8 @@ const currentLangEntries = entries.filter(entry => entry.slug.startsWith(current
 
 <style>
     .docs-container {
-        display: flex;
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr) 240px;
         max-width: 1400px; /* Reduced from 1600px for better readability width */
         margin: 0 auto;
         padding-top: 64px; /* Matches new navbar height */
@@ -116,7 +117,8 @@ const currentLangEntries = entries.filter(entry => entry.slug.startsWith(current
     /* Sidebar */
     .sidebar {
         width: 260px;
-        position: fixed;
+        box-sizing: border-box;
+        position: sticky;
         top: 64px;
         bottom: 0;
         overflow-y: auto;
@@ -193,9 +195,7 @@ const currentLangEntries = entries.filter(entry => entry.slug.startsWith(current
 
     /* Main Content */
     .content {
-        flex: 1;
-        margin-left: 260px; 
-        margin-right: 240px; 
+        min-width: 0;
         padding: 3rem 4rem;
         max-width: 100%;
     }
@@ -318,9 +318,9 @@ const currentLangEntries = entries.filter(entry => entry.slug.startsWith(current
     /* TOC */
     .toc {
         width: 240px;
-        position: fixed;
+        box-sizing: border-box;
+        position: sticky;
         top: 64px;
-        right: 0;
         padding: 2rem 1.5rem;
         max-height: calc(100vh - 64px);
         overflow-y: auto;
@@ -351,14 +351,33 @@ const currentLangEntries = entries.filter(entry => entry.slug.startsWith(current
         color: var(--color-primary);
     }
 
+    @media (max-width: 1500px) {
+        .docs-container {
+            grid-template-columns: 260px minmax(0, 1fr) 200px;
+        }
+        .content { padding: 3rem 3rem; }
+    }
+
+    @media (max-width: 1200px) {
+        .docs-container {
+            grid-template-columns: 260px minmax(0, 1fr) 180px;
+        }
+        .content { padding: 2.5rem 2.5rem; }
+    }
+
     @media (max-width: 1350px) {
+        .docs-container {
+            grid-template-columns: 260px minmax(0, 1fr);
+        }
         .toc { display: none; }
-        .content { margin-right: 0; }
+        .content { padding: 3rem 4rem; }
     }
 
     @media (max-width: 900px) {
+        .docs-container {
+            grid-template-columns: minmax(0, 1fr);
+        }
         .sidebar { display: none; } /* Mobile menu needed separately */
-        .content { margin-left: 0; padding: 2rem 1.5rem; }
-        .docs-container { display: block; }
+        .content { padding: 2rem 1.5rem; }
     }
 </style>
