@@ -58,7 +58,7 @@ const currentLangEntries = entries.filter(entry => entry.slug.startsWith(current
                         {currentLangEntries.map(entry => (
                             <li>
                                 <a 
-                                    href={`/docs/${entry.slug}`} 
+                                    href={`${baseUrl}docs/${entry.slug}`} 
                                     class={currentSlug === entry.slug ? 'active' : ''}
                                 >
                                     {entry.data.title || formatTitle(entry.slug)}
