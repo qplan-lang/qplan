@@ -13,7 +13,7 @@ export function buildAIPlanPrompt(
   registry: ModuleRegistry,
   language: PromptLanguage = "en"
 ) {
-  const modules = registry.list();
+  const modules = registry.list({ includeExcluded: false });
   const moduleText = modules
     .map(m => {
       const usageTxt = m.usage ? `\n  예시:\n${indent(m.usage.trim(), 4)}` : "";
@@ -57,7 +57,7 @@ QPlan은 Step 기반 워크플로우 언어로, 모든 Action은 반드시 step 
   - 문자열은 "..." 로 감싸고, ctx 변수를 참조할 때는 해당 변수명을 그대로 value 로 적되 따옴표를 쓰지 않습니다.
   - 모든 Action은 반드시 step 블록 내부에 위치해야 하며, 독립 실행은 허용되지 않습니다.
 - \`var\` 모듈은 숫자/문자열/JSON 리터럴만 value 로 허용됩니다. \`var value=diff -> copy\` 처럼 기존 ctx 변수를 다른 이름으로 복사하려고 쓰면 오류가 나므로, 그런 경우에는 \`set copy = diff\` (선행 초기화 필요) 또는 다른 모듈을 사용하십시오.
-- If 조건문 (>, <, >=, <=, ==, !=, EXISTS, NOT_EXISTS) + and/or/not 조합, 괄호 우선순위 지원
+- If 조건문 (>, <, >=, <=, ==, !=, EXISTS, NOT_EXISTS) + and/or/not 조합, 괄호 우선순위 지원. 단항 조건 \`if <expr>\` 는 truthy/falsy 기준으로 판단
 - Each 반복문 (each item in iterable { ... } / each (item, idx) in iterable { ... })
 - Each/While 반복문에서 break(루프 탈출)/continue(다음 반복) 제어.
 - Parallel 병렬 실행 (concurrency, ignoreErrors)

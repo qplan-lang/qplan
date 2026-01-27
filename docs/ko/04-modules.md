@@ -11,6 +11,7 @@ QPlan의 모든 기능은 **ActionModule** 을 통해 확장된다. ActionModule
 | `inputs` | 지원하는 입력 파라미터 이름 배열. |
 | `inputType` | 입력 스키마(JSON) 형태. 예: `{ name: "string", options: { limit: "number" } }` |
 | `outputType` | 반환 스키마(JSON) 형태. 예: `{ title: "string", items: [{ id: "string" }] }` |
+| `excludeInPrompt` | true면 AI 프롬프트에 포함되지 않는다. |
 | `execute(inputs, ctx)` | 비동기/동기 모두 가능. 결과를 반환하면 ctx에 저장된다. |
 
 함수형 모듈의 경우 메타데이터를 속성으로 덧붙인다:
@@ -24,6 +25,7 @@ export const echoModule = Object.assign(
     inputs: ["msg"],
     inputType: { msg: "string" },
     outputType: { msg: "string" },
+    excludeInPrompt: false,
   }
 );
 ```
@@ -75,7 +77,8 @@ registry.registerAll([htmlModule, aiModule]); // 여러 모듈 일괄 등록
 
 - `registry.register(module)` 은 id 중복을 검사한다. 중복이면 오류가 발생한다.
 - id가 없는 모듈을 등록하려 하면 경고를 출력하며 registry에 추가하지 않는다(LLM이 사용할 수 없으므로 안전 장치).
-- `registry.list()` 로 현재 등록된 모듈 메타데이터를 얻어 AI 프롬프트에 활용할 수 있다.
+- `registry.list()` 로 현재 등록된 모듈 메타데이터를 모두 얻을 수 있다.
+- `registry.list({ includeExcluded: false })` 는 프롬프트에 노출될 모듈만 반환한다.
 
 ## 5. ActionModule 구현 가이드
 1. **ctx 변수 접근** – 문자열 입력이 ctx 변수명과 일치하면 Executor가 자동으로 ctx 값을 대입해 준다. 필요 시 직접 `ctx.has/ctx.get` 을 호출해도 된다.

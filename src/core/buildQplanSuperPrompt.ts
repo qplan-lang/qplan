@@ -20,7 +20,7 @@ import { buildAIGrammarSummary } from "./buildAIGrammarSummary.js";
  */
 export function buildQplanSuperPrompt(registry: ModuleRegistry): string {
    const grammar = buildAIGrammarSummary();
-   const modules = registry.list();
+  const modules = registry.list({ includeExcluded: false });
 
    const moduleText = modules
       .map(m => {

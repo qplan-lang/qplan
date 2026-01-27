@@ -51,7 +51,7 @@ await runQplan(script, {
 ```
 
 ## 🔄 Control flow & language features
-- **If / While**—conditions support `> < >= <= == != EXISTS NOT_EXISTS` (`EXISTS` is unary; `undefined`/`null`/`""` are false), logical `AND/OR/not`, and parentheses. While loops reuse the same condition syntax.
+- **If / While**—conditions support `> < >= <= == != EXISTS NOT_EXISTS` (`EXISTS` is unary; `undefined`/`null`/`""` are false), plus unary truthy checks like `if total`. Combine with `AND/OR/not` and parentheses. While loops reuse the same condition syntax.
 - **Each**—`each item in iterable { ... }` or `each (item, idx) in iterable { ... }` iterates arrays, with `break`/`continue` available inside.
 - **Parallel**—`parallel concurrency=3 ignoreErrors=true { ... }` runs a block in parallel.
 - **Future & Join**—the `future` module stores a Promise in ctx under a `__future` wrapper, and `join futures="f1,f2" -> list` combines multiple futures.

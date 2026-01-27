@@ -51,13 +51,13 @@ await runQplan(script, {
 ```
 
 ## 🔄 제어 흐름 & 언어 기능
-- **If / While** — 조건식은 `> < >= <= == != EXISTS NOT_EXISTS`(`EXISTS`는 단항이며 `undefined`/`null`/`""`는 거짓) 와 `AND/OR/not` 및 괄호를 지원한다. While 은 동일한 조건 구문을 반복에 사용한다.
+- **If / While** — 조건식은 `> < >= <= == != EXISTS NOT_EXISTS`(`EXISTS`는 단항이며 `undefined`/`null`/`""`는 거짓)와 단항 truthy 체크(`if total`)를 지원한다. `AND/OR/not` 및 괄호도 가능하며 While 은 동일한 조건 구문을 반복에 사용한다.
 - **Each** — `each item in iterable { ... }` 또는 `each (item, idx) in iterable { ... }` 로 배열을 순회한다. 내부에서 `break`/`continue` 사용 가능.
 - **Parallel** — `parallel concurrency=3 ignoreErrors=true { ... }` 로 블록을 병렬 실행한다.
 - **Future & Join** — `future` 모듈은 Promise를 `__future` 래퍼에 담아 ctx에 저장하고, `join futures="f1,f2" -> list` 가 여러 Future를 합친다.
 - **Set & Return** — `set total = (total + delta) * 0.5` 처럼 산술 표현식을 기존 변수에 적용하고, `return key=value ...` 로 Step 출력 객체를 직접 구성한다.
 - **Break / Continue** — Each, While 루프 안에서 루프 탈출/다음 반복으로 이동.
-- **Stop / Skip** — Plan 전체 중단 또는 현재 Step 건너뛰기.
+- **Stop / Skip** — stop은 Plan을 `stopped` 상태로 정상 종료, skip은 현재 Step만 종료하고 다음 Step으로 이동.
 - **ExecutionContext** — `ctx.get("order.summary.status")` 같은 dot-path나 `items[0]` 같은 배열 인덱스로 하위 값을 읽을 수 있고(배열은 `.length`/`.count` 지원), `ctx.getEnv()`, `ctx.getMetadata()` 로 실행 시 전달한 컨텍스트에 접근할 수 있으며, `ctx.toJSON()` 으로 전체 상태를 덤프할 수 있다.
 - **문법 전체**는 `docs/02-grammar.md` 를 참고하면 된다. `buildAIGrammarSummary()` 는 해당 문법을 LLM용으로 요약한 버전을 자동 생성한다.
 

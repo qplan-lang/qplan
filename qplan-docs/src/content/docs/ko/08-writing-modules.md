@@ -37,8 +37,28 @@ export const fileModule = {
 - `description`: 모듈 기능을 간결하게 설명. Prompt Builder가 그대로 표시한다.
 - `usage`: 실제 QPlan 사용 예시 문자열. 여러 줄 가능.
 - `inputs`: 지원하는 파라미터 이름 배열. AI가 올바른 키를 사용하도록 돕는다.
+- `inputType`: 입력 스키마(JSON) 형태. 예: `{ name: "string", options: { limit: "number" } }`
+- `outputType`: 반환 스키마(JSON) 형태. 예: `{ title: "string", items: [{ id: "string" }] }`
 
 메타데이터는 함수형과 객체형 모두 동일하게 적용되며, registry.list() 결과에 그대로 노출된다.
+
+```ts
+export const profileModule = {
+  id: "profile",
+  description: "프로필 정보를 생성",
+  usage: `profile name="kim" age=20 -> out`,
+  inputs: ["name", "age"],
+  inputType: { name: "string", age: "number" },
+  outputType: {
+    title_a: "string",
+    gndType: "number",
+    arr: [{ obj1: "any", obj2: "any" }],
+  },
+  execute(inputs) {
+    return { title_a: inputs.name, gndType: inputs.age, arr: [] };
+  },
+};
+```
 
 ## 3. Inputs 처리 & ctx 연동
 - 문자열 인수가 ctx에 존재하면 Executor가 자동으로 값을 대입한다. 모듈 내부에서 `ctx.has/ctx.get` 을 호출할 수도 있다.

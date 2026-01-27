@@ -1093,12 +1093,14 @@ export class Parser {
     const opToken = this.peek();
     let comparator: string;
     if (opToken.type === TokenType.Symbol) {
-      const op = this.consume(TokenType.Symbol).value;
       const validOps = [">", "<", ">=", "<=", "==", "!="];
-      if (!validOps.includes(op)) {
-        throw new ParserError(`Invalid operator '${op}'`, opToken.line);
+      if (validOps.includes(opToken.value)) {
+        comparator = this.consume(TokenType.Symbol).value;
+      } else if (opToken.value === "{" || opToken.value === ")") {
+        comparator = "TRUTHY";
+      } else {
+        throw new ParserError(`Invalid operator '${opToken.value}'`, opToken.line);
       }
-      comparator = op;
     } else if (opToken.type === TokenType.Identifier) {
       const opId = this.consume(TokenType.Identifier).value.toUpperCase();
       const validIds = ["EXISTS", "NOT_EXISTS"];
@@ -1106,6 +1108,16 @@ export class Parser {
         throw new ParserError(`Invalid operator '${opId}'`, opToken.line);
       }
       comparator = opId;
+    } else if (opToken.type === TokenType.Keyword) {
+      const opValue = opToken.value.toUpperCase();
+      if (opValue === "AND" || opValue === "OR") {
+        comparator = "TRUTHY";
+      } else {
+        throw new ParserError(
+          `Invalid operator token '${opToken.value}'`,
+          opToken.line
+        );
+      }
     } else {
       throw new ParserError(
         `Invalid operator token '${opToken.value}'`,
@@ -1115,7 +1127,7 @@ export class Parser {
 
     // Parse right side as expression (for EXISTS/NOT_EXISTS, create a dummy literal)
     let right: ExpressionNode;
-    if (comparator === "EXISTS" || comparator === "NOT_EXISTS") {
+    if (comparator === "EXISTS" || comparator === "NOT_EXISTS" || comparator === "TRUTHY") {
       // For EXISTS/NOT_EXISTS, right side is not needed
       right = { type: "Literal", value: undefined };
     } else {

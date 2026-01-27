@@ -375,7 +375,7 @@ await runQplan(aiScript, { registry });
   `step id="stepId" desc="설명" [-> resultVar] { ... }`
 
 - **조건 / 반복**:  
-  `if`, `while`, `each` (EXISTS 단항 연산자 지원)
+  `if`, `while`, `each` (EXISTS 단항 + truthy 단항 조건 지원)
 
 - **병렬 / 비동기**:  
   `parallel`, `future`, `join`

@@ -109,6 +109,10 @@ ai prompt="요약" context=html
 
 ## 2.5 If 조건문
 ```
+if <expr> {
+    ...
+}
+
 if <left> <op> <right> [and/or <left> <op> <right> ...] {
     ...
 } else {
@@ -120,6 +124,7 @@ if <left> <op> <right> [and/or <left> <op> <right> ...] {
 ```
 지원 비교 연산자: `> < >= <= == != EXISTS NOT_EXISTS`  
 `EXISTS`/`NOT_EXISTS`는 단항 연산자이며(예: `value EXISTS`), `undefined`/`null`/빈 문자열(`""`)을 존재하지 않는 것(False)으로 취급한다.  
+비교 연산자를 생략하면(`if <expr>`), truthy/falsy 규칙으로 평가한다.  
 `and`, `or`, `not` 으로 조건을 조합할 수 있고 괄호 `()` 로 우선순위를 지정 가능하다.  
 왼쪽/오른쪽 피연산자는 ctx 변수명, `stats.average` 같은 dot-path(없는 속성은 `undefined` 반환), `items[0]` 같은 배열 인덱스를 사용할 수 있다. 배열은 `.length`와 `.count`를 지원한다.
 
@@ -179,7 +184,7 @@ set config = {"limit":10}
 - `continue` : 현재 반복을 건너뛰고 다음 반복으로 이동
 
 ### Plan/Step 제어
-- `stop` : Plan 전체 실행 중단 (모든 Step 즉시 종료)
+- `stop` : Plan 전체 실행 중단 (status=`stopped`로 정상 종료)
 - `skip` : 현재 Step의 나머지 부분 건너뛰기 (다음 Step으로 이동)
 
 ### Step 이동
@@ -257,8 +262,7 @@ SkipStmt        = "skip" ;
 SetStmt         = "set" , Identifier , "=" , Expression ;
 
 Condition       = SimpleCondition , { LogicOp , SimpleCondition } ;
-SimpleCondition = [ "NOT" ] , IdentifierPath , Comparator ,
-                  (Number | QuotedString | IdentifierPath) ;
+SimpleCondition = [ "NOT" ] , Expression , [ Comparator , Expression ] ;
 LogicOp         = "AND" | "OR" ;
 
 Comparator      = ">" | "<" | ">=" | "<=" | "==" | "!=" | "EXISTS" | "NOT_EXISTS" ;
@@ -351,7 +355,7 @@ step id="sleepers" desc="병렬 작업" {
 - Action = 모듈 이름 + 옵션(선택) + key=value arguments + optional output  
 - Arguments 는 숫자/문자열/JSON/dot-path/배열 인덱스 변수 참조 지원  
 - Future/Join/Parallel/Each/While/Set/Return/Jump 내장  
-- If 조건은 숫자/문자열 비교 + EXISTS/NOT_EXISTS + 괄호  
+- If 조건은 숫자/문자열 비교 + EXISTS/NOT_EXISTS + 단항 truthy + 괄호  
 
 ---
 

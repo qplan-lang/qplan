@@ -11,6 +11,7 @@ Every QPlan capability is extended via **ActionModules**. A module can be a func
 | `inputs` | Array of supported input parameter names. |
 | `inputType` | Input schema in JSON form. Example: `{ name: "string", options: { limit: "number" } }`. |
 | `outputType` | Output schema in JSON form. Example: `{ title: "string", items: [{ id: "string" }] }`. |
+| `excludeInPrompt` | If true, module is excluded from AI prompt builders. |
 | `execute(inputs, ctx)` | Async or sync; returned values are stored in ctx. |
 
 For function-style modules, attach metadata via properties:
@@ -24,6 +25,7 @@ export const echoModule = Object.assign(
     inputs: ["msg"],
     inputType: { msg: "string" },
     outputType: { msg: "string" },
+    excludeInPrompt: false,
   }
 );
 ```
@@ -75,7 +77,8 @@ registry.registerAll([htmlModule, aiModule]); // 여러 모듈 일괄 등록
 
 - `registry.register(module)` checks ID collisions and throws if duplicated.
 - Modules without IDs trigger warnings and are skipped (LLMs couldn’t use them safely).
-- `registry.list()` returns metadata for all registered modules to feed into AI prompts.
+- `registry.list()` returns metadata for all registered modules.
+- `registry.list({ includeExcluded: false })` returns only prompt-visible modules.
 
 ## 5. ActionModule implementation guide
 1. **ctx variable access** – If a string input matches a ctx variable name, the executor auto-injects the value. You can also call `ctx.has/ctx.get` directly.

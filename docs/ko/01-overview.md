@@ -51,7 +51,7 @@ await runQplan(script, {
 ```
 
 ## 🔄 제어 흐름 & 언어 기능
-- **If / While** — 조건식은 `> < >= <= == != EXISTS NOT_EXISTS`(`EXISTS`는 단항이며 `undefined`/`null`/`""`는 거짓) 와 `AND/OR/not` 및 괄호를 지원한다. While 은 동일한 조건 구문을 반복에 사용한다.
+- **If / While** — 조건식은 `> < >= <= == != EXISTS NOT_EXISTS`(`EXISTS`는 단항이며 `undefined`/`null`/`""`는 거짓)와 단항 truthy 체크(`if total`)를 지원한다. `AND/OR/not` 및 괄호도 가능하며 While 은 동일한 조건 구문을 반복에 사용한다.
 - **Each** — `each item in iterable { ... }` 또는 `each (item, idx) in iterable { ... }` 로 배열을 순회한다. 내부에서 `break`/`continue` 사용 가능.
 - **Parallel** — `parallel concurrency=3 ignoreErrors=true { ... }` 로 블록을 병렬 실행한다.
 - **Future & Join** — `future` 모듈은 Promise를 `__future` 래퍼에 담아 ctx에 저장하고, `join futures="f1,f2" -> list` 가 여러 Future를 합친다.

@@ -7,7 +7,7 @@ QPlan은 “AI가 스크립트를 작성하고 엔진이 실행”하는 시나�
 ```ts
 const modules = registry.list();
 ```
-`registry.list()` 결과에는 `id`, `description`, `usage`, `inputs` 가 포함되며 LLM에 전달할 모듈 가이드의 핵심이 된다. 모듈 메타데이터를 충실히 작성할수록 AI가 정확한 QPlan 명령을 생성한다.
+`registry.list()` 결과에는 `id`, `description`, `usage`, `inputs`, `inputType`, `outputType` 가 포함되며 LLM에 전달할 모듈 가이드의 핵심이 된다. 모듈 메타데이터를 충실히 작성할수록 AI가 정확한 QPlan 명령을 생성한다.
 
 ## 3. buildAIPlanPrompt() 워크플로우
 ```ts
@@ -28,7 +28,7 @@ console.log(ctx.toJSON());
 `buildAIPlanPrompt(requirement, { registry, language })` 는 다음 정보를 자동으로 포함한다.
 1. QPlan 언어 개요와 “Step 내부에서만 Action 실행” 같은 규칙
 2. `buildAIGrammarSummary()` 로 생성한 AI-friendly 문법 요약
-3. registry.list() 로 얻은 모듈 메타데이터(`usage` 예시 포함)
+3. registry.list() 로 얻은 모듈 메타데이터(`usage` 예시, `inputType`/`outputType` 포함)
 4. onError/jump/dot-path/params 등 실행 규칙 및 출력 형식
 
 LLM은 이 프롬프트를 기반으로 Step 기반 QPlan 스크립트만 출력하게 된다. 외부 입력이 필요하다면 `@params` 를 한 줄(콤마 구분)로 선언하도록 안내해야 validation을 통과한다.

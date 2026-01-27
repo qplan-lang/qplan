@@ -30,12 +30,12 @@ Executor.run(ast, ctx)
 - Comparators: `> < >= <= == != EXISTS NOT_EXISTS`
 - Logic: `AND`, `OR`, `not`, plus parentheses for precedence
 - Operands accept ctx variables or dot paths like `stats.total`.
-- While reuses the same condition syntax, enabling `stop`/`skip` inside.
+- While reuses the same condition syntax, enabling `break`/`continue` inside.
 
 ### Each
 - Syntax: `each item in iterable { ... }` or `each (item, idx) in iterable { ... }`
 - The iterable must exist in ctx and be array-like/iterable.
-- `stop` exits the loop; `skip` continues to the next iteration.
+- Use `break`/`continue` for loop control; `stop` terminates the plan, and `skip` ends the current step.
 
 ### Parallel
 - Syntax: `parallel { ... } concurrency=2 ignoreErrors=true`

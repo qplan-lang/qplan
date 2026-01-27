@@ -9,6 +9,9 @@ Every QPlan capability is extended via **ActionModules**. A module can be a func
 | `description` | Shown to AI/docs; summarize the module purpose. |
 | `usage` | Example usage string; prompt builders embed it verbatim. |
 | `inputs` | Array of supported input parameter names. |
+| `inputType` | Input schema in JSON form. Example: `{ name: "string", options: { limit: "number" } }`. |
+| `outputType` | Output schema in JSON form. Example: `{ title: "string", items: [{ id: "string" }] }`. |
+| `excludeInPrompt` | If true, module is excluded from AI prompt builders. |
 | `execute(inputs, ctx)` | Async or sync; returned values are stored in ctx. |
 
 For function-style modules, attach metadata via properties:
@@ -20,6 +23,9 @@ export const echoModule = Object.assign(
     description: "Return inputs as-is",
     usage: `echo msg="hello" -> out`,
     inputs: ["msg"],
+    inputType: { msg: "string" },
+    outputType: { msg: "string" },
+    excludeInPrompt: false,
   }
 );
 ```
@@ -71,13 +77,14 @@ registry.registerAll([htmlModule, aiModule]); // 여러 모듈 일괄 등록
 
 - `registry.register(module)` checks ID collisions and throws if duplicated.
 - Modules without IDs trigger warnings and are skipped (LLMs couldn’t use them safely).
-- `registry.list()` returns metadata for all registered modules to feed into AI prompts.
+- `registry.list()` returns metadata for all registered modules.
+- `registry.list({ includeExcluded: false })` returns only prompt-visible modules.
 
 ## 5. ActionModule implementation guide
 1. **ctx variable access** – If a string input matches a ctx variable name, the executor auto-injects the value. You can also call `ctx.has/ctx.get` directly.
 2. **Async handling** – If `execute` returns a Promise, the executor awaits it. For future-style concurrency, return `{ __future: Promise }` so only the promise is saved.
 3. **I/O validation** – Throw explicit errors when required params are missing so the step’s onError policy engages.
-4. **Metadata** – Populate `description/usage/inputs` so `buildAIPlanPrompt` can communicate usage naturally to the AI.
+4. **Metadata** – Populate `description/usage/inputs` so `buildAIPlanPrompt` can communicate usage naturally to the AI. Add `inputType/outputType` to describe I/O shapes.
 5. **State** – Prefer stateless modules. When shared state is needed, inject it externally or leverage the ExecutionContext.
 6. **Execution control** – Long-running loops or waits should call `await ctx.checkControl()` periodically so pause/abort requests take effect. Use `ctx.getExecutionState()` if you need to branch on current state.
 

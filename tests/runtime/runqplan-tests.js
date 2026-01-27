@@ -451,6 +451,71 @@ step id="second" {
   assert.strictEqual(ctx.get("marker3"), "next-step");
 }
 
+async function testUnaryTruthyConditions() {
+  const script = `
+step id="seed" {
+  var [] -> emptyArr
+  var [1,2] -> arr
+  var {} -> emptyObj
+  var 0 -> zero
+  var null -> nil
+  var "" -> emptyStr
+  var "hi" -> text
+}
+
+step id="check" {
+  if emptyArr {
+    var "empty-array-true" -> r1
+  }
+  if arr {
+    var "array-true" -> r2
+  }
+  if emptyObj {
+    var "object-true" -> r3
+  }
+  if zero {
+    var "zero-true" -> r4
+  } else {
+    var "zero-false" -> r4
+  }
+  if nil {
+    var "null-true" -> r4_1
+  } else {
+    var "null-false" -> r4_1
+  }
+  if emptyStr {
+    var "emptyStr-true" -> r5
+  } else {
+    var "emptyStr-false" -> r5
+  }
+  if text {
+    var "text-true" -> r6
+  }
+  if missingVar {
+    var "missing-true" -> r7
+  } else {
+    var "missing-false" -> r7
+  }
+  if undefined {
+    var "undefined-true" -> r8
+  } else {
+    var "undefined-false" -> r8
+  }
+}
+`;
+
+  const ctx = await runQplan(script);
+  assert.strictEqual(ctx.get("r1"), "empty-array-true");
+  assert.strictEqual(ctx.get("r2"), "array-true");
+  assert.strictEqual(ctx.get("r3"), "object-true");
+  assert.strictEqual(ctx.get("r4"), "zero-false");
+  assert.strictEqual(ctx.get("r4_1"), "null-false");
+  assert.strictEqual(ctx.get("r5"), "emptyStr-false");
+  assert.strictEqual(ctx.get("r6"), "text-true");
+  assert.strictEqual(ctx.get("r7"), "missing-false");
+  assert.strictEqual(ctx.get("r8"), "undefined-false");
+}
+
 await testEnvHooksAndPlanEvents();
 await testReturnShorthandAndStepNamespace();
 await testActionArgsResolveAgainstCtx();
@@ -468,4 +533,5 @@ await testStopStepStatusInEvents();
 await testStopInsideParallel();
 await testStopInsideStepWithReturnIsNotExecuted();
 await testSkipContinuesToNextStep();
+await testUnaryTruthyConditions();
 console.log("runtime runQplan-tests passed");

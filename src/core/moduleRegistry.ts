@@ -68,14 +68,18 @@ export class ModuleRegistry {
   }
 
   // AI가 참고하는 모듈 스펙 리스트
-  list(): ModuleMeta[] {
-    return [...this.modules.values()].map(m => ({
-      id: m.id,
-      description: m.description,
-      usage: m.usage,
-      inputs: m.inputs,
-      inputType: m.inputType,
-      outputType: m.outputType
-    }));
+  list(options: { includeExcluded?: boolean } = {}): ModuleMeta[] {
+    const includeExcluded = options.includeExcluded ?? true;
+    return [...this.modules.values()]
+      .filter(m => includeExcluded || !m.excludeInPrompt)
+      .map(m => ({
+        id: m.id,
+        description: m.description,
+        usage: m.usage,
+        inputs: m.inputs,
+        inputType: m.inputType,
+        outputType: m.outputType,
+        excludeInPrompt: m.excludeInPrompt
+      }));
   }
 }

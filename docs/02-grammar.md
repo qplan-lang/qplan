@@ -109,6 +109,10 @@ ai prompt="Summary" context=html
 
 ## 2.5 If statements
 ```
+if <expr> {
+    ...
+}
+
 if <left> <op> <right> [and/or <left> <op> <right> ...] {
     ...
 } else {
@@ -120,6 +124,7 @@ lines at the top of the script.
 ```
 Supported comparison operators: `> < >= <= == != EXISTS NOT_EXISTS`.  
 `EXISTS` and `NOT_EXISTS` are unary operators (e.g., `if value EXISTS`); they treat `undefined`/`null`/`""` as False.  
+If you omit a comparator (`if <expr>`), QPlan evaluates the expression using truthy/falsy rules.  
 Combine conditions with `and`, `or`, `not`, and use parentheses `()` for precedence.  
 Operands may reference ctx variables, dot paths like `stats.average` (missing props return `undefined`), or bracket indices like `items[0]`. Arrays support `.length` and `.count`.
 
@@ -257,8 +262,7 @@ SkipStmt        = "skip" ;
 SetStmt         = "set" , Identifier , "=" , Expression ;
 
 Condition       = SimpleCondition , { LogicOp , SimpleCondition } ;
-SimpleCondition = [ "NOT" ] , IdentifierPath , Comparator ,
-                  (Number | QuotedString | IdentifierPath) ;
+SimpleCondition = [ "NOT" ] , Expression , [ Comparator , Expression ] ;
 LogicOp         = "AND" | "OR" ;
 
 Comparator      = ">" | "<" | ">=" | "<=" | "==" | "!=" | "EXISTS" | "NOT_EXISTS" ;
@@ -351,7 +355,7 @@ step id="sleepers" desc="Parallel tasks" {
 - Action = module name + optional options + key=value arguments + optional output capture.  
 - Arguments support numbers/strings/JSON/dot-path or bracket-index variable references.  
 - Built-in Future/Join/Parallel/Each/While/Set/Return/Jump constructs.  
-- If conditions compare numbers/strings, support EXISTS/NOT_EXISTS, and allow parentheses.  
+- If conditions compare numbers/strings, support EXISTS/NOT_EXISTS, support unary truthy checks, and allow parentheses.  
 
 ---
 

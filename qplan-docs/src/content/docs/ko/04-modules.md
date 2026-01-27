@@ -9,6 +9,9 @@ QPlan의 모든 기능은 **ActionModule** 을 통해 확장된다. ActionModule
 | `description` | AI / 문서에 노출되는 설명. 모듈 목적을 간결하게 적는다. |
 | `usage` | 사용 예시 문자열. Prompt Builder가 그대로 프롬프트에 포함한다. |
 | `inputs` | 지원하는 입력 파라미터 이름 배열. |
+| `inputType` | 입력 스키마(JSON) 형태. 예: `{ name: "string", options: { limit: "number" } }` |
+| `outputType` | 반환 스키마(JSON) 형태. 예: `{ title: "string", items: [{ id: "string" }] }` |
+| `excludeInPrompt` | true면 AI 프롬프트에 포함되지 않는다. |
 | `execute(inputs, ctx)` | 비동기/동기 모두 가능. 결과를 반환하면 ctx에 저장된다. |
 
 함수형 모듈의 경우 메타데이터를 속성으로 덧붙인다:
@@ -20,6 +23,9 @@ export const echoModule = Object.assign(
     description: "입력 그대로 반환",
     usage: `echo msg="hello" -> out`,
     inputs: ["msg"],
+    inputType: { msg: "string" },
+    outputType: { msg: "string" },
+    excludeInPrompt: false,
   }
 );
 ```
@@ -71,13 +77,14 @@ registry.registerAll([htmlModule, aiModule]); // 여러 모듈 일괄 등록
 
 - `registry.register(module)` 은 id 중복을 검사한다. 중복이면 오류가 발생한다.
 - id가 없는 모듈을 등록하려 하면 경고를 출력하며 registry에 추가하지 않는다(LLM이 사용할 수 없으므로 안전 장치).
-- `registry.list()` 로 현재 등록된 모듈 메타데이터를 얻어 AI 프롬프트에 활용할 수 있다.
+- `registry.list()` 로 현재 등록된 모듈 메타데이터를 모두 얻을 수 있다.
+- `registry.list({ includeExcluded: false })` 는 프롬프트에 노출될 모듈만 반환한다.
 
 ## 5. ActionModule 구현 가이드
 1. **ctx 변수 접근** – 문자열 입력이 ctx 변수명과 일치하면 Executor가 자동으로 ctx 값을 대입해 준다. 필요 시 직접 `ctx.has/ctx.get` 을 호출해도 된다.
 2. **비동기 처리** – `execute` 가 Promise를 반환하면 Executor가 await 한다. Future 모듈처럼 병렬 처리가 필요하면 `{ __future: Promise }` 객체를 반환해 ctx에 Promise만 저장할 수 있다.
 3. **입출력 검증** – 필요한 파라미터가 없으면 명시적으로 오류를 던져 Step의 onError 정책이 동작하도록 한다.
-4. **메타데이터** – `description/usage/inputs` 를 채우면 `buildAIPlanPrompt` 가 자연스럽게 사용법을 AI에게 전달한다.
+4. **메타데이터** – `description/usage/inputs` 를 채우면 `buildAIPlanPrompt` 가 자연스럽게 사용법을 AI에게 전달한다. `inputType/outputType` 을 추가하면 입출력 구조까지 전달할 수 있다.
 5. **상태 저장** – ActionModule은 Stateless로 구현하는 것을 권장한다. 실행 간 공유 상태가 필요하면 외부 클래스를 주입하거나 ExecutionContext를 활용한다.
 6. **실행 제어** – 긴 루프/대기 모듈은 `await ctx.checkControl()` 을 주기적으로 호출해 pause/abort 요청을 반영하고, 필요 시 `ctx.getExecutionState()` 로 상태를 확인한다.
 

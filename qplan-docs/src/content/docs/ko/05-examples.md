@@ -67,24 +67,24 @@ step id="skip" desc="다음 작업" {
 - parallel 블록은 `concurrency` 와 `ignoreErrors` 옵션을 블록 앞/뒤 어느 쪽에 둬도 된다.
 - Jump는 Step ID를 대상으로만 작동한다.
 
-## 5. Each 반복 + stop/skip
+## 5. Each 반복 + break/continue
 ```qplan
 step id="loop" desc="반복 예제" {
   var 0 -> total
   json parse data="[1,2,3,4]" -> nums
   each (n, idx) in nums {
     if n == 3 {
-      stop
+      break
     }
     if idx == 0 {
-      skip
+      continue
     }
     math add a=total b=n -> total
   }
   return count=nums.length total=total
 }
 ```
-- `each` 블록 내부에서 `stop` 을 호출하면 현재 each 를 탈출, `skip` 은 다음 반복으로 이동한다.
+- `each` 블록 내부에서는 `break`로 루프 탈출, `continue`로 다음 반복으로 이동한다.
 - `nums.length` 처럼 dot-path 접근은 ExecutionContext가 처리한다.
 
 ## 6. While + Set 으로 카운터 조작

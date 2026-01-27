@@ -51,13 +51,13 @@ await runQplan(script, {
 ```
 
 ## 🔄 Control flow & language features
-- **If / While**—conditions support `> < >= <= == != EXISTS NOT_EXISTS` (`EXISTS` is unary; `undefined`/`null`/`""` are false), logical `AND/OR/not`, and parentheses. While loops reuse the same condition syntax.
+- **If / While**—conditions support `> < >= <= == != EXISTS NOT_EXISTS` (`EXISTS` is unary; `undefined`/`null`/`""` are false), plus unary truthy checks like `if total`. Combine with `AND/OR/not` and parentheses. While loops reuse the same condition syntax.
 - **Each**—`each item in iterable { ... }` or `each (item, idx) in iterable { ... }` iterates arrays, with `break`/`continue` available inside.
 - **Parallel**—`parallel concurrency=3 ignoreErrors=true { ... }` runs a block in parallel.
 - **Future & Join**—the `future` module stores a Promise in ctx under a `__future` wrapper, and `join futures="f1,f2" -> list` combines multiple futures.
 - **Set & Return**—`set total = (total + delta) * 0.5` applies arithmetic expressions to existing variables, and `return key=value ...` shapes step outputs manually.
 - **Break / Continue**—exit loops or skip to the next iteration in Each or While loops.
-- **Stop / Skip**—terminate the entire plan or skip the rest of the current step.
+- **Stop / Skip**—stop ends the plan with status `stopped` (treated as normal completion), skip ends the current step and continues to the next.
 - **ExecutionContext**—`ctx.get("order.summary.status")` reads nested values via dot paths, `ctx.get("items.0")` / `items[0]` style bracket indices are supported (arrays also support `.length`/`.count`), `ctx.getEnv()` / `ctx.getMetadata()` expose per-run context, and `ctx.toJSON()` dumps the entire state.
 - **Full grammar** lives in `docs/02-grammar.md`; `buildAIGrammarSummary()` auto-generates a condensed, LLM-friendly version.
 

@@ -326,11 +326,13 @@ export class Executor {
   }
 
   private evaluateClause(clause: ConditionClause, ctx: ExecutionContext): boolean {
-    // Special handling for EXISTS: allow missing simple identifiers
+    // Special handling for unary checks: allow missing simple identifiers
     let left: any;
 
     if (
-      (clause.comparator === "EXISTS" || clause.comparator === "NOT_EXISTS") &&
+      (clause.comparator === "EXISTS" ||
+        clause.comparator === "NOT_EXISTS" ||
+        clause.comparator === "TRUTHY") &&
       clause.left.type === "Identifier" &&
       !clause.left.name.includes(".")
     ) {
@@ -370,6 +372,9 @@ export class Executor {
         break;
       case "NOT_EXISTS":
         result = left === undefined || left === null || left === "";
+        break;
+      case "TRUTHY":
+        result = Boolean(left);
         break;
       default:
         throw new Error(`Unknown comparator: ${clause.comparator}`);

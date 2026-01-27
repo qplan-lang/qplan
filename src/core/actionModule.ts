@@ -18,6 +18,7 @@ export interface ModuleMeta {
   inputs?: string[];           // 파라미터 이름 목록
   inputType?: Record<string, any>; // 입력 타입/스키마 설명
   outputType?: Record<string, any>; // 반환 타입/스키마 설명
+  excludeInPrompt?: boolean;  // 프롬프트에 노출 제외
 }
 
 export type ModuleInputs = Record<string, any>;

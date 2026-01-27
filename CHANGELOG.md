@@ -7,6 +7,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.6.3] - 2026-01-27
+
+### Added
+- Unary truthy conditions for `if`/`while` (e.g., `if total { ... }`).
+- `excludeInPrompt` module metadata to hide modules from AI prompt builders.
+- Example demonstrating prompt exclusion (`examples/31_exam_prompt_exclude.js`).
+- Runtime tests for unary truthy conditions and prompt exclusion.
+
+### Changed
+- Prompt builders now filter out modules marked `excludeInPrompt`.
+
+### Updated
+- Grammar/overview/module docs and prompt summaries to cover unary truthy conditions and `excludeInPrompt`.
+
 ## [0.6.2] - 2026-01-21
 
 ### Added

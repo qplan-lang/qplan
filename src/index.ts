@@ -67,7 +67,7 @@ export function buildAIPlanPrompt(
 }
 
 export function listRegisteredModules(targetRegistry: ModuleRegistry = registry) {
-  return targetRegistry.list();
+  return targetRegistry.list({ includeExcluded: true });
 }
 
 /**

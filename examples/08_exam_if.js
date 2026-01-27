@@ -61,6 +61,45 @@ if isRun == false {
 if isStop != true {
   echo msg="not true check ok" -> msg5_4
 }
+if isRun {
+  echo msg="isRun is true" -> msg5_5
+}
+if isStop {
+  echo msg="isStop is true" -> msg5_6
+} else {
+  echo msg="isStop is false" -> msg5_7
+}
+
+# 6) Unary truthy checks (JS truthy/falsy)
+var [] -> emptyArr
+var [1,2] -> arr
+var {} -> emptyObj
+var 0 -> zero
+var "" -> emptyStr
+var "hi" -> text
+
+if emptyArr {
+  echo msg="empty array is truthy" -> msg6_1
+}
+if arr {
+  echo msg="array is truthy" -> msg6_2
+}
+if emptyObj {
+  echo msg="object is truthy" -> msg6_3
+}
+if zero {
+  echo msg="zero is truthy (should not run)" -> msg6_4
+} else {
+  echo msg="zero is falsy" -> msg6_4
+}
+if emptyStr {
+  echo msg="empty string is truthy (should not run)" -> msg6_5
+} else {
+  echo msg="empty string is falsy" -> msg6_5
+}
+if text {
+  echo msg="non-empty string is truthy" -> msg6_6
+}
 `;
 
 const ctx = await runQplan(script);

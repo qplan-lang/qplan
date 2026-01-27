@@ -127,6 +127,8 @@ if <left> <OP> <right> [and/or <left> <OP> <right> ...] {
   EXISTS
   NOT_EXISTS
   not (앞에 붙여 부정 가능)
+단항 조건:
+  if <expr> 형태는 truthy/falsy 규칙으로 판정됨
 괄호( ) 로 우선순위를 지정할 수 있음.
 
 예)

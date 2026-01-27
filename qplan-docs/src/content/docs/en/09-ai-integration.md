@@ -7,7 +7,7 @@ QPlan targets the “AI writes, engine executes” workflow. This guide explains
 ```ts
 const modules = registry.list();
 ```
-`registry.list()` returns `id`, `description`, `usage`, and `inputs`, forming the core module guide for the LLM. Richer metadata leads to more accurate QPlan code.
+`registry.list()` returns `id`, `description`, `usage`, `inputs`, `inputType`, and `outputType`, forming the core module guide for the LLM. Richer metadata leads to more accurate QPlan code.
 
 ## 3. buildAIPlanPrompt() workflow
 ```ts
@@ -28,7 +28,7 @@ console.log(ctx.toJSON());
 `buildAIPlanPrompt(requirement, { registry, language })` embeds:
 1. QPlan overview and key rules (e.g., actions only inside steps).
 2. AI-friendly grammar summary from `buildAIGrammarSummary()`.
-3. Module metadata from `registry.list()` (including `usage`).
+3. Module metadata from `registry.list()` (including `usage`, `inputType`, and `outputType`).
 4. Execution rules/output format covering onError, jumps, dot paths, params, etc.
 
 With this prompt, the LLM outputs step-based QPlan scripts only.

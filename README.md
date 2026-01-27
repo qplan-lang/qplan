@@ -251,7 +251,7 @@ Includes `if`, `while`, `each`, `parallel`, `future`, `join`, `jump`, `skip`, `s
 
 - `action key=value -> var`
 - `step id="..." desc="..." [type="..."] [onError="..."] [-> resultVar] { ... }` (results auto-bind to the step id unless you override it with `-> resultVar`)
-- Conditionals (including unary `EXISTS`), loops, async, parallel
+- Conditionals (including unary `EXISTS` and truthy checks), loops, async, parallel
 - Dot-path & bracket index referencing (with safe access & array properties)
 
 ## 11. License

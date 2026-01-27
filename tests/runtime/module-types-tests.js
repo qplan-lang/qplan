@@ -35,5 +35,31 @@ function testModuleTypeMetadataInPrompt() {
   );
 }
 
+function testExcludeInPrompt() {
+  const registry = new ModuleRegistry({ seedBasicModules: false });
+  registry.register({
+    id: "visible_echo",
+    description: "visible in prompt",
+    inputs: ["msg"],
+    execute: () => ({ ok: true }),
+  });
+  registry.register({
+    id: "internal_echo",
+    description: "hidden from prompt",
+    inputs: ["msg"],
+    excludeInPrompt: true,
+    execute: () => ({ ok: true }),
+  });
+
+  const planPrompt = buildAIPlanPrompt("say hello", { registry });
+  assert.ok(planPrompt.includes("- visible_echo: visible in prompt"));
+  assert.ok(!planPrompt.includes("internal_echo"));
+
+  const superPrompt = buildQplanSuperPrompt(registry);
+  assert.ok(superPrompt.includes("- visible_echo: visible in prompt"));
+  assert.ok(!superPrompt.includes("internal_echo"));
+}
+
 testModuleTypeMetadataInPrompt();
+testExcludeInPrompt();
 console.log("runtime module-types-tests passed");
