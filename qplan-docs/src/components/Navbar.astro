@@ -5,6 +5,7 @@ interface Props {
 }
 
 const { currentLang, langUrls } = Astro.props;
+const baseUrl = import.meta.env.BASE_URL;
 ---
 
 <nav class="navbar">
@@ -16,9 +17,9 @@ const { currentLang, langUrls } = Astro.props;
             <div class="version-badge">v0.6.3</div>
             
             <div class="nav-links">
-                <a href="/docs/en/11-qplan_quickstart_guide" class="link">Docs</a>
-                <a href="/docs/en/05-examples" class="link">Examples</a>
-                <a href="/docs/en/04-modules" class="link">Modules</a>
+                <a href={`${baseUrl}docs/en/11-qplan_quickstart_guide`} class="link">Docs</a>
+                <a href={`${baseUrl}docs/en/05-examples`} class="link">Examples</a>
+                <a href={`${baseUrl}docs/en/04-modules`} class="link">Modules</a>
             </div>
         </div>
 		

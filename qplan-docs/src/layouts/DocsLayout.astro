@@ -10,6 +10,7 @@ interface Props {
 }
 
 const { title, headings, entries, currentSlug } = Astro.props;
+const baseUrl = import.meta.env.BASE_URL;
 
 // Determine current language from slug
 const currentLang = currentSlug.startsWith('ko/') ? 'ko' : 'en';
@@ -29,7 +30,7 @@ function getUrlForLang(targetLang: string) {
     // If slug starts with lang code, remove it.
     // Astro content slugs: 'en/01-overview'
     const docPath = parts.slice(1).join('/');
-    return `/docs/${targetLang}/${docPath}`;
+    return `${baseUrl}docs/${targetLang}/${docPath}`;
 }
 
 const langUrls = {
