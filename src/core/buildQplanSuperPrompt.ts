@@ -1,4 +1,4 @@
-import { ModuleRegistry } from "./moduleRegistry.js";
+import { ModuleListOptions, ModuleRegistry } from "./moduleRegistry.js";
 import { buildAIGrammarSummary } from "./buildAIGrammarSummary.js";
 
 /**
@@ -18,17 +18,23 @@ import { buildAIGrammarSummary } from "./buildAIGrammarSummary.js";
  *  - AI-friendly grammar summary (자동 생성)
  *  - 사용 가능한 모듈 전체 목록 (동적)
  */
-export function buildQplanSuperPrompt(registry: ModuleRegistry): string {
+export function buildQplanSuperPrompt(
+   registry: ModuleRegistry,
+   moduleFilter: ModuleListOptions = {}
+): string {
    const grammar = buildAIGrammarSummary();
-  const modules = registry.list({ includeExcluded: false });
+  const modules = registry.list({ includeExcluded: false, ...moduleFilter });
 
    const moduleText = modules
       .map(m => {
+         const title = m.title ? ` (${m.title})` : "";
+         const category = m.category ? `\n  category: ${m.category}` : "";
+         const tags = m.tags?.length ? `\n  tags: ${m.tags.join(", ")}` : "";
          const usage = m.usage ? `\n  예시:\n${indent(m.usage.trim(), 4)}` : "";
          const inputs = m.inputs ? `\n  입력값: ${m.inputs.join(", ")}` : "";
          const inputType = m.inputType ? `\n  입력타입: ${formatType(m.inputType)}` : "";
          const outputType = m.outputType ? `\n  출력타입: ${formatType(m.outputType)}` : "";
-         return `- ${m.id}: ${m.description ?? ""}${inputs}${inputType}${outputType}${usage}`;
+         return `- ${m.id}${title}: ${m.description ?? ""}${category}${tags}${inputs}${inputType}${outputType}${usage}`;
       })
       .join("\n\n");
 

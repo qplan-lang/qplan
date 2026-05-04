@@ -39,18 +39,126 @@ const modules = registry.list();
 
 The better the metadata, the more accurately the AI produces QPlan commands. `description` and `usage` are injected verbatim into prompts. Adding `inputType/outputType` helps the LLM understand module I/O shapes.
 
-## 4. How the registry participates in execution
+## 4. Module Search And Prompt Filtering
+When a project has many modules, avoid sending every module to the LLM. Filter candidates first with `category`, `tags`, `query`, and `limit`, then build the planning prompt. Registered modules remain available for execution, but only filtered modules are exposed in the prompt.
+
+Add searchable metadata to modules:
+
+```ts
+registry.register({
+  id: "http_get",
+  title: "HTTP request",
+  category: "network",
+  tags: ["http", "api", "fetch"],
+  aliases: ["request", "download"],
+  description: "Fetch text from an API",
+  usage: `http_get url="https://example.com" -> out`,
+  inputs: ["url"],
+  execute: async ({ url }) => fetch(String(url)).then(r => r.text()),
+});
+```
+
+`registry.search()` excludes `excludeInPrompt: true` modules by default.
+
+```ts
+const modules = registry.search({
+  categories: ["network", "data"],
+  tags: ["json", "http"],
+  query: "api parse",
+  limit: 10,
+});
+```
+
+Search options behave like this:
+
+| Option | Behavior |
+| --- | --- |
+| `category` | Filter by one category. |
+| `categories` | Match any listed category. |
+| `tags` | Match any listed tag by default. |
+| `requireAllTags` | When `true`, every listed tag must be present. |
+| `query` | Scores text matches across `id`, `title`, `aliases`, `category`, `tags`, `description`, `inputs`, `usage`, and type metadata. |
+| `ids` | Select only specific module IDs. |
+| `limit` | Maximum number of modules to return. |
+| `includeExcluded` | Include `excludeInPrompt` modules when `true`. |
+
+Pass `moduleFilter` when building a planning prompt:
+
+```ts
+const prompt = buildAIPlanPrompt("Fetch API data and parse JSON", {
+  registry,
+  moduleFilter: {
+    categories: ["network", "data"],
+    tags: ["json", "http"],
+    query: "api parse",
+    limit: 8,
+  },
+});
+```
+
+The default module output detail is `compact`. It omits `usage`, `category`, and `tags`, and focuses on `id/title`, `description`, `inputs`, `inputType`, and `outputType`.
+
+| `moduleDetail` | Module info included in the prompt |
+| --- | --- |
+| `ids` | Only `id` and `title`. |
+| `compact` | Default. `id/title`, `description`, `inputs`, `inputType`, `outputType`. |
+| `usage` | `compact` plus `usage` examples. |
+| `full` | `usage` plus `category`, `tags`, and `aliases`. |
+
+```ts
+const prompt = buildAIPlanPrompt("Read a file and calculate the average", {
+  registry,
+  moduleFilter: { categories: ["io", "math"], limit: 6 },
+  moduleDetail: "compact",
+});
+```
+
+Apps can expose only one domain of modules for a specific planning task:
+
+```ts
+const reportPrompt = buildAIPlanPrompt("Summarize revenue data", {
+  registry,
+  moduleFilter: {
+    category: "reporting",
+    limit: 12,
+  },
+});
+```
+
+Use `excludeInPrompt: true` for modules that are registered for execution but should not be visible during dynamic planning.
+
+```ts
+registry.register({
+  id: "internal_payment_admin",
+  category: "payment",
+  tags: ["admin", "internal"],
+  excludeInPrompt: true,
+  execute() {
+    return "ok";
+  },
+});
+```
+
+Category summaries can drive UI filters or RAG candidate selection screens:
+
+```ts
+const categories = registry.listCategories();
+// [{ category: "data", count: 3 }, { category: "network", count: 5 }]
+```
+
+## 5. How the registry participates in execution
 1. `runQplan(script, { registry })` parses to AST, then the executor runs steps using the provided registry (defaults to the shared singleton).
 2. For each action, the executor calls `registry.get(moduleId)`.
 3. Missing modules throw immediately and are handled via the step’s onError policy.
 4. Returned results populate the ExecutionContext; future actions referencing the same names receive those values automatically.
 
+## 6. Registry Extension Guide
 - **Add custom modules**: implement an ActionModule and call `registry.register(customModule)`.
 - **Temp/sandbox modules**: still assign IDs so AI/docs can see them; otherwise registration is skipped.
 - **Multiple registries**: instantiate `const custom = new ModuleRegistry()` (basic modules included automatically), register extra modules, and pass it to both `runQplan(script, { registry: custom })` and `buildAIPlanPrompt(requirement, { registry: custom })`. To start empty, use `new ModuleRegistry({ seedBasicModules: false })`.
 - **Updating metadata**: modifying `description/usage/inputs/inputType/outputType` updates the `registry.list()` output immediately.
 
-## 6. Module management best practices
+## 7. Module Management Best Practices
 - Use lowercase, concise IDs (`search`, `payment`).
 - Include every real input key in `inputs` so the AI avoids typos.
 - Provide real QPlan snippets in `usage` for better prompt hints.

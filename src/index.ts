@@ -22,6 +22,7 @@ import { tokenize } from "./core/tokenizer.js";
 import { Parser } from "./core/parser.js";
 import { Executor } from "./core/executor.js";
 import { ModuleRegistry } from "./core/moduleRegistry.js";
+import type { ModuleListOptions } from "./core/moduleRegistry.js";
 import { ExecutionContext } from "./core/executionContext.js";
 import { ParserError } from "./core/parserError.js";
 import { ASTRoot } from "./core/ast.js";
@@ -31,7 +32,7 @@ import { AbortError as ExecutionAbortError } from "./core/executionController.js
 import { validateSemantics, parseParamsMeta } from "./core/semanticValidator.js";
 import type { SemanticIssue } from "./core/semanticValidator.js";
 import { buildAIPlanPrompt as buildPrompt } from "./core/buildAIPlanPrompt.js";
-import type { PromptLanguage } from "./core/buildAIPlanPrompt.js";
+import type { ModuleDetail, PromptLanguage } from "./core/buildAIPlanPrompt.js";
 import { QPlan } from "./qplan.js";
 import { validateScript, type QplanValidationResult } from "./core/qplanValidation.js";
 
@@ -55,6 +56,8 @@ export function getUserLanguage(): PromptLanguage {
 export interface BuildAIPlanPromptOptions {
   registry?: ModuleRegistry;
   language?: PromptLanguage;
+  moduleFilter?: ModuleListOptions;
+  moduleDetail?: ModuleDetail;
 }
 
 export function buildAIPlanPrompt(
@@ -63,11 +66,20 @@ export function buildAIPlanPrompt(
 ) {
   const targetRegistry = options.registry ?? registry;
   const language = options.language ?? userLanguage;
-  return buildPrompt(requirement, targetRegistry, language);
+  return buildPrompt(
+    requirement,
+    targetRegistry,
+    language,
+    options.moduleFilter,
+    options.moduleDetail
+  );
 }
 
-export function listRegisteredModules(targetRegistry: ModuleRegistry = registry) {
-  return targetRegistry.list({ includeExcluded: true });
+export function listRegisteredModules(
+  targetRegistry: ModuleRegistry = registry,
+  options: ModuleListOptions = {}
+) {
+  return targetRegistry.list({ includeExcluded: true, ...options });
 }
 
 /**
@@ -161,8 +173,14 @@ export type {
 } from "./step/stepEvents.js";
 export type { StepEventInfo } from "./step/stepTypes.js";
 export type { PromptLanguage } from "./core/buildAIPlanPrompt.js";
+export type { ModuleDetail } from "./core/buildAIPlanPrompt.js";
 export { QPlan } from "./qplan.js";
 export { ModuleRegistry } from "./core/moduleRegistry.js";
+export type {
+  ModuleCategoryInfo,
+  ModuleListOptions,
+  ModuleRegistryOptions,
+} from "./core/moduleRegistry.js";
 export type {
   ActionModule,
   ModuleMeta,

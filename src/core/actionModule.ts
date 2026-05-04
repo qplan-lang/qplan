@@ -13,6 +13,10 @@ import { ExecutionContext } from "./executionContext.js";
 
 export interface ModuleMeta {
   id?: string;                 // 모듈 이름
+  title?: string;              // Short human-readable module title
+  category?: string;           // Primary search/filter category
+  tags?: string[];             // Search/filter tags
+  aliases?: string[];          // Alternative search terms
   description?: string;        // AI가 사용법 파악할 설명
   usage?: string;              // 호출 예시
   inputs?: string[];           // 파라미터 이름 목록

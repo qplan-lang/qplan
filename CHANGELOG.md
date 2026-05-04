@@ -7,6 +7,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.7.0] - 2026-05-04
+
+### Added
+- Search-friendly module metadata: `title`, `category`, `tags`, and `aliases`.
+- `ModuleRegistry` filtering and discovery APIs: `search()`, `listCategories()`, and extended `list()` options.
+- `moduleFilter` support for prompt builders so LLM planning prompts can include only relevant modules.
+- `moduleDetail` support for `buildAIPlanPrompt()` with `ids`, `compact`, `usage`, and `full` modes.
+- Default category/tag metadata for built-in modules.
+- Example demonstrating module search and prompt filtering (`examples/32_exam_module_search.js`).
+- Registry documentation for module search, prompt filtering, hidden modules, and category summaries.
+
+### Changed
+- AI prompt builders now include module title/category/tag metadata when available.
+- `buildAIPlanPrompt()` now defaults to compact module output and omits module `usage`, `category`, and `tags` unless requested.
+- Large registries can be used for execution while exposing a smaller filtered module set to dynamic planning.
+
+---
+
 ## [0.6.3] - 2026-01-27
 
 ### Added
